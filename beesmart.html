@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BeeSmart</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --yellow: #FFD100;
+    --black: #0d0d0d;
+    --card: #181818;
+    --border: #252525;
+    --muted: #555;
+    --text: #e0e0e0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--black);
+    color: var(--yellow);
+    font-family: 'Source Serif 4', Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+  }
+  #app { width: 100%; max-width: 400px; }
+
+  /* HOME */
+  .home { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .logo-area { text-align: center; }
+  .bee-icon { font-size: 48px; line-height: 1; margin-bottom: 4px; }
+  h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 48px; font-weight: 900; letter-spacing: -1px; color: var(--yellow); }
+  .tagline { font-size: 13px; color: var(--muted); letter-spacing: 0.8px; margin-top: 4px; }
+  .stats-row { display: flex; width: 100%; background: var(--card); border-radius: 18px; border: 1px solid var(--border); padding: 18px 0; }
+  .stat-box { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--yellow); line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-divider { width: 1px; background: var(--border); }
+
+  /* CATEGORY PICKER */
+  .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; text-align: center; }
+  .category-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
+  .cat-btn {
+    padding: 14px 10px; background: var(--card); border: 2px solid var(--border);
+    border-radius: 14px; cursor: pointer; font-family: 'Source Serif 4', serif;
+    color: var(--muted); text-align: center; transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .cat-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+  .cat-btn.selected { border-color: var(--yellow); color: var(--yellow); background: #1f1a00; }
+  .cat-emoji { font-size: 22px; }
+  .cat-name { font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }
+  .cat-btn.surprise { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 10px; padding: 12px; }
+  .cat-name { font-size: 11px; font-weight: 600; letter-spacing: 0.2px; }
+
+  .btn-primary { width: 100%; padding: 18px; background: var(--yellow); color: var(--black); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; letter-spacing: 2px; font-family: 'Playfair Display', serif; transition: opacity 0.15s; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-secondary { width: 100%; padding: 14px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 14px; font-size: 15px; cursor: pointer; font-family: 'Source Serif 4', serif; transition: color 0.15s; }
+  .btn-secondary:hover { color: var(--yellow); }
+  .how-to { background: var(--card); border-radius: 14px; padding: 18px 20px; width: 100%; border: 1px solid var(--border); }
+  .how-to-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; }
+  .how-to-text { font-size: 13px; color: #888; line-height: 1.7; }
+
+  /* DIFFICULTY BAR */
+  .diff-bar-wrap { width: 100%; margin-bottom: 4px; }
+  .diff-bar-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .diff-bar-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .diff-bar-value { font-size: 11px; color: var(--yellow); font-weight: 600; letter-spacing: 0.5px; }
+  .diff-bar-track { width: 100%; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .diff-bar-fill { height: 100%; background: var(--yellow); border-radius: 2px; transition: width 0.8s ease; }
+
+  /* GAME HEADER */
+  .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .lives { display: flex; gap: 4px; }
+  .heart { font-size: 22px; }
+  .heart.lost { filter: grayscale(1); opacity: 0.2; }
+  .score-area { display: flex; align-items: center; gap: 8px; }
+  .score-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; }
+  .streak-pill { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 13px; }
+  .home-btn { background: transparent; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; transition: color 0.15s; }
+  .home-btn:hover { color: var(--yellow); }
+
+  /* GAME BODY */
+  .game-body { display: flex; flex-direction: column; gap: 14px; }
+  .mechanic-badge { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; }
+  .word-card { background: var(--card); border-radius: 20px; padding: 28px 24px; text-align: center; border: 1px solid var(--border); }
+  .speak-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--yellow); color: var(--black); border: none; border-radius: 12px; padding: 13px 20px; font-size: 15px; cursor: pointer; font-weight: 700; font-family: 'Source Serif 4', serif; transition: opacity 0.15s; }
+  .speak-btn:hover { opacity: 0.9; }
+  .speak-btn-small { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 12px; cursor: pointer; font-family: 'Source Serif 4', serif; transition: all 0.15s; margin-top: 14px; }
+  .speak-btn-small:hover { color: var(--yellow); border-color: var(--yellow); }
+  .cat-tag { margin-top: 12px; font-size: 11px; color: #3a3a3a; text-transform: uppercase; letter-spacing: 1px; }
+  .def-text { font-size: 17px; line-height: 1.65; color: var(--text); font-style: italic; }
+  .scramble-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .s-letter { width: 38px; height: 46px; background: var(--yellow); color: var(--black); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; font-family: 'Playfair Display', serif; }
+  .feedback { border-radius: 12px; padding: 13px 16px; text-align: center; font-size: 14px; color: #fff; }
+  .feedback.correct { background: #14532d; }
+  .feedback.try { background: #78350f; }
+  .feedback.wrong { background: #7f1d1d; }
+  .hint-box { background: var(--card); border-radius: 14px; padding: 16px 18px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .hint-label { color: var(--yellow); font-weight: 600; }
+  .hint-text { font-size: 13px; color: #bbb; line-height: 1.6; }
+  .input-row { display: flex; gap: 10px; }
+  input[type="text"] { flex: 1; background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 16px; font-size: 17px; color: #fff; font-family: 'Source Serif 4', serif; outline: none; transition: border-color 0.2s; }
+  input[type="text"]:focus { border-color: var(--yellow); }
+  .submit-btn { background: var(--yellow); color: var(--black); border: none; border-radius: 12px; padding: 0 20px; font-size: 22px; cursor: pointer; font-weight: 700; min-width: 54px; transition: opacity 0.15s; }
+  .submit-btn:hover { opacity: 0.9; }
+  .hint-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; padding: 12px; font-size: 13px; cursor: pointer; font-family: 'Source Serif 4', serif; width: 100%; transition: color 0.15s; }
+  .hint-btn:hover { color: var(--yellow); }
+
+  /* LOADING */
+  .loading-wrap { text-align: center; padding: 60px 0; }
+  .loading-bee { font-size: 48px; animation: float 1.5s ease-in-out infinite; }
+  .loading-text { color: var(--muted); font-size: 13px; margin-top: 12px; letter-spacing: 0.5px; }
+
+  /* GAME OVER */
+  .gameover { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+  .gameover-bee { font-size: 72px; line-height: 1; }
+  .gameover-title { font-family: 'Playfair Display', serif; font-size: 32px; }
+  .gameover-score { font-family: 'Playfair Display', serif; font-size: 72px; font-weight: 900; color: #fff; line-height: 1; }
+  .gameover-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+  .gameover-cat { font-size: 14px; color: var(--muted); }
+  .new-best { font-size: 15px; color: var(--yellow); }
+
+  /* LEVEL UP TOAST */
+  #toast {
+    position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: var(--yellow); color: var(--black); padding: 12px 24px;
+    border-radius: 40px; font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700;
+    letter-spacing: 0.5px; z-index: 1000; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    opacity: 0; white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* CELEBRATION */
+  #celebration { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; gap: 16px; pointer-events: none; z-index: 999; }
+  #celebration.show { display: flex; animation: fadeInOut 1.5s ease forwards; }
+  .celeb-emoji { font-size: 56px; animation: bounce 0.5s ease infinite alternate; }
+
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+  @keyframes fadeInOut { 0% { opacity:0; } 20% { opacity:1; } 80% { opacity:1; } 100% { opacity:0; } }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .shake { animation: shake 0.3s ease; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<div id="celebration">
+  <span class="celeb-emoji">🐝</span>
+  <span class="celeb-emoji" style="animation-delay:0.1s">⭐</span>
+  <span class="celeb-emoji" style="animation-delay:0.2s">🐝</span>
+  <span class="celeb-emoji" style="animation-delay:0.3s">✨</span>
+  <span class="celeb-emoji" style="animation-delay:0.4s">🐝</span>
+</div>
+
+<script>
+const API = "https://api.anthropic.com/v1/messages";
+const MECHANICS = ["audio","definition","scramble"];
+const CATEGORIES = [
+  { id: "geography", name: "Geography",       emoji: "🌍", prompt: "cities, countries, capitals, rivers, mountains, landmarks, regions" },
+  { id: "history",   name: "People & History",emoji: "👑", prompt: "historical figures, events, dynasties, explorers, leaders, eras" },
+  { id: "science",   name: "Science & Nature",emoji: "🔬", prompt: "scientific terms, animals, plants, elements, phenomena, anatomy" },
+  { id: "arts",      name: "Arts & Culture",  emoji: "🎭", prompt: "art movements, musicians, authors, films, cultural terms, architecture" },
+  { id: "food",      name: "Food & Cooking",  emoji: "🍽️", prompt: "ingredients, dishes, cooking techniques, cuisines, chefs, food terms" },
+  { id: "general",   name: "General",         emoji: "📚", prompt: "mixed nouns, concepts, commonly misspelled words, vocabulary, idioms" },
+  { id: "surprise",  name: "Surprise Me",     emoji: "🎲", prompt: "anything goes — a wild unpredictable mix of all categories" },
+];
+
+let state = {
+  screen: "home",
+  selectedCategory: null,
+  lives: 3, score: 0, streak: 0,
+  dailyStreak: 0, highScore: 0,
+  difficulty: 1, currentWord: null,
+  mechanic: "audio", hint: null,
+  hintUsed: false, attempts: 0,
+  usedWords: [], transitioning: false,
+  scrambled: "", loading: false, feedback: null,
+};
+
+function saveToStorage(k, v) { try { localStorage.setItem("beesmart_"+k, JSON.stringify(v)); } catch {} }
+function loadFromStorage(k) { try { const v = localStorage.getItem("beesmart_"+k); return v ? JSON.parse(v) : null; } catch { return null; } }
+
+function initStorage() {
+  const hs = loadFromStorage("highscore"); if (hs !== null) state.highScore = hs;
+  const diff = loadFromStorage("difficulty"); if (diff !== null) state.difficulty = diff;
+  const ds = loadFromStorage("dailystreak");
+  if (ds) {
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now()-86400000).toDateString();
+    if (ds.lastDate === today || ds.lastDate === yesterday) state.dailyStreak = ds.streak;
+  }
+}
+
+function saveProgress() {
+  if (state.score > state.highScore) { state.highScore = state.score; saveToStorage("highscore", state.highScore); }
+  saveToStorage("difficulty", state.difficulty);
+  const today = new Date().toDateString();
+  const ds = loadFromStorage("dailystreak");
+  let s = 1;
+  if (ds) {
+    const yesterday = new Date(Date.now()-86400000).toDateString();
+    if (ds.lastDate === today) s = ds.streak;
+    else if (ds.lastDate === yesterday) s = ds.streak + 1;
+  }
+  state.dailyStreak = s;
+  saveToStorage("dailystreak", { streak: s, lastDate: today });
+}
+
+function diffLabel(d) {
+  if (d < 2) return "Beginner";
+  if (d < 4) return "Easy";
+  if (d < 6) return "Medium";
+  if (d < 8) return "Hard";
+  if (d < 9.5) return "Expert";
+  return "Master";
+}
+
+function scrambleWord(word) {
+  const arr = word.split("");
+  for (let i = arr.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  const r = arr.join(""); return r === word && word.length > 1 ? scrambleWord(word) : r;
+}
+
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85; u.pitch = 1;
+  window.speechSynthesis.speak(u);
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+function showCelebration() {
+  const el = document.getElementById("celebration");
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 1500);
+}
+
+async function fetchWord() {
+  const cat = CATEGORIES.find(c => c.id === state.selectedCategory) || CATEGORIES[4];
+  const dl = state.difficulty < 3 ? "easy" : state.difficulty < 6 ? "medium" : "hard";
+  const res = await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{ role: "user", content:
+        `Generate a spelling challenge word for an adult spelling bee game.\n\nCategory: ${cat.name} — focus on: ${cat.prompt}\nAlso mix in proper nouns (names, cities, countries) relevant to the category.\nDifficulty: ${dl} (${state.difficulty.toFixed(1)}/10)\nDo NOT use: ${state.usedWords.slice(-20).join(", ")||"none"}\n\nEasy=well-known words, Medium=tricky spellings, Hard=obscure/complex\n\nIMPORTANT: In the sentence field, replace the word itself with "______" so the player cannot see the spelling.\n\nRespond ONLY raw JSON no markdown:\n{"word":"the word","definition":"clear definition max 15 words","sentence":"sentence with the target word replaced by ______","category":"specific subcategory label"}`
+      }]
+    })
+  });
+  const data = await res.json();
+  return JSON.parse(data.content[0].text.trim().replace(/```json|```/g,""));
+}
+
+async function loadNextWord() {
+  state.loading = true; state.hint = null; state.hintUsed = false;
+  state.attempts = 0; state.feedback = null; state.transitioning = false;
+  render();
+  try {
+    const wordData = await fetchWord();
+    const next = MECHANICS[Math.floor(Math.random()*MECHANICS.length)];
+    state.mechanic = next; state.currentWord = wordData;
+    state.usedWords.push(wordData.word);
+    if (next === "scramble") state.scrambled = scrambleWord(wordData.word.toUpperCase());
+    state.loading = false; render();
+    if (next === "audio") setTimeout(() => speak(wordData.word), 400);
+    setTimeout(() => { const i = document.getElementById("word-input"); if (i) i.focus(); }, 150);
+  } catch(e) {
+    state.loading = false;
+    state.feedback = { type: "wrong", msg: "Connection issue — please retry" };
+    render();
+  }
+}
+
+function handleSubmit() {
+  if (!state.currentWord || state.transitioning) return;
+  const inp = document.getElementById("word-input");
+  if (!inp || !inp.value.trim()) return;
+  const correct = inp.value.trim().toLowerCase() === state.currentWord.word.toLowerCase();
+
+  if (correct) {
+    const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
+    state.score += pts; state.streak += 1;
+    const prevDiff = state.difficulty;
+    state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
+    if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
+      setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
+    }
+    state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
+    state.transitioning = true;
+    saveProgress();
+    if (state.streak > 0 && state.streak % 3 === 0) showCelebration();
+    inp.value = ""; render();
+    setTimeout(() => loadNextWord(), 1400);
+  } else {
+    state.attempts += 1;
+    if (state.attempts >= 2) {
+      state.lives -= 1; state.streak = 0;
+      state.difficulty = Math.max(1, state.difficulty - 0.3);
+      state.transitioning = true;
+      if (state.lives <= 0) {
+        saveProgress();
+        state.feedback = { type: "wrong", msg: `The word was "${state.currentWord.word}"` };
+        render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
+      } else {
+        state.feedback = { type: "wrong", msg: `It was "${state.currentWord.word}"` };
+        render(); setTimeout(() => loadNextWord(), 1800);
+      }
+    } else {
+      state.feedback = { type: "try", msg: "Not quite — try again!" };
+      if (!state.hint) state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
+      inp.value = "";
+      const row = document.querySelector(".input-row");
+      if (row) { row.classList.add("shake"); setTimeout(() => row.classList.remove("shake"), 300); }
+      render();
+    }
+  }
+}
+
+function selectCategory(id) { state.selectedCategory = id; render(); }
+
+function startGame() {
+  if (!state.selectedCategory) return;
+  state.screen = "game"; state.lives = 3; state.score = 0;
+  state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
+  loadNextWord();
+}
+
+function revealHint() {
+  if (!state.currentWord) return;
+  state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
+  state.hintUsed = true; render();
+}
+
+function goHome() {
+  window.speechSynthesis.cancel();
+  state.screen = "home";
+  state.currentWord = null;
+  state.feedback = null;
+  render();
+}
+
+function render() {
+  const app = document.getElementById("app");
+
+  if (state.screen === "home") {
+    const catBtns = CATEGORIES.map(c => {
+      const sel = state.selectedCategory === c.id ? "selected" : "";
+      const surprise = c.id === "surprise" ? "surprise" : "";
+      return `<button class="cat-btn ${surprise} ${sel}" onclick="selectCategory('${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`;
+    }).join("");
+    app.innerHTML = `
+      <div class="home">
+        <div class="logo-area">
+          <div class="bee-icon">🐝</div>
+          <h1>BeeSmart</h1>
+          <p class="tagline">Sharpen your spelling. One word at a time.</p>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box"><span class="stat-num">${state.highScore}</span><span class="stat-label">Best</span></div>
+          <div class="stat-divider"></div>
+          <div class="stat-box"><span class="stat-num">${state.dailyStreak}</span><span class="stat-label">Day Streak</span></div>
+          <div class="stat-divider"></div>
+          <div class="stat-box"><span class="stat-num">${diffLabel(state.difficulty)}</span><span class="stat-label">Level</span></div>
+        </div>
+        <div style="width:100%">
+          <p class="section-title">Choose a category</p>
+          <div class="category-grid">${catBtns}</div>
+        </div>
+        <button class="btn-primary" onclick="startGame()" ${!state.selectedCategory?"disabled":""}>
+          ${state.selectedCategory ? "PLAY" : "SELECT A CATEGORY"}
+        </button>
+        <div class="how-to">
+          <p class="how-to-title">How to play</p>
+          <p class="how-to-text">Listen to the word, decode the definition, or unscramble the letters — then spell it correctly. 3 lives per game. Hints available but reduce your points.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (state.screen === "gameover") {
+    const newBest = state.score > 0 && state.score >= state.highScore;
+    const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
+    app.innerHTML = `
+      <div class="gameover">
+        <div class="gameover-bee">🐝</div>
+        <h2 class="gameover-title">Game Over</h2>
+        <div class="gameover-score">${state.score}</div>
+        <p class="gameover-label">points</p>
+        ${cat ? `<p class="gameover-cat">${cat.emoji} ${cat.name}</p>` : ""}
+        ${newBest ? `<p class="new-best">✨ New personal best!</p>` : ""}
+        <div style="height:8px"></div>
+        <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
+        <button class="btn-secondary" onclick="state.screen='home';render()">Change Category</button>
+      </div>`;
+    return;
+  }
+
+  // GAME
+  const hearts = [0,1,2].map(i => `<span class="heart ${i<state.lives?"":"lost"}">♥</span>`).join("");
+  const diffPct = ((state.difficulty-1)/9)*100;
+
+  let cardHTML = "";
+  if (state.loading) {
+    const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
+    cardHTML = `<div class="loading-wrap"><div class="loading-bee">🐝</div><p class="loading-text">Finding your ${cat?cat.name.toLowerCase():"next"} word...</p></div>`;
+  } else if (state.currentWord) {
+    const sw = state.currentWord.word.replace(/'/g,"\\'");
+    let inner = "";
+    if (state.mechanic === "audio") {
+      inner = `<button class="speak-btn" onclick="speak('${sw}')">🔊 Hear word again</button><p class="cat-tag">${state.currentWord.category}</p>`;
+    } else if (state.mechanic === "definition") {
+      inner = `<p class="def-text">"${state.currentWord.definition}"</p><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
+    } else {
+      const letters = state.scrambled.split("").map(l=>`<span class="s-letter">${l}</span>`).join("");
+      inner = `<div class="scramble-row">${letters}</div><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
+    }
+    cardHTML = `<div class="word-card">${inner}</div>`;
+  }
+
+  const mechanicLabel = state.mechanic==="audio"?"🔊 Listen & Spell":state.mechanic==="definition"?"📖 Define & Spell":"🔀 Unscramble";
+
+  app.innerHTML = `
+    <div class="game-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="home-btn" onclick="goHome()" title="Home">⌂</button>
+        <div class="lives">${hearts}</div>
+      </div>
+      <div class="score-area">
+        <span class="score-num">${state.score}</span>
+        ${state.streak>=2?`<span class="streak-pill">🔥 ${state.streak}</span>`:""}
+      </div>
+    </div>
+    <div class="diff-bar-wrap">
+      <div class="diff-bar-label">
+        <span class="diff-bar-title">Difficulty</span>
+        <span class="diff-bar-value">${diffLabel(state.difficulty)}</span>
+      </div>
+      <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
+    </div>
+    <div class="game-body">
+      ${state.currentWord&&!state.loading?`<p class="mechanic-badge">${mechanicLabel}</p>`:""}
+      ${cardHTML}
+      ${state.feedback?`<div class="feedback ${state.feedback.type}">${state.feedback.msg}</div>`:""}
+      ${state.hint?`<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>`:""}
+      ${state.currentWord&&!state.loading?`
+        <div class="input-row">
+          <input id="word-input" type="text" placeholder="Type your spelling..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning?"disabled":""}/>
+          <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning?"disabled":""}>→</button>
+        </div>
+        ${!state.hint&&!state.transitioning?`<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>`:""}
+      `:""}
+    </div>`;
+
+  const inp = document.getElementById("word-input");
+  if (inp) inp.addEventListener("keydown", e => { if (e.key==="Enter") handleSubmit(); });
+}
+
+initStorage();
+render();
+</script>
+</body>
+</html>
