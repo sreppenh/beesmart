@@ -43,17 +43,16 @@
   .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; text-align: center; }
   .category-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
   .cat-btn {
-    padding: 14px 10px; background: var(--card); border: 2px solid var(--border);
+    padding: 14px 8px; background: var(--card); border: 2px solid var(--border);
     border-radius: 14px; cursor: pointer; font-family: 'Source Serif 4', serif;
     color: var(--muted); text-align: center; transition: all 0.15s;
     display: flex; flex-direction: column; align-items: center; gap: 6px;
   }
   .cat-btn:hover { border-color: var(--yellow); color: var(--yellow); }
   .cat-btn.selected { border-color: var(--yellow); color: var(--yellow); background: #1f1a00; }
-  .cat-emoji { font-size: 22px; }
-  .cat-name { font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }
-  .cat-btn.surprise { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 10px; padding: 12px; }
+  .cat-emoji { font-size: 20px; }
   .cat-name { font-size: 11px; font-weight: 600; letter-spacing: 0.2px; }
+  .cat-btn.surprise { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 10px; padding: 12px; }
 
   .btn-primary { width: 100%; padding: 18px; background: var(--yellow); color: var(--black); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; letter-spacing: 2px; font-family: 'Playfair Display', serif; transition: opacity 0.15s; }
   .btn-primary:hover { opacity: 0.9; }
@@ -95,6 +94,35 @@
   .def-text { font-size: 17px; line-height: 1.65; color: var(--text); font-style: italic; }
   .scramble-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .s-letter { width: 38px; height: 46px; background: var(--yellow); color: var(--black); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; font-family: 'Playfair Display', serif; }
+
+  /* LETTER GAP */
+  .gap-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin-bottom: 4px; }
+  .gap-letter { width: 34px; height: 42px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; font-family: 'Playfair Display', serif; }
+  .gap-letter.shown { background: var(--card); border: 1px solid var(--border); color: var(--yellow); }
+  .gap-letter.hidden { background: #1f1a00; border: 2px dashed #444; color: transparent; }
+  .gap-instruction { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .gap-input-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .gap-input { width: 38px; height: 46px; background: var(--card); border: 2px solid var(--border); border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: var(--yellow); font-family: 'Playfair Display', serif; outline: none; transition: border-color 0.2s; text-transform: uppercase; }
+  .gap-input:focus { border-color: var(--yellow); }
+
+  /* ONE LETTER OFF */
+  .olo-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+  .olo-letter {
+    width: 36px; height: 44px; background: var(--card); border: 2px solid var(--border);
+    border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 19px; font-weight: 700; font-family: 'Playfair Display', serif;
+    color: var(--yellow); cursor: pointer; transition: all 0.15s;
+  }
+  .olo-letter:hover { border-color: var(--yellow); background: #1f1a00; }
+  .olo-letter.selected-wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; }
+  .olo-letter.confirmed-wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; cursor: default; }
+  .olo-letter.confirmed-right { background: #14532d; border-color: #22c55e; color: #fff; cursor: default; }
+  .olo-fix-row { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 12px; }
+  .olo-fix-label { font-size: 13px; color: var(--muted); }
+  .olo-fix-input { width: 52px; height: 52px; background: var(--card); border: 2px solid var(--yellow); border-radius: 10px; text-align: center; font-size: 24px; font-weight: 700; color: var(--yellow); font-family: 'Playfair Display', serif; outline: none; text-transform: uppercase; }
+  .olo-submit { background: var(--yellow); color: var(--black); border: none; border-radius: 10px; padding: 0 16px; height: 52px; font-size: 20px; cursor: pointer; font-weight: 700; }
+  .olo-instruction { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+
   .feedback { border-radius: 12px; padding: 13px 16px; text-align: center; font-size: 14px; color: #fff; }
   .feedback.correct { background: #14532d; }
   .feedback.try { background: #78350f; }
@@ -160,15 +188,16 @@
 
 <script>
 const API = "https://api.anthropic.com/v1/messages";
-const MECHANICS = ["audio","definition","scramble"];
+const MECHANICS = ["audio","definition","scramble","lettergap","oneletteroff"];
+
 const CATEGORIES = [
-  { id: "geography", name: "Geography",       emoji: "🌍", prompt: "cities, countries, capitals, rivers, mountains, landmarks, regions" },
-  { id: "history",   name: "People & History",emoji: "👑", prompt: "historical figures, events, dynasties, explorers, leaders, eras" },
-  { id: "science",   name: "Science & Nature",emoji: "🔬", prompt: "scientific terms, animals, plants, elements, phenomena, anatomy" },
-  { id: "arts",      name: "Arts & Culture",  emoji: "🎭", prompt: "art movements, musicians, authors, films, cultural terms, architecture" },
-  { id: "food",      name: "Food & Cooking",  emoji: "🍽️", prompt: "ingredients, dishes, cooking techniques, cuisines, chefs, food terms" },
-  { id: "general",   name: "General",         emoji: "📚", prompt: "mixed nouns, concepts, commonly misspelled words, vocabulary, idioms" },
-  { id: "surprise",  name: "Surprise Me",     emoji: "🎲", prompt: "anything goes — a wild unpredictable mix of all categories" },
+  { id: "geography", name: "Geography",        emoji: "🌍", prompt: "cities, countries, capitals, rivers, mountains, landmarks, regions" },
+  { id: "history",   name: "People & History", emoji: "👑", prompt: "historical figures, events, dynasties, explorers, leaders, eras" },
+  { id: "science",   name: "Science & Nature", emoji: "🔬", prompt: "scientific terms, animals, plants, elements, phenomena, anatomy" },
+  { id: "arts",      name: "Arts & Culture",   emoji: "🎭", prompt: "art movements, musicians, authors, films, cultural terms, architecture" },
+  { id: "food",      name: "Food & Cooking",   emoji: "🍽️", prompt: "ingredients, dishes, cooking techniques, cuisines, chefs, food terms" },
+  { id: "general",   name: "General",          emoji: "📚", prompt: "mixed nouns, concepts, commonly misspelled words, vocabulary, idioms" },
+  { id: "surprise",  name: "Surprise Me",      emoji: "🎲", prompt: "anything goes — a wild unpredictable mix of all categories" },
 ];
 
 let state = {
@@ -181,6 +210,11 @@ let state = {
   hintUsed: false, attempts: 0,
   usedWords: [], transitioning: false,
   scrambled: "", loading: false, feedback: null,
+  // letter gap
+  gapIndices: [], gapAnswers: [],
+  // one letter off
+  misspelled: "", wrongIndex: -1,
+  selectedOloIndex: -1, oloPhase: "select", // select | fix
 };
 
 function saveToStorage(k, v) { try { localStorage.setItem("beesmart_"+k, JSON.stringify(v)); } catch {} }
@@ -227,6 +261,20 @@ function scrambleWord(word) {
   const r = arr.join(""); return r === word && word.length > 1 ? scrambleWord(word) : r;
 }
 
+// Build letter gap: hide more letters at higher difficulty
+function buildGap(word) {
+  const len = word.length;
+  const d = state.difficulty;
+  // At difficulty 1: ~30% hidden, at 10: ~80% hidden
+  const hideFraction = 0.3 + (d / 10) * 0.5;
+  const numHidden = Math.max(1, Math.round(len * hideFraction));
+  const indices = Array.from({length: len}, (_, i) => i);
+  // Always keep first letter shown
+  const shuffled = indices.slice(1).sort(() => Math.random() - 0.5);
+  const hidden = new Set(shuffled.slice(0, Math.min(numHidden, len - 1)));
+  return Array.from({length: len}, (_, i) => hidden.has(i));
+}
+
 function speak(text) {
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
@@ -246,9 +294,14 @@ function showCelebration() {
   setTimeout(() => el.classList.remove("show"), 1500);
 }
 
-async function fetchWord() {
-  const cat = CATEGORIES.find(c => c.id === state.selectedCategory) || CATEGORIES[4];
+async function fetchWord(needsMisspelling) {
+  const cat = CATEGORIES.find(c => c.id === state.selectedCategory) || CATEGORIES[5];
   const dl = state.difficulty < 3 ? "easy" : state.difficulty < 6 ? "medium" : "hard";
+
+  const misspellingInstruction = needsMisspelling
+    ? `Also provide a "misspelled" version of the word with exactly ONE letter changed to a plausible mistake (e.g. wrong vowel, doubled consonant, transposed letters). The misspelled version must have the SAME number of letters as the correct word. Include "misspelled":"the wrong version" and "wrongIndex": the 0-based index of the changed letter in the JSON.`
+    : `"misspelled":"","wrongIndex":-1`;
+
   const res = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -256,7 +309,21 @@ async function fetchWord() {
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
       messages: [{ role: "user", content:
-        `Generate a spelling challenge word for an adult spelling bee game.\n\nCategory: ${cat.name} — focus on: ${cat.prompt}\nAlso mix in proper nouns (names, cities, countries) relevant to the category.\nDifficulty: ${dl} (${state.difficulty.toFixed(1)}/10)\nDo NOT use: ${state.usedWords.slice(-20).join(", ")||"none"}\n\nEasy=well-known words, Medium=tricky spellings, Hard=obscure/complex\n\nIMPORTANT: In the sentence field, replace the word itself with "______" so the player cannot see the spelling.\n\nRespond ONLY raw JSON no markdown:\n{"word":"the word","definition":"clear definition max 15 words","sentence":"sentence with the target word replaced by ______","category":"specific subcategory label"}`
+        `Generate a spelling challenge word for an adult spelling bee game.
+
+Category: ${cat.name} — focus on: ${cat.prompt}
+Also mix in proper nouns (names, cities, countries) relevant to the category.
+Difficulty: ${dl} (${state.difficulty.toFixed(1)}/10)
+Do NOT use: ${state.usedWords.slice(-20).join(", ")||"none"}
+
+Easy=well-known words, Medium=tricky spellings, Hard=obscure/complex
+
+IMPORTANT: In the "sentence" field, replace the target word with "______" so the player cannot see the spelling.
+
+${misspellingInstruction}
+
+Respond ONLY raw JSON no markdown:
+{"word":"the word","definition":"clear definition max 15 words","sentence":"sentence with word replaced by ______","category":"specific subcategory","misspelled":"","wrongIndex":-1}`
       }]
     })
   });
@@ -267,16 +334,36 @@ async function fetchWord() {
 async function loadNextWord() {
   state.loading = true; state.hint = null; state.hintUsed = false;
   state.attempts = 0; state.feedback = null; state.transitioning = false;
+  state.selectedOloIndex = -1; state.oloPhase = "select";
   render();
   try {
-    const wordData = await fetchWord();
     const next = MECHANICS[Math.floor(Math.random()*MECHANICS.length)];
-    state.mechanic = next; state.currentWord = wordData;
+    const wordData = await fetchWord(next === "oneletteroff");
+    state.mechanic = next;
+    state.currentWord = wordData;
     state.usedWords.push(wordData.word);
-    if (next === "scramble") state.scrambled = scrambleWord(wordData.word.toUpperCase());
+
+    if (next === "scramble") {
+      state.scrambled = scrambleWord(wordData.word.toUpperCase());
+    }
+    if (next === "lettergap") {
+      const hidden = buildGap(wordData.word);
+      state.gapIndices = hidden;
+      state.gapAnswers = wordData.word.split("").map((l, i) => hidden[i] ? "" : l);
+    }
+    if (next === "oneletteroff") {
+      state.misspelled = wordData.misspelled || wordData.word;
+      state.wrongIndex = wordData.wrongIndex !== undefined ? wordData.wrongIndex : -1;
+    }
+
     state.loading = false; render();
     if (next === "audio") setTimeout(() => speak(wordData.word), 400);
-    setTimeout(() => { const i = document.getElementById("word-input"); if (i) i.focus(); }, 150);
+    setTimeout(() => {
+      const i = document.getElementById("word-input");
+      if (i) i.focus();
+      const g = document.querySelector(".gap-input");
+      if (g) g.focus();
+    }, 150);
   } catch(e) {
     state.loading = false;
     state.feedback = { type: "wrong", msg: "Connection issue — please retry" };
@@ -284,52 +371,119 @@ async function loadNextWord() {
   }
 }
 
+// Handle correct answer scoring and progression
+function handleCorrect() {
+  const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
+  state.score += pts; state.streak += 1;
+  const prevDiff = state.difficulty;
+  state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
+  if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
+    setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
+  }
+  state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
+  state.transitioning = true;
+  saveProgress();
+  if (state.streak > 0 && state.streak % 3 === 0) showCelebration();
+  render();
+  setTimeout(() => loadNextWord(), 1400);
+}
+
+function handleWrong(revealMsg) {
+  state.lives -= 1; state.streak = 0;
+  state.difficulty = Math.max(1, state.difficulty - 0.3);
+  state.transitioning = true;
+  if (state.lives <= 0) {
+    saveProgress();
+    state.feedback = { type: "wrong", msg: revealMsg };
+    render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
+  } else {
+    state.feedback = { type: "wrong", msg: revealMsg };
+    render(); setTimeout(() => loadNextWord(), 1800);
+  }
+}
+
+function handleMissedAttempt() {
+  state.attempts += 1;
+  if (!state.hint) state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
+  if (state.attempts >= 2) {
+    handleWrong(`It was "${state.currentWord.word}"`);
+  } else {
+    state.feedback = { type: "try", msg: "Not quite — try again!" };
+    const row = document.querySelector(".input-row, .gap-input-row");
+    if (row) { row.classList.add("shake"); setTimeout(() => row.classList.remove("shake"), 300); }
+    render();
+  }
+}
+
+// Standard submit (audio, definition, scramble)
 function handleSubmit() {
   if (!state.currentWord || state.transitioning) return;
   const inp = document.getElementById("word-input");
   if (!inp || !inp.value.trim()) return;
   const correct = inp.value.trim().toLowerCase() === state.currentWord.word.toLowerCase();
+  inp.value = "";
+  if (correct) { handleCorrect(); }
+  else { handleMissedAttempt(); }
+}
 
-  if (correct) {
-    const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
-    state.score += pts; state.streak += 1;
-    const prevDiff = state.difficulty;
-    state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
-    if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
-      setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
+// Letter gap submit
+function handleGapSubmit() {
+  if (!state.currentWord || state.transitioning) return;
+  const word = state.currentWord.word.toUpperCase();
+  const inputs = document.querySelectorAll(".gap-input");
+  let allCorrect = true;
+  let inputIdx = 0;
+  for (let i = 0; i < word.length; i++) {
+    if (state.gapIndices[i]) {
+      const val = inputs[inputIdx] ? inputs[inputIdx].value.trim().toUpperCase() : "";
+      if (val !== word[i]) { allCorrect = false; break; }
+      inputIdx++;
     }
-    state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
-    state.transitioning = true;
-    saveProgress();
-    if (state.streak > 0 && state.streak % 3 === 0) showCelebration();
-    inp.value = ""; render();
-    setTimeout(() => loadNextWord(), 1400);
+  }
+  if (allCorrect) { handleCorrect(); }
+  else { handleMissedAttempt(); }
+}
+
+// One letter off: click a letter tile
+function oloClickLetter(idx) {
+  if (state.transitioning || state.oloPhase !== "select") return;
+  state.selectedOloIndex = idx;
+  state.oloPhase = "fix";
+  render();
+  setTimeout(() => { const f = document.getElementById("olo-fix-input"); if (f) f.focus(); }, 100);
+}
+
+// One letter off: submit the fix
+function handleOloFix() {
+  if (!state.currentWord || state.transitioning) return;
+  const fixInput = document.getElementById("olo-fix-input");
+  if (!fixInput) return;
+  const typedLetter = fixInput.value.trim().toUpperCase();
+  if (!typedLetter) return;
+
+  const correctIndex = state.wrongIndex;
+  const correctLetter = state.currentWord.word[correctIndex].toUpperCase();
+  const selectedCorrectPosition = state.selectedOloIndex === correctIndex;
+  const typedCorrectLetter = typedLetter === correctLetter;
+
+  if (selectedCorrectPosition && typedCorrectLetter) {
+    handleCorrect();
   } else {
-    state.attempts += 1;
-    if (state.attempts >= 2) {
-      state.lives -= 1; state.streak = 0;
-      state.difficulty = Math.max(1, state.difficulty - 0.3);
-      state.transitioning = true;
-      if (state.lives <= 0) {
-        saveProgress();
-        state.feedback = { type: "wrong", msg: `The word was "${state.currentWord.word}"` };
-        render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
-      } else {
-        state.feedback = { type: "wrong", msg: `It was "${state.currentWord.word}"` };
-        render(); setTimeout(() => loadNextWord(), 1800);
-      }
+    fixInput.value = "";
+    // Wrong selection or wrong letter
+    if (!selectedCorrectPosition) {
+      // Reset to select phase so they can try again
+      state.oloPhase = "select";
+      state.selectedOloIndex = -1;
+      handleMissedAttempt();
     } else {
-      state.feedback = { type: "try", msg: "Not quite — try again!" };
-      if (!state.hint) state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
-      inp.value = "";
-      const row = document.querySelector(".input-row");
-      if (row) { row.classList.add("shake"); setTimeout(() => row.classList.remove("shake"), 300); }
-      render();
+      // Right position, wrong letter
+      handleMissedAttempt();
     }
   }
 }
 
-function selectCategory(id) { state.selectedCategory = id; render(); }
+function selectCategory(id) { state.selectedCategory = id; startGame(); }
 
 function startGame() {
   if (!state.selectedCategory) return;
@@ -346,20 +500,18 @@ function revealHint() {
 
 function goHome() {
   window.speechSynthesis.cancel();
-  state.screen = "home";
-  state.currentWord = null;
-  state.feedback = null;
+  state.screen = "home"; state.currentWord = null; state.feedback = null;
   render();
 }
 
 function render() {
   const app = document.getElementById("app");
 
+  // HOME
   if (state.screen === "home") {
     const catBtns = CATEGORIES.map(c => {
-      const sel = state.selectedCategory === c.id ? "selected" : "";
       const surprise = c.id === "surprise" ? "surprise" : "";
-      return `<button class="cat-btn ${surprise} ${sel}" onclick="selectCategory('${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`;
+      return `<button class="cat-btn ${surprise}" onclick="selectCategory('${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`;
     }).join("");
     app.innerHTML = `
       <div class="home">
@@ -376,20 +528,18 @@ function render() {
           <div class="stat-box"><span class="stat-num">${diffLabel(state.difficulty)}</span><span class="stat-label">Level</span></div>
         </div>
         <div style="width:100%">
-          <p class="section-title">Choose a category</p>
+          <p class="section-title">Tap a category to play</p>
           <div class="category-grid">${catBtns}</div>
         </div>
-        <button class="btn-primary" onclick="startGame()" ${!state.selectedCategory?"disabled":""}>
-          ${state.selectedCategory ? "PLAY" : "SELECT A CATEGORY"}
-        </button>
         <div class="how-to">
           <p class="how-to-title">How to play</p>
-          <p class="how-to-text">Listen to the word, decode the definition, or unscramble the letters — then spell it correctly. 3 lives per game. Hints available but reduce your points.</p>
+          <p class="how-to-text">5 different spelling challenges — listen, define, unscramble, fill the gaps, or spot the mistake. 3 lives per game. Hints cost points.</p>
         </div>
       </div>`;
     return;
   }
 
+  // GAME OVER
   if (state.screen === "gameover") {
     const newBest = state.score > 0 && state.score >= state.highScore;
     const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
@@ -419,18 +569,75 @@ function render() {
   } else if (state.currentWord) {
     const sw = state.currentWord.word.replace(/'/g,"\\'");
     let inner = "";
+
     if (state.mechanic === "audio") {
       inner = `<button class="speak-btn" onclick="speak('${sw}')">🔊 Hear word again</button><p class="cat-tag">${state.currentWord.category}</p>`;
+
     } else if (state.mechanic === "definition") {
       inner = `<p class="def-text">"${state.currentWord.definition}"</p><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
-    } else {
+
+    } else if (state.mechanic === "scramble") {
       const letters = state.scrambled.split("").map(l=>`<span class="s-letter">${l}</span>`).join("");
       inner = `<div class="scramble-row">${letters}</div><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
+
+    } else if (state.mechanic === "lettergap") {
+      const word = state.currentWord.word.toUpperCase();
+      const letterTiles = word.split("").map((l, i) =>
+        state.gapIndices[i]
+          ? `<span class="gap-letter hidden">_</span>`
+          : `<span class="gap-letter shown">${l}</span>`
+      ).join("");
+      // Build individual inputs for each hidden letter
+      const hiddenCount = state.gapIndices.filter(Boolean).length;
+      const gapInputs = Array.from({length: hiddenCount}, (_, i) =>
+        `<input class="gap-input" id="gap-${i}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${i},${hiddenCount})" onkeydown="gapKeyDown(event,${i},${hiddenCount})"/>`
+      ).join("");
+      inner = `
+        <div class="gap-row">${letterTiles}</div>
+        <p class="gap-instruction">Type the missing letters in order</p>
+        <div class="gap-input-row">${gapInputs}</div>
+        <div style="margin-top:12px"><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button></div>`;
+
+    } else if (state.mechanic === "oneletteroff") {
+      const display = state.misspelled || state.currentWord.word;
+      const tiles = display.toUpperCase().split("").map((l, i) => {
+        let cls = "olo-letter";
+        if (state.selectedOloIndex === i) cls += " selected-wrong";
+        return `<span class="${cls}" onclick="oloClickLetter(${i})">${l}</span>`;
+      }).join("");
+
+      let fixHTML = "";
+      if (state.oloPhase === "fix") {
+        fixHTML = `<div class="olo-fix-row">
+          <span class="olo-fix-label">Replace with:</span>
+          <input id="olo-fix-input" class="olo-fix-input" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" onkeydown="if(event.key==='Enter')handleOloFix()"/>
+          <button class="olo-submit" onclick="handleOloFix()">→</button>
+        </div>`;
+      }
+
+      inner = `
+        <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Type the correct letter"}</p>
+        <div class="olo-row" style="margin-top:12px">${tiles}</div>
+        ${fixHTML}
+        <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
+        <button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear word</button>`;
     }
+
     cardHTML = `<div class="word-card">${inner}</div>`;
   }
 
-  const mechanicLabel = state.mechanic==="audio"?"🔊 Listen & Spell":state.mechanic==="definition"?"📖 Define & Spell":"🔀 Unscramble";
+  const mechanicLabels = {
+    audio: "🔊 Listen & Spell",
+    definition: "📖 Define & Spell",
+    scramble: "🔀 Unscramble",
+    lettergap: "✏️ Fill the Gaps",
+    oneletteroff: "🔍 One Letter Off",
+  };
+
+  // Show standard input only for audio/definition/scramble
+  const showStandardInput = state.currentWord && !state.loading &&
+    ["audio","definition","scramble"].includes(state.mechanic);
+  const showGapSubmit = state.currentWord && !state.loading && state.mechanic === "lettergap";
 
   app.innerHTML = `
     <div class="game-header">
@@ -451,21 +658,50 @@ function render() {
       <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
     </div>
     <div class="game-body">
-      ${state.currentWord&&!state.loading?`<p class="mechanic-badge">${mechanicLabel}</p>`:""}
+      ${state.currentWord&&!state.loading?`<p class="mechanic-badge">${mechanicLabels[state.mechanic]||""}</p>`:""}
       ${cardHTML}
       ${state.feedback?`<div class="feedback ${state.feedback.type}">${state.feedback.msg}</div>`:""}
       ${state.hint?`<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>`:""}
-      ${state.currentWord&&!state.loading?`
+      ${showStandardInput?`
         <div class="input-row">
           <input id="word-input" type="text" placeholder="Type your spelling..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning?"disabled":""}/>
           <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning?"disabled":""}>→</button>
         </div>
         ${!state.hint&&!state.transitioning?`<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>`:""}
       `:""}
+      ${showGapSubmit?`
+        <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning?"disabled":""} style="margin-top:4px">Check Answers</button>
+        ${!state.hint&&!state.transitioning?`<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>`:""}
+      `:""}
     </div>`;
 
   const inp = document.getElementById("word-input");
   if (inp) inp.addEventListener("keydown", e => { if (e.key==="Enter") handleSubmit(); });
+
+  // Focus first gap input
+  if (state.mechanic === "lettergap" && !state.loading) {
+    setTimeout(() => { const g = document.getElementById("gap-0"); if (g) g.focus(); }, 100);
+  }
+}
+
+// Auto-advance between gap inputs
+function gapInputNext(idx, total) {
+  const inp = document.getElementById(`gap-${idx}`);
+  if (inp && inp.value.length === 1 && idx < total - 1) {
+    const next = document.getElementById(`gap-${idx+1}`);
+    if (next) next.focus();
+  }
+}
+
+function gapKeyDown(e, idx, total) {
+  if (e.key === "Backspace") {
+    const inp = document.getElementById(`gap-${idx}`);
+    if (inp && inp.value === "" && idx > 0) {
+      const prev = document.getElementById(`gap-${idx-1}`);
+      if (prev) { prev.value = ""; prev.focus(); }
+    }
+  }
+  if (e.key === "Enter") handleGapSubmit();
 }
 
 initStorage();
