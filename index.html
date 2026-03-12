@@ -211,6 +211,8 @@
       blitzTimeSurvived: 0,
       blitzExpired: false,
       blitzCountdown: null,
+      sessionWordCount: 0,
+      warmupRamp: false,
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
@@ -287,8 +289,8 @@
     }
 
     function diffLabel(d) {
-      if (d < 2) return "Beginner";
-      if (d < 4) return "Easy";
+      if (d < 2) return "Warm-up";
+      if (d < 4) return "Beginner";
       if (d < 6) return "Medium";
       if (d < 8) return "Hard";
       if (d < 9.5) return "Expert";
@@ -357,7 +359,8 @@
     }
 
     function getElementChallenge() {
-      const tier = state.difficulty < 4 ? 1 : state.difficulty < 7 ? 2 : 3;
+      const rawTier = getEffectiveTier();
+      const tier = rawTier === 0 ? 1 : rawTier; // elements have no tier 0; fall back to tier 1
       const usedSet = new Set(state.usedWords);
       const candidates = ELEMENTS.filter(e => e.difficulty === tier && !usedSet.has(e.name));
       const pool = candidates.length > 0 ? candidates : ELEMENTS.filter(e => !usedSet.has(e.name));
@@ -387,7 +390,8 @@
     }
 
     function getFlagChallenge() {
-      const tier = state.difficulty < 4 ? 1 : state.difficulty < 7 ? 2 : 3;
+      const rawTier = getEffectiveTier();
+      const tier = rawTier === 0 ? 1 : rawTier; // flags have no tier 0; fall back to tier 1
       const usedSet = new Set(state.usedWords);
       const candidates = FLAGS.filter(f => f.difficulty === tier && !usedSet.has(f.country));
       const pool = candidates.length > 0 ? candidates : FLAGS.filter(f => !usedSet.has(f.country));
@@ -414,7 +418,7 @@
     // In hard mode (difficulty >= 5): see one, spell the other
     function getCapitalsChallenge() {
       const dataset = getCapitalsDataset();
-      const tier = state.difficulty < 4 ? 1 : state.difficulty < 7 ? 2 : 3;
+      const tier = getEffectiveTier();
       const usedSet = new Set(state.usedWords);
 
       const candidates = dataset.filter(d =>
@@ -467,9 +471,19 @@
     // --- WORD SELECTION: Library first, AI fallback ---
 
     function getDifficultyTier(d) {
+      if (d < 2) return 0;
       if (d < 4) return 1;
       if (d < 7) return 2;
       return 3;
+    }
+
+    // Returns the effective tier for word selection, applying warm-up ramp for returning players
+    function getEffectiveTier() {
+      if (state.warmupRamp) {
+        if (state.sessionWordCount < 2) return 0;
+        if (state.sessionWordCount < 4) return Math.max(0, getDifficultyTier(state.difficulty) - 1);
+      }
+      return getDifficultyTier(state.difficulty);
     }
 
     function addMisspellingIfNeeded(wordObj, needsMisspelling) {
@@ -502,7 +516,7 @@
     }
 
     function getLibraryWord(catId, needsMisspelling) {
-      const tier = getDifficultyTier(state.difficulty);
+      const tier = getEffectiveTier();
       const usedSet = new Set(state.usedWords);
 
       let srQueue = [];
@@ -531,7 +545,10 @@
           (catId === "surprise" || w.catId === catId) && !usedSet.has(w.word)
         );
         if (fallback.length === 0) return null;
-        const pick = fallback[Math.floor(Math.random() * fallback.length)];
+        // During ramp, prefer lower-difficulty words in fallback
+        const sorted = fallback.slice().sort((a, b) => a.difficulty - b.difficulty);
+        const pool = tier <= 1 ? sorted.slice(0, Math.max(5, Math.ceil(sorted.length * 0.4))) : sorted;
+        const pick = pool[Math.floor(Math.random() * pool.length)];
         return addMisspellingIfNeeded(pick, needsMisspelling);
       }
 
@@ -624,6 +641,7 @@
         state.mechanic = next;
         state.currentWord = wordData;
         state.usedWords.push(wordData.word);
+        state.sessionWordCount += 1;
 
         if (next === "scramble") {
           state.scrambled = scrambleWord(wordData.word.toUpperCase());
@@ -869,9 +887,12 @@
       if (!cs.hasPlayed) {
         state.difficulty = 1;
         setCatStats(key, { hasPlayed: true, difficulty: 1 });
+        state.warmupRamp = false;
       } else {
         state.difficulty = cs.difficulty;
+        state.warmupRamp = cs.difficulty > 2;
       }
+      state.sessionWordCount = 0;
       state.screen = "game"; state.lives = 3; state.score = 0;
       state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
       loadNextWord();
