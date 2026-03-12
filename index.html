@@ -189,7 +189,7 @@
       mechanic: "audio", hint: null,
       hintUsed: false, attempts: 0,
       usedWords: [], transitioning: false,
-      scrambled: "", loading: false, feedback: null,
+      scrambled: "", scrambleSelected: [], scrambleRemaining: [], loading: false, feedback: null,
       // letter gap
       gapIndices: [], gapAnswers: [],
       // one letter off
@@ -583,6 +583,8 @@
 
         if (next === "scramble") {
           state.scrambled = scrambleWord(wordData.word.toUpperCase());
+          state.scrambleRemaining = state.scrambled.split("").map((l, id) => ({ l, id }));
+          state.scrambleSelected = [];
         }
         if (next === "lettergap") {
           const hidden = buildGap(wordData.word);
@@ -688,6 +690,40 @@
       }
       if (allCorrect) { handleCorrect(); }
       else { state.lastAttempt = typedLetters.join(""); handleMissedAttempt(); }
+    }
+
+    // Scramble: click a tile from the pool to place it
+    function scrambleSelect(id) {
+      if (state.transitioning) return;
+      const idx = state.scrambleRemaining.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      const [item] = state.scrambleRemaining.splice(idx, 1);
+      state.scrambleSelected.push(item);
+      render();
+    }
+
+    // Scramble: click a placed tile to return it to the pool
+    function scrambleDeselect(idx) {
+      if (state.transitioning) return;
+      const [item] = state.scrambleSelected.splice(idx, 1);
+      state.scrambleRemaining.push(item);
+      render();
+    }
+
+    function handleScrambleSubmit() {
+      if (!state.currentWord || state.transitioning) return;
+      if (state.scrambleSelected.length !== state.currentWord.word.length) return;
+      const typed = state.scrambleSelected.map(x => x.l).join("");
+      const correct = typed === state.currentWord.word.toUpperCase();
+      if (correct) {
+        handleCorrect();
+      } else {
+        state.lastAttempt = typed;
+        // Reset tiles back to the pool so player can rearrange
+        state.scrambleRemaining = [...state.scrambleSelected, ...state.scrambleRemaining];
+        state.scrambleSelected = [];
+        handleMissedAttempt();
+      }
     }
 
     // One letter off: click a letter tile
@@ -901,8 +937,17 @@
           inner = `${defDisplay}<p class="cat-tag">${state.currentWord.category}</p>${sentenceClue}`;
 
         } else if (state.mechanic === "scramble") {
-          const letters = state.scrambled.split("").map(l => `<span class="s-letter">${l}</span>`).join("");
-          inner = `<div class="scramble-row">${letters}</div><p class="cat-tag">${state.currentWord.category}</p><p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
+          const answerTiles = state.scrambleSelected.map((x, i) =>
+            `<span class="s-answer" onclick="scrambleDeselect(${i})">${x.l}</span>`
+          ).join("");
+          const poolTiles = state.scrambleRemaining.map(x =>
+            `<span class="s-letter" onclick="scrambleSelect(${x.id})">${x.l}</span>`
+          ).join("");
+          inner = `
+        <div class="scramble-answer-row">${answerTiles}</div>
+        <div class="scramble-row" style="margin-top:10px">${poolTiles}</div>
+        <p class="cat-tag" style="margin-top:10px">${state.currentWord.category}</p>
+        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
 
         } else if (state.mechanic === "lettergap") {
           const word = state.currentWord.word.toUpperCase();
@@ -956,10 +1001,11 @@
         oneletteroff: "🔍 One Letter Off",
       };
 
-      // Show standard input only for audio/definition/scramble
+      // Show standard input only for audio/definition
       const showStandardInput = state.currentWord && !state.loading &&
-        ["audio", "definition", "scramble"].includes(state.mechanic);
+        ["audio", "definition"].includes(state.mechanic);
       const showGapSubmit = state.currentWord && !state.loading && state.mechanic === "lettergap";
+      const showScrambleSubmit = state.currentWord && !state.loading && state.mechanic === "scramble";
 
       app.innerHTML = `
     <div class="game-header">
@@ -993,6 +1039,10 @@
       `: ""}
       ${showGapSubmit ? `
         <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""} style="margin-top:4px">Check Answers</button>
+        ${!state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+      `: ""}
+      ${showScrambleSubmit ? `
+        <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""} style="margin-top:4px">Check</button>
         ${!state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
       `: ""}
     </div>`;
