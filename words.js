@@ -94,7 +94,6 @@ const WORD_LIBRARY = {
     { word: "Bolshevik", definition: "A member of the radical Russian socialist party that seized power in 1917", sentence: "The ______ Revolution transformed Russia into a communist state.", category: "People & History", difficulty: 3 },
     { word: "Rasputin", definition: "A controversial mystic who influenced the Russian royal family", sentence: "______ gained extraordinary influence over Tsar Nicholas II's court.", category: "People & History", difficulty: 3 },
     { word: "Hammurabi", definition: "The Babylonian king who created one of the earliest written law codes", sentence: "______ established that the punishment should fit the crime.", category: "People & History", difficulty: 3 },
-    { word: "Conquistador", definition: "A Spanish conqueror of the Americas in the 16th century", sentence: "The ______ claimed vast territories for the Spanish crown.", category: "People & History", difficulty: 3 },
     { word: "Suleiman", definition: "The Ottoman sultan known as the Magnificent who ruled 1520-1566", sentence: "______ expanded the Ottoman Empire to its greatest extent.", category: "People & History", difficulty: 3 },
     { word: "Richelieu", definition: "The powerful French cardinal who served Louis XIII", sentence: "Cardinal ______ centralized power in the French monarchy.", category: "People & History", difficulty: 3 },
   ],

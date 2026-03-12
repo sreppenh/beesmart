@@ -196,6 +196,7 @@
       misspelled: "", wrongIndex: -1,
       selectedOloIndex: -1, oloPhase: "select", // select | fix
       theme: "night",
+      lastAttempt: null,
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
@@ -236,6 +237,29 @@
       saveToStorage("dailystreak", { streak: s, lastDate: today });
     }
 
+    function saveSession() {
+      saveToStorage("session", {
+        score: state.score, lives: state.lives, streak: state.streak,
+        difficulty: state.difficulty, usedWords: state.usedWords,
+        selectedCategory: state.selectedCategory
+      });
+    }
+
+    function clearSession() {
+      try { localStorage.removeItem("beesmart_session"); } catch {}
+    }
+
+    function resumeGame() {
+      const saved = loadFromStorage("session");
+      if (!saved) return;
+      state.selectedCategory = saved.selectedCategory;
+      state.score = saved.score; state.lives = saved.lives;
+      state.streak = saved.streak; state.difficulty = saved.difficulty;
+      state.usedWords = saved.usedWords || [];
+      state.screen = "game"; state.currentWord = null; state.feedback = null;
+      loadNextWord();
+    }
+
     function diffLabel(d) {
       if (d < 2) return "Beginner";
       if (d < 4) return "Easy";
@@ -259,9 +283,10 @@
       const hideFraction = 0.3 + (d / 10) * 0.5;
       const numHidden = Math.max(1, Math.round(len * hideFraction));
       const indices = Array.from({ length: len }, (_, i) => i);
-      // Always keep first letter shown
-      const shuffled = indices.slice(1).sort(() => Math.random() - 0.5);
-      const hidden = new Set(shuffled.slice(0, Math.min(numHidden, len - 1)));
+      // At difficulty >= 8, first letter is also eligible to be hidden
+      const pool = state.difficulty >= 8 ? indices : indices.slice(1);
+      const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+      const hidden = new Set(shuffled.slice(0, Math.min(numHidden, pool.length)));
       return Array.from({ length: len }, (_, i) => hidden.has(i));
     }
 
@@ -537,7 +562,7 @@
     async function loadNextWord() {
       state.loading = true; state.hint = null; state.hintUsed = false;
       state.attempts = 0; state.feedback = null; state.transitioning = false;
-      state.selectedOloIndex = -1; state.oloPhase = "select";
+      state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null;
       render();
       try {
         const isCapitals = isCapitalsMode();
@@ -597,6 +622,7 @@
       state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
       state.transitioning = true;
       saveProgress();
+      saveSession();
       if (state.streak > 0 && state.streak % 3 === 0) showCelebration();
       render();
       setTimeout(() => loadNextWord(), 1400);
@@ -609,9 +635,11 @@
       state.transitioning = true;
       if (state.lives <= 0) {
         saveProgress();
+        clearSession();
         state.feedback = { type: "wrong", msg: revealMsg };
         render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
       } else {
+        saveSession();
         state.feedback = { type: "wrong", msg: revealMsg };
         render(); setTimeout(() => loadNextWord(), 1800);
       }
@@ -635,10 +663,11 @@
       if (!state.currentWord || state.transitioning) return;
       const inp = document.getElementById("word-input");
       if (!inp || !inp.value.trim()) return;
-      const correct = inp.value.trim().toLowerCase() === state.currentWord.word.toLowerCase();
+      const typed = inp.value.trim();
+      const correct = typed.toLowerCase() === state.currentWord.word.toLowerCase();
       inp.value = "";
       if (correct) { handleCorrect(); }
-      else { handleMissedAttempt(); }
+      else { state.lastAttempt = typed; handleMissedAttempt(); }
     }
 
     // Letter gap submit
@@ -648,15 +677,17 @@
       const inputs = document.querySelectorAll(".gap-input");
       let allCorrect = true;
       let inputIdx = 0;
+      const typedLetters = word.split("");
       for (let i = 0; i < word.length; i++) {
         if (state.gapIndices[i]) {
           const val = inputs[inputIdx] ? inputs[inputIdx].value.trim().toUpperCase() : "";
-          if (val !== word[i]) { allCorrect = false; break; }
+          if (val !== word[i]) { allCorrect = false; }
+          typedLetters[i] = val || "_";
           inputIdx++;
         }
       }
       if (allCorrect) { handleCorrect(); }
-      else { handleMissedAttempt(); }
+      else { state.lastAttempt = typedLetters.join(""); handleMissedAttempt(); }
     }
 
     // One letter off: click a letter tile
@@ -687,12 +718,13 @@
         fixInput.value = "";
         // Wrong selection or wrong letter
         if (!selectedCorrectPosition) {
-          // Reset to select phase so they can try again
+          // Wrong position — reset UI only, no attempt consumed
           state.oloPhase = "select";
           state.selectedOloIndex = -1;
-          handleMissedAttempt();
+          state.feedback = { type: "try", msg: "Wrong position — try again!" };
+          render();
         } else {
-          // Right position, wrong letter
+          // Right position, wrong letter — consume an attempt
           handleMissedAttempt();
         }
       }
@@ -702,6 +734,7 @@
 
     function startGame() {
       if (!state.selectedCategory) return;
+      clearSession();
       state.screen = "game"; state.lives = 3; state.score = 0;
       state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
       loadNextWord();
@@ -727,6 +760,7 @@
 
     function goHome() {
       window.speechSynthesis.cancel();
+      clearSession();
       state.screen = "home"; state.currentWord = null; state.feedback = null;
       render();
     }
@@ -736,6 +770,8 @@
 
       // HOME
       if (state.screen === "home") {
+        const savedSession = loadFromStorage("session");
+        const showResume = savedSession && savedSession.lives > 0 && savedSession.score > 0;
         app.innerHTML = `
       <div class="home">
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">${state.theme === 'day' ? '🌙' : '☀️'}</button>
@@ -744,6 +780,7 @@
           <h1>BeeSmart</h1>
           <p class="tagline">Sharpen your spelling. One word at a time.</p>
         </div>
+        ${showResume ? `<button class="btn-primary" onclick="resumeGame()" style="margin-bottom:4px">▶ Resume game — ${savedSession.score} pts, ${savedSession.lives} ♥ left</button>` : ""}
         <div class="stats-row">
           <div class="stat-box"><span class="stat-num">${state.highScore}</span><span class="stat-label">Best</span></div>
           <div class="stat-divider"></div>
@@ -945,7 +982,7 @@
     <div class="game-body">
       ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${mechanicLabels[state.mechanic] || ""}</p>` : ""}
       ${cardHTML}
-      ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}</div>` : ""}
+      ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em">You typed: <span style="color:#e74c3c;text-decoration:line-through">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
       ${state.hint ? `<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>` : ""}
       ${showStandardInput ? `
         <div class="input-row">
