@@ -182,9 +182,11 @@
 
     let state = {
       screen: "home",
+      homeTab: "play",
       selectedCategory: null,
+      gameMode: null,
       lives: 3, score: 0, streak: 0,
-      dailyStreak: 0, highScore: 0,
+      dailyStreak: 0,
       difficulty: 1, currentWord: null,
       mechanic: "audio", hint: null,
       hintUsed: false, attempts: 0,
@@ -197,14 +199,15 @@
       selectedOloIndex: -1, oloPhase: "select", // select | fix
       theme: "night",
       lastAttempt: null,
+      categoryStats: {},
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
     function loadFromStorage(k) { try { const v = localStorage.getItem("beesmart_" + k); return v ? JSON.parse(v) : null; } catch { return null; } }
 
     function initStorage() {
-      const hs = loadFromStorage("highscore"); if (hs !== null) state.highScore = hs;
-      const diff = loadFromStorage("difficulty"); if (diff !== null) state.difficulty = diff;
+      const cs = loadFromStorage("category_stats");
+      if (cs) state.categoryStats = cs;
       const ds = loadFromStorage("dailystreak");
       if (ds) {
         const today = new Date().toDateString();
@@ -223,8 +226,6 @@
     }
 
     function saveProgress() {
-      if (state.score > state.highScore) { state.highScore = state.score; saveToStorage("highscore", state.highScore); }
-      saveToStorage("difficulty", state.difficulty);
       const today = new Date().toDateString();
       const ds = loadFromStorage("dailystreak");
       let s = 1;
@@ -237,11 +238,24 @@
       saveToStorage("dailystreak", { streak: s, lastDate: today });
     }
 
+    function getStatsKey() {
+      return state.gameMode === "mixed" ? "mixed" : (state.selectedCategory || "general");
+    }
+
+    function getCatStats(catId) {
+      return state.categoryStats[catId] || { difficulty: 1, hasPlayed: false, bestScore: 0, wordsAttempted: 0, wordsCorrectFirstTry: 0 };
+    }
+
+    function setCatStats(catId, updates) {
+      state.categoryStats[catId] = { ...getCatStats(catId), ...updates };
+      saveToStorage("category_stats", state.categoryStats);
+    }
+
     function saveSession() {
       saveToStorage("session", {
         score: state.score, lives: state.lives, streak: state.streak,
         difficulty: state.difficulty, usedWords: state.usedWords,
-        selectedCategory: state.selectedCategory
+        selectedCategory: state.selectedCategory, gameMode: state.gameMode
       });
     }
 
@@ -253,6 +267,7 @@
       const saved = loadFromStorage("session");
       if (!saved) return;
       state.selectedCategory = saved.selectedCategory;
+      state.gameMode = saved.gameMode || null;
       state.score = saved.score; state.lives = saved.lives;
       state.streak = saved.streak; state.difficulty = saved.difficulty;
       state.usedWords = saved.usedWords || [];
@@ -618,6 +633,13 @@
       state.score += pts; state.streak += 1;
       const prevDiff = state.difficulty;
       state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
+      const key = getStatsKey();
+      const cs = getCatStats(key);
+      setCatStats(key, {
+        difficulty: state.difficulty,
+        wordsAttempted: cs.wordsAttempted + 1,
+        wordsCorrectFirstTry: cs.wordsCorrectFirstTry + (state.attempts === 0 ? 1 : 0),
+      });
       if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
         setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
       }
@@ -634,10 +656,15 @@
       if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, false);
       state.lives -= 1; state.streak = 0;
       state.difficulty = Math.max(1, state.difficulty - 0.3);
+      const key = getStatsKey();
+      const cs = getCatStats(key);
+      setCatStats(key, { difficulty: state.difficulty, wordsAttempted: cs.wordsAttempted + 1 });
       state.transitioning = true;
       if (state.lives <= 0) {
         saveProgress();
         clearSession();
+        const finalCs = getCatStats(key);
+        if (state.score > finalCs.bestScore) setCatStats(key, { bestScore: state.score });
         state.feedback = { type: "wrong", msg: revealMsg };
         render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
       } else {
@@ -771,6 +798,14 @@
     function startGame() {
       if (!state.selectedCategory) return;
       clearSession();
+      const key = getStatsKey();
+      const cs = getCatStats(key);
+      if (!cs.hasPlayed) {
+        state.difficulty = 1;
+        setCatStats(key, { hasPlayed: true, difficulty: 1 });
+      } else {
+        state.difficulty = cs.difficulty;
+      }
       state.screen = "game"; state.lives = 3; state.score = 0;
       state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
       loadNextWord();
@@ -808,9 +843,59 @@
       if (state.screen === "home") {
         const savedSession = loadFromStorage("session");
         const showResume = savedSession && savedSession.lives > 0 && savedSession.score > 0;
+        const allCatStats = Object.values(state.categoryStats);
+        const overallBest = allCatStats.length ? Math.max(0, ...allCatStats.map(s => s.bestScore || 0)) : 0;
+        const catsPlayed = allCatStats.filter(s => s.hasPlayed).length;
+        const themeBtn = `<button class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">${state.theme === 'day' ? '🌙' : '☀️'}</button>`;
+        const tabsHTML = `
+          <div class="home-tabs">
+            <button class="tab-pill ${state.homeTab === 'play' ? 'active' : ''}" onclick="state.homeTab='play';render()">Play</button>
+            <button class="tab-pill ${state.homeTab === 'stats' ? 'active' : ''}" onclick="state.homeTab='stats';render()">Stats</button>
+          </div>`;
+
+        if (state.homeTab === 'stats') {
+          const MIXED_CAT = { id: "mixed", name: "Mixed Mode", emoji: "🎲" };
+          const statsCats = [MIXED_CAT, ...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES];
+          const cards = statsCats.map(c => {
+            const s = getCatStats(c.id);
+            if (!s.hasPlayed) {
+              return `<div class="stat-card muted">
+                <div class="stat-card-header"><span class="stat-card-emoji">${c.emoji}</span><span class="stat-card-name">${c.name}</span></div>
+                <p class="stat-card-unplayed">Not yet played</p>
+              </div>`;
+            }
+            const winRate = s.wordsAttempted > 0 ? Math.round((s.wordsCorrectFirstTry / s.wordsAttempted) * 100) : 0;
+            const diffPct = ((s.difficulty - 1) / 9) * 100;
+            return `<div class="stat-card">
+              <div class="stat-card-header"><span class="stat-card-emoji">${c.emoji}</span><span class="stat-card-name">${c.name}</span></div>
+              <div class="stat-card-best">${s.bestScore}</div>
+              <div class="stat-card-diff">
+                <span class="stat-card-diff-label">${diffLabel(s.difficulty)}</span>
+                <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width:${diffPct}%"></div></div>
+              </div>
+              <div class="stat-card-meta">
+                <span>${s.wordsAttempted} words</span>
+                <span>${winRate}% first try</span>
+              </div>
+            </div>`;
+          }).join("");
+          app.innerHTML = `
+          <div class="home">
+            ${themeBtn}
+            ${tabsHTML}
+            <div class="stats-streak-banner">
+              <span class="stats-streak-num">${state.dailyStreak}</span>
+              <span class="stats-streak-label">day streak 🔥</span>
+            </div>
+            <div class="stats-list">${cards}</div>
+          </div>`;
+          return;
+        }
+
         app.innerHTML = `
       <div class="home">
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">${state.theme === 'day' ? '🌙' : '☀️'}</button>
+        ${themeBtn}
+        ${tabsHTML}
         <div class="logo-area">
           <div class="bee-icon">🐝</div>
           <h1>BeeSmart</h1>
@@ -818,11 +903,11 @@
         </div>
         ${showResume ? `<button class="btn-primary" onclick="resumeGame()" style="margin-bottom:4px">▶ Resume game — ${savedSession.score} pts, ${savedSession.lives} ♥ left</button>` : ""}
         <div class="stats-row">
-          <div class="stat-box"><span class="stat-num">${state.highScore}</span><span class="stat-label">Best</span></div>
+          <div class="stat-box"><span class="stat-num">${overallBest}</span><span class="stat-label">Best</span></div>
           <div class="stat-divider"></div>
           <div class="stat-box"><span class="stat-num">${state.dailyStreak}</span><span class="stat-label">Day Streak</span></div>
           <div class="stat-divider"></div>
-          <div class="stat-box"><span class="stat-num">${diffLabel(state.difficulty)}</span><span class="stat-label">Level</span></div>
+          <div class="stat-box"><span class="stat-num">${catsPlayed}</span><span class="stat-label">Categories</span></div>
         </div>
         <div class="mode-select">
           <button class="mode-btn spelling" onclick="goToMode('spelling')">
@@ -896,8 +981,11 @@
 
       // GAME OVER
       if (state.screen === "gameover") {
-        const newBest = state.score > 0 && state.score >= state.highScore;
-        const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        const gameOverKey = getStatsKey();
+        const gameOverCatStats = getCatStats(gameOverKey);
+        const newBest = state.score > 0 && state.score >= gameOverCatStats.bestScore;
+        const catId = state.gameMode === "mixed" ? "mixed" : state.selectedCategory;
+        const cat = catId === "mixed" ? { emoji: "🎲", name: "Mixed Mode" } : CATEGORIES.find(c => c.id === catId);
         app.innerHTML = `
       <div class="gameover">
         <div class="gameover-bee">🐝</div>
