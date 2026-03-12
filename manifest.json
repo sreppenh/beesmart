@@ -1,0 +1,17 @@
+{
+  "name": "BeeSmart",
+  "short_name": "BeeSmart",
+  "description": "Vocabulary learning app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#FFD100",
+  "icons": [
+    {
+      "src": "bee-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
