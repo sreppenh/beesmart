@@ -1,519 +1,1374 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>BeeSmart</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet"/>
-<style>
-  :root {
-    --yellow: #FFD100;
-    --black: #0d0d0d;
-    --card: #181818;
-    --border: #252525;
-    --muted: #555;
-    --text: #e0e0e0;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--black);
-    color: var(--yellow);
-    font-family: 'Source Serif 4', Georgia, serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 20px;
-  }
-  #app { width: 100%; max-width: 400px; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BeeSmart</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --yellow: #FFD100;
+      --black: #0d0d0d;
+      --card: #181818;
+      --border: #252525;
+      --muted: #555;
+      --text: #e0e0e0;
+    }
 
-  /* HOME */
-  .home { display: flex; flex-direction: column; align-items: center; gap: 22px; }
-  .logo-area { text-align: center; }
-  .bee-icon { font-size: 48px; line-height: 1; margin-bottom: 4px; }
-  h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 48px; font-weight: 900; letter-spacing: -1px; color: var(--yellow); }
-  .tagline { font-size: 13px; color: var(--muted); letter-spacing: 0.8px; margin-top: 4px; }
-  .stats-row { display: flex; width: 100%; background: var(--card); border-radius: 18px; border: 1px solid var(--border); padding: 18px 0; }
-  .stat-box { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .stat-num { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--yellow); line-height: 1; }
-  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-  .stat-divider { width: 1px; background: var(--border); }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  /* CATEGORY PICKER */
-  .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 12px; text-align: center; }
-  .category-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
-  .cat-btn {
-    padding: 14px 8px; background: var(--card); border: 2px solid var(--border);
-    border-radius: 14px; cursor: pointer; font-family: 'Source Serif 4', serif;
-    color: var(--muted); text-align: center; transition: all 0.15s;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-  }
-  .cat-btn:hover { border-color: var(--yellow); color: var(--yellow); }
-  .cat-btn.selected { border-color: var(--yellow); color: var(--yellow); background: #1f1a00; }
-  .cat-emoji { font-size: 20px; }
-  .cat-name { font-size: 11px; font-weight: 600; letter-spacing: 0.2px; }
-  .cat-btn.surprise { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 10px; padding: 12px; }
+    body {
+      background: var(--black);
+      color: var(--yellow);
+      font-family: 'Source Serif 4', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+    }
 
-  .btn-primary { width: 100%; padding: 18px; background: var(--yellow); color: var(--black); border: none; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; letter-spacing: 2px; font-family: 'Playfair Display', serif; transition: opacity 0.15s; }
-  .btn-primary:hover { opacity: 0.9; }
-  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-secondary { width: 100%; padding: 14px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 14px; font-size: 15px; cursor: pointer; font-family: 'Source Serif 4', serif; transition: color 0.15s; }
-  .btn-secondary:hover { color: var(--yellow); }
-  .how-to { background: var(--card); border-radius: 14px; padding: 18px 20px; width: 100%; border: 1px solid var(--border); }
-  .how-to-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; }
-  .how-to-text { font-size: 13px; color: #888; line-height: 1.7; }
+    #app {
+      width: 100%;
+      max-width: 400px;
+    }
 
-  /* DIFFICULTY BAR */
-  .diff-bar-wrap { width: 100%; margin-bottom: 4px; }
-  .diff-bar-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .diff-bar-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-  .diff-bar-value { font-size: 11px; color: var(--yellow); font-weight: 600; letter-spacing: 0.5px; }
-  .diff-bar-track { width: 100%; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
-  .diff-bar-fill { height: 100%; background: var(--yellow); border-radius: 2px; transition: width 0.8s ease; }
+    /* HOME */
+    .home {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
 
-  /* GAME HEADER */
-  .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .lives { display: flex; gap: 4px; }
-  .heart { font-size: 22px; }
-  .heart.lost { filter: grayscale(1); opacity: 0.2; }
-  .score-area { display: flex; align-items: center; gap: 8px; }
-  .score-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; }
-  .streak-pill { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 13px; }
-  .home-btn { background: transparent; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; transition: color 0.15s; }
-  .home-btn:hover { color: var(--yellow); }
+    .logo-area {
+      text-align: center;
+    }
 
-  /* GAME BODY */
-  .game-body { display: flex; flex-direction: column; gap: 14px; }
-  .mechanic-badge { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; text-align: center; }
-  .word-card { background: var(--card); border-radius: 20px; padding: 28px 24px; text-align: center; border: 1px solid var(--border); }
-  .speak-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--yellow); color: var(--black); border: none; border-radius: 12px; padding: 13px 20px; font-size: 15px; cursor: pointer; font-weight: 700; font-family: 'Source Serif 4', serif; transition: opacity 0.15s; }
-  .speak-btn:hover { opacity: 0.9; }
-  .speak-btn-small { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 12px; cursor: pointer; font-family: 'Source Serif 4', serif; transition: all 0.15s; margin-top: 14px; }
-  .speak-btn-small:hover { color: var(--yellow); border-color: var(--yellow); }
-  .cat-tag { margin-top: 12px; font-size: 11px; color: #3a3a3a; text-transform: uppercase; letter-spacing: 1px; }
-  .def-text { font-size: 17px; line-height: 1.65; color: var(--text); font-style: italic; }
-  .scramble-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
-  .s-letter { width: 38px; height: 46px; background: var(--yellow); color: var(--black); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; font-family: 'Playfair Display', serif; }
+    .bee-icon {
+      font-size: 48px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
 
-  /* LETTER GAP */
-  .gap-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin-bottom: 4px; }
-  .gap-letter { width: 34px; height: 42px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; font-family: 'Playfair Display', serif; }
-  .gap-letter.shown { background: var(--card); border: 1px solid var(--border); color: var(--yellow); }
-  .gap-letter.hidden { background: #1f1a00; border: 2px dashed #444; color: transparent; }
-  .gap-instruction { font-size: 12px; color: var(--muted); margin-top: 10px; }
-  .gap-input-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
-  .gap-input { width: 38px; height: 46px; background: var(--card); border: 2px solid var(--border); border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: var(--yellow); font-family: 'Playfair Display', serif; outline: none; transition: border-color 0.2s; text-transform: uppercase; }
-  .gap-input:focus { border-color: var(--yellow); }
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--yellow);
+    }
 
-  /* ONE LETTER OFF */
-  .olo-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
-  .olo-letter {
-    width: 36px; height: 44px; background: var(--card); border: 2px solid var(--border);
-    border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
-    font-size: 19px; font-weight: 700; font-family: 'Playfair Display', serif;
-    color: var(--yellow); cursor: pointer; transition: all 0.15s;
-  }
-  .olo-letter:hover { border-color: var(--yellow); background: #1f1a00; }
-  .olo-letter.selected-wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; }
-  .olo-letter.confirmed-wrong { background: #7f1d1d; border-color: #ef4444; color: #fff; cursor: default; }
-  .olo-letter.confirmed-right { background: #14532d; border-color: #22c55e; color: #fff; cursor: default; }
-  .olo-fix-row { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 12px; }
-  .olo-fix-label { font-size: 13px; color: var(--muted); }
-  .olo-fix-input { width: 52px; height: 52px; background: var(--card); border: 2px solid var(--yellow); border-radius: 10px; text-align: center; font-size: 24px; font-weight: 700; color: var(--yellow); font-family: 'Playfair Display', serif; outline: none; text-transform: uppercase; }
-  .olo-submit { background: var(--yellow); color: var(--black); border: none; border-radius: 10px; padding: 0 16px; height: 52px; font-size: 20px; cursor: pointer; font-weight: 700; }
-  .olo-instruction { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+    .tagline {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      margin-top: 4px;
+    }
 
-  .feedback { border-radius: 12px; padding: 13px 16px; text-align: center; font-size: 14px; color: #fff; }
-  .feedback.correct { background: #14532d; }
-  .feedback.try { background: #78350f; }
-  .feedback.wrong { background: #7f1d1d; }
-  .hint-box { background: var(--card); border-radius: 14px; padding: 16px 18px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-  .hint-label { color: var(--yellow); font-weight: 600; }
-  .hint-text { font-size: 13px; color: #bbb; line-height: 1.6; }
-  .input-row { display: flex; gap: 10px; }
-  input[type="text"] { flex: 1; background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 16px; font-size: 17px; color: #fff; font-family: 'Source Serif 4', serif; outline: none; transition: border-color 0.2s; }
-  input[type="text"]:focus { border-color: var(--yellow); }
-  .submit-btn { background: var(--yellow); color: var(--black); border: none; border-radius: 12px; padding: 0 20px; font-size: 22px; cursor: pointer; font-weight: 700; min-width: 54px; transition: opacity 0.15s; }
-  .submit-btn:hover { opacity: 0.9; }
-  .hint-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; padding: 12px; font-size: 13px; cursor: pointer; font-family: 'Source Serif 4', serif; width: 100%; transition: color 0.15s; }
-  .hint-btn:hover { color: var(--yellow); }
+    .stats-row {
+      display: flex;
+      width: 100%;
+      background: var(--card);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 18px 0;
+    }
 
-  /* LOADING */
-  .loading-wrap { text-align: center; padding: 60px 0; }
-  .loading-bee { font-size: 48px; animation: float 1.5s ease-in-out infinite; }
-  .loading-text { color: var(--muted); font-size: 13px; margin-top: 12px; letter-spacing: 0.5px; }
+    .stat-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
 
-  /* GAME OVER */
-  .gameover { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
-  .gameover-bee { font-size: 72px; line-height: 1; }
-  .gameover-title { font-family: 'Playfair Display', serif; font-size: 32px; }
-  .gameover-score { font-family: 'Playfair Display', serif; font-size: 72px; font-weight: 900; color: #fff; line-height: 1; }
-  .gameover-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
-  .gameover-cat { font-size: 14px; color: var(--muted); }
-  .new-best { font-size: 15px; color: var(--yellow); }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--yellow);
+      line-height: 1;
+    }
 
-  /* LEVEL UP TOAST */
-  #toast {
-    position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px);
-    background: var(--yellow); color: var(--black); padding: 12px 24px;
-    border-radius: 40px; font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700;
-    letter-spacing: 0.5px; z-index: 1000; pointer-events: none;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-    opacity: 0; white-space: nowrap;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .stat-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-  /* CELEBRATION */
-  #celebration { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; gap: 16px; pointer-events: none; z-index: 999; }
-  #celebration.show { display: flex; animation: fadeInOut 1.5s ease forwards; }
-  .celeb-emoji { font-size: 56px; animation: bounce 0.5s ease infinite alternate; }
+    .stat-divider {
+      width: 1px;
+      background: var(--border);
+    }
 
-  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
-  @keyframes fadeInOut { 0% { opacity:0; } 20% { opacity:1; } 80% { opacity:1; } 100% { opacity:0; } }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-  .shake { animation: shake 0.3s ease; }
-</style>
+    /* CATEGORY PICKER */
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .cat-btn {
+      padding: 14px 8px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      font-family: 'Source Serif 4', serif;
+      color: var(--muted);
+      text-align: center;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cat-btn:hover {
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+
+    .cat-btn.selected {
+      border-color: var(--yellow);
+      color: var(--yellow);
+      background: #1f1a00;
+    }
+
+    .cat-emoji {
+      font-size: 20px;
+    }
+
+    .cat-name {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    .cat-btn.capitals-mode {
+      border-color: #2a4a7f;
+      background: #0d1f3c;
+      color: #7aadff;
+    }
+    .cat-btn.capitals-mode:hover {
+      border-color: #4a7abf;
+      background: #162d52;
+      color: #a8cbff;
+    }
+    .cat-btn.surprise {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 18px;
+      background: var(--yellow);
+      color: var(--black);
+      border: none;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 2px;
+      font-family: 'Playfair Display', serif;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 15px;
+      cursor: pointer;
+      font-family: 'Source Serif 4', serif;
+      transition: color 0.15s;
+    }
+
+    .btn-secondary:hover {
+      color: var(--yellow);
+    }
+
+    .how-to {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 18px 20px;
+      width: 100%;
+      border: 1px solid var(--border);
+    }
+
+    .how-to-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .how-to-text {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.7;
+    }
+
+    /* DIFFICULTY BAR */
+    .diff-bar-wrap {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    .diff-bar-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .diff-bar-title {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .diff-bar-value {
+      font-size: 11px;
+      color: var(--yellow);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .diff-bar-track {
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .diff-bar-fill {
+      height: 100%;
+      background: var(--yellow);
+      border-radius: 2px;
+      transition: width 0.8s ease;
+    }
+
+    /* GAME HEADER */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .lives {
+      display: flex;
+      gap: 4px;
+    }
+
+    .heart {
+      font-size: 22px;
+    }
+
+    .heart.lost {
+      filter: grayscale(1);
+      opacity: 0.2;
+    }
+
+    .score-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .streak-pill {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 13px;
+    }
+
+    .home-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+
+    .home-btn:hover {
+      color: var(--yellow);
+    }
+
+    /* GAME BODY */
+    .game-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mechanic-badge {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-align: center;
+    }
+
+    .word-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .speak-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--yellow);
+      color: var(--black);
+      border: none;
+      border-radius: 12px;
+      padding: 13px 20px;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: 'Source Serif 4', serif;
+      transition: opacity 0.15s;
+    }
+
+    .speak-btn:hover {
+      opacity: 0.9;
+    }
+
+    .speak-btn-small {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Source Serif 4', serif;
+      transition: all 0.15s;
+      margin-top: 14px;
+    }
+
+    .speak-btn-small:hover {
+      color: var(--yellow);
+      border-color: var(--yellow);
+    }
+
+    .cat-tag {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #3a3a3a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .def-text {
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--text);
+      font-style: italic;
+    }
+
+    .scramble-row {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .s-letter {
+      width: 38px;
+      height: 46px;
+      background: var(--yellow);
+      color: var(--black);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* LETTER GAP */
+    .gap-row {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+
+    .gap-letter {
+      width: 34px;
+      height: 42px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .gap-letter.shown {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--yellow);
+    }
+
+    .gap-letter.hidden {
+      background: #1f1a00;
+      border: 2px dashed #444;
+      color: transparent;
+    }
+
+    .gap-instruction {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .gap-input-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .gap-input {
+      width: 38px;
+      height: 46px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--yellow);
+      font-family: 'Playfair Display', serif;
+      outline: none;
+      transition: border-color 0.2s;
+      text-transform: uppercase;
+    }
+
+    .gap-input:focus {
+      border-color: var(--yellow);
+    }
+
+    /* ONE LETTER OFF */
+    .olo-row {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .olo-letter {
+      width: 36px;
+      height: 44px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+      color: var(--yellow);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .olo-letter:hover {
+      border-color: var(--yellow);
+      background: #1f1a00;
+    }
+
+    .olo-letter.selected-wrong {
+      background: #7f1d1d;
+      border-color: #ef4444;
+      color: #fff;
+    }
+
+    .olo-letter.confirmed-wrong {
+      background: #7f1d1d;
+      border-color: #ef4444;
+      color: #fff;
+      cursor: default;
+    }
+
+    .olo-letter.confirmed-right {
+      background: #14532d;
+      border-color: #22c55e;
+      color: #fff;
+      cursor: default;
+    }
+
+    .olo-fix-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .olo-fix-label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .olo-fix-input {
+      width: 52px;
+      height: 52px;
+      background: var(--card);
+      border: 2px solid var(--yellow);
+      border-radius: 10px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--yellow);
+      font-family: 'Playfair Display', serif;
+      outline: none;
+      text-transform: uppercase;
+    }
+
+    .olo-submit {
+      background: var(--yellow);
+      color: var(--black);
+      border: none;
+      border-radius: 10px;
+      padding: 0 16px;
+      height: 52px;
+      font-size: 20px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .olo-instruction {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    .feedback {
+      border-radius: 12px;
+      padding: 13px 16px;
+      text-align: center;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .feedback.correct {
+      background: #14532d;
+    }
+
+    .feedback.try {
+      background: #78350f;
+    }
+
+    .feedback.wrong {
+      background: #7f1d1d;
+    }
+
+    .hint-box {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hint-label {
+      color: var(--yellow);
+      font-weight: 600;
+    }
+
+    .hint-text {
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.6;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 17px;
+      color: #fff;
+      font-family: 'Source Serif 4', serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--yellow);
+    }
+
+    .submit-btn {
+      background: var(--yellow);
+      color: var(--black);
+      border: none;
+      border-radius: 12px;
+      padding: 0 20px;
+      font-size: 22px;
+      cursor: pointer;
+      font-weight: 700;
+      min-width: 54px;
+      transition: opacity 0.15s;
+    }
+
+    .submit-btn:hover {
+      opacity: 0.9;
+    }
+
+    .hint-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'Source Serif 4', serif;
+      width: 100%;
+      transition: color 0.15s;
+    }
+
+    .hint-btn:hover {
+      color: var(--yellow);
+    }
+
+    /* LOADING */
+    .loading-wrap {
+      text-align: center;
+      padding: 60px 0;
+    }
+
+    .loading-bee {
+      font-size: 48px;
+      animation: float 1.5s ease-in-out infinite;
+    }
+
+    .loading-text {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    /* GAME OVER */
+    .gameover {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .gameover-bee {
+      font-size: 72px;
+      line-height: 1;
+    }
+
+    .gameover-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+    }
+
+    .gameover-score {
+      font-family: 'Playfair Display', serif;
+      font-size: 72px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .gameover-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .gameover-cat {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .new-best {
+      font-size: 15px;
+      color: var(--yellow);
+    }
+
+    /* LEVEL UP TOAST */
+    #toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--yellow);
+      color: var(--black);
+      padding: 12px 24px;
+      border-radius: 40px;
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      z-index: 1000;
+      pointer-events: none;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* CELEBRATION */
+    #celebration {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #celebration.show {
+      display: flex;
+      animation: fadeInOut 1.5s ease forwards;
+    }
+
+    .celeb-emoji {
+      font-size: 56px;
+      animation: bounce 0.5s ease infinite alternate;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0);
+      }
+
+      to {
+        transform: translateY(-20px);
+      }
+    }
+
+    @keyframes fadeInOut {
+      0% {
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 1;
+      }
+
+      80% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-6px)
+      }
+
+      75% {
+        transform: translateX(6px)
+      }
+    }
+
+    .shake {
+      animation: shake 0.3s ease;
+    }
+  </style>
 </head>
+
 <body>
-<div id="app"></div>
-<div id="toast"></div>
-<div id="celebration">
-  <span class="celeb-emoji">🐝</span>
-  <span class="celeb-emoji" style="animation-delay:0.1s">⭐</span>
-  <span class="celeb-emoji" style="animation-delay:0.2s">🐝</span>
-  <span class="celeb-emoji" style="animation-delay:0.3s">✨</span>
-  <span class="celeb-emoji" style="animation-delay:0.4s">🐝</span>
-</div>
+  <div id="app"></div>
+  <div id="toast"></div>
+  <div id="celebration">
+    <span class="celeb-emoji">🐝</span>
+    <span class="celeb-emoji" style="animation-delay:0.1s">⭐</span>
+    <span class="celeb-emoji" style="animation-delay:0.2s">🐝</span>
+    <span class="celeb-emoji" style="animation-delay:0.3s">✨</span>
+    <span class="celeb-emoji" style="animation-delay:0.4s">🐝</span>
+  </div>
 
-<script>
-const API = "/api/word";
-const MECHANICS = ["audio","definition","scramble","lettergap","oneletteroff"];
+  <script src="words.js"></script>
+  <script>
+    const API = "/api/word";
+    const MECHANICS = ["audio", "definition", "scramble", "lettergap", "oneletteroff"];
 
-const CATEGORIES = [
-  { id: "geography", name: "Geography",        emoji: "🌍", prompt: "cities, countries, capitals, rivers, mountains, landmarks, regions" },
-  { id: "history",   name: "People & History", emoji: "👑", prompt: "historical figures, events, dynasties, explorers, leaders, eras" },
-  { id: "science",   name: "Science & Nature", emoji: "🔬", prompt: "scientific terms, animals, plants, elements, phenomena, anatomy" },
-  { id: "arts",      name: "Arts & Culture",   emoji: "🎭", prompt: "art movements, musicians, authors, films, cultural terms, architecture" },
-  { id: "food",      name: "Food & Cooking",   emoji: "🍽️", prompt: "ingredients, dishes, cooking techniques, cuisines, chefs, food terms" },
-  { id: "general",   name: "General",          emoji: "📚", prompt: "mixed nouns, concepts, commonly misspelled words, vocabulary, idioms" },
-  { id: "surprise",  name: "Surprise Me",      emoji: "🎲", prompt: "anything goes — a wild unpredictable mix of all categories" },
-];
+    const CATEGORIES = [
+      { id: "geography", name: "Geography", emoji: "🌍", prompt: "cities, countries, capitals, rivers, mountains, landmarks, regions" },
+      { id: "history", name: "People & History", emoji: "👑", prompt: "historical figures, events, dynasties, explorers, leaders, eras" },
+      { id: "science", name: "Science & Nature", emoji: "🔬", prompt: "scientific terms, animals, plants, elements, phenomena, anatomy" },
+      { id: "arts", name: "Arts & Culture", emoji: "🎭", prompt: "art movements, musicians, authors, films, cultural terms, architecture" },
+      { id: "food", name: "Food & Cooking", emoji: "🍽️", prompt: "ingredients, dishes, cooking techniques, cuisines, chefs, food terms" },
+      { id: "general", name: "General", emoji: "📚", prompt: "mixed nouns, concepts, commonly misspelled words, vocabulary, idioms" },
+      { id: "surprise", name: "Surprise Me", emoji: "🎲", prompt: "anything goes — a wild unpredictable mix of all categories" },
+      { id: "countries", name: "Countries & Capitals", emoji: "🌐", prompt: "" },
+      { id: "states",    name: "States & Capitals",   emoji: "🇺🇸", prompt: "" },
+    ];
 
-let state = {
-  screen: "home",
-  selectedCategory: null,
-  lives: 3, score: 0, streak: 0,
-  dailyStreak: 0, highScore: 0,
-  difficulty: 1, currentWord: null,
-  mechanic: "audio", hint: null,
-  hintUsed: false, attempts: 0,
-  usedWords: [], transitioning: false,
-  scrambled: "", loading: false, feedback: null,
-  // letter gap
-  gapIndices: [], gapAnswers: [],
-  // one letter off
-  misspelled: "", wrongIndex: -1,
-  selectedOloIndex: -1, oloPhase: "select", // select | fix
-};
+    let state = {
+      screen: "home",
+      selectedCategory: null,
+      lives: 3, score: 0, streak: 0,
+      dailyStreak: 0, highScore: 0,
+      difficulty: 1, currentWord: null,
+      mechanic: "audio", hint: null,
+      hintUsed: false, attempts: 0,
+      usedWords: [], transitioning: false,
+      scrambled: "", loading: false, feedback: null,
+      // letter gap
+      gapIndices: [], gapAnswers: [],
+      // one letter off
+      misspelled: "", wrongIndex: -1,
+      selectedOloIndex: -1, oloPhase: "select", // select | fix
+    };
 
-function saveToStorage(k, v) { try { localStorage.setItem("beesmart_"+k, JSON.stringify(v)); } catch {} }
-function loadFromStorage(k) { try { const v = localStorage.getItem("beesmart_"+k); return v ? JSON.parse(v) : null; } catch { return null; } }
+    function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
+    function loadFromStorage(k) { try { const v = localStorage.getItem("beesmart_" + k); return v ? JSON.parse(v) : null; } catch { return null; } }
 
-function initStorage() {
-  const hs = loadFromStorage("highscore"); if (hs !== null) state.highScore = hs;
-  const diff = loadFromStorage("difficulty"); if (diff !== null) state.difficulty = diff;
-  const ds = loadFromStorage("dailystreak");
-  if (ds) {
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now()-86400000).toDateString();
-    if (ds.lastDate === today || ds.lastDate === yesterday) state.dailyStreak = ds.streak;
-  }
-}
-
-function saveProgress() {
-  if (state.score > state.highScore) { state.highScore = state.score; saveToStorage("highscore", state.highScore); }
-  saveToStorage("difficulty", state.difficulty);
-  const today = new Date().toDateString();
-  const ds = loadFromStorage("dailystreak");
-  let s = 1;
-  if (ds) {
-    const yesterday = new Date(Date.now()-86400000).toDateString();
-    if (ds.lastDate === today) s = ds.streak;
-    else if (ds.lastDate === yesterday) s = ds.streak + 1;
-  }
-  state.dailyStreak = s;
-  saveToStorage("dailystreak", { streak: s, lastDate: today });
-}
-
-function diffLabel(d) {
-  if (d < 2) return "Beginner";
-  if (d < 4) return "Easy";
-  if (d < 6) return "Medium";
-  if (d < 8) return "Hard";
-  if (d < 9.5) return "Expert";
-  return "Master";
-}
-
-function scrambleWord(word) {
-  const arr = word.split("");
-  for (let i = arr.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
-  const r = arr.join(""); return r === word && word.length > 1 ? scrambleWord(word) : r;
-}
-
-// Build letter gap: hide more letters at higher difficulty
-function buildGap(word) {
-  const len = word.length;
-  const d = state.difficulty;
-  // At difficulty 1: ~30% hidden, at 10: ~80% hidden
-  const hideFraction = 0.3 + (d / 10) * 0.5;
-  const numHidden = Math.max(1, Math.round(len * hideFraction));
-  const indices = Array.from({length: len}, (_, i) => i);
-  // Always keep first letter shown
-  const shuffled = indices.slice(1).sort(() => Math.random() - 0.5);
-  const hidden = new Set(shuffled.slice(0, Math.min(numHidden, len - 1)));
-  return Array.from({length: len}, (_, i) => hidden.has(i));
-}
-
-function speak(text) {
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.85; u.pitch = 1;
-  window.speechSynthesis.speak(u);
-}
-
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2500);
-}
-
-function showCelebration() {
-  const el = document.getElementById("celebration");
-  el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 1500);
-}
-
-async function fetchWord(needsMisspelling) {
-  const cat = CATEGORIES.find(c => c.id === state.selectedCategory) || CATEGORIES[5];
-  const dl = state.difficulty < 3 ? "easy" : state.difficulty < 6 ? "medium" : "hard";
-
-  const misspellingInstruction = needsMisspelling
-    ? `Also provide a "misspelled" version of the word with exactly ONE letter changed to a plausible mistake (e.g. wrong vowel, doubled consonant, transposed letters). The misspelled version must have the SAME number of letters as the correct word. Include "misspelled":"the wrong version" and "wrongIndex": the 0-based index of the changed letter in the JSON.`
-    : `"misspelled":"","wrongIndex":-1`;
-
-  const res = await fetch(API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      messages: [{ role: "user", content:
-        `Generate a spelling challenge word for an adult spelling bee game.
-
-Category: ${cat.name} — focus on: ${cat.prompt}
-Also mix in proper nouns (names, cities, countries) relevant to the category.
-Difficulty: ${dl} (${state.difficulty.toFixed(1)}/10)
-Do NOT use: ${state.usedWords.slice(-20).join(", ")||"none"}
-
-Easy=well-known words, Medium=tricky spellings, Hard=obscure/complex
-
-IMPORTANT: In the "sentence" field, replace the target word with "______" so the player cannot see the spelling.
-
-${misspellingInstruction}
-
-Respond ONLY raw JSON no markdown:
-{"word":"the word","definition":"clear definition max 15 words","sentence":"sentence with word replaced by ______","category":"specific subcategory","misspelled":"","wrongIndex":-1}`
-      }]
-    })
-  });
-  const data = await res.json();
-  return JSON.parse(data.content[0].text.trim().replace(/```json|```/g,""));
-}
-
-async function loadNextWord() {
-  state.loading = true; state.hint = null; state.hintUsed = false;
-  state.attempts = 0; state.feedback = null; state.transitioning = false;
-  state.selectedOloIndex = -1; state.oloPhase = "select";
-  render();
-  try {
-    const next = MECHANICS[Math.floor(Math.random()*MECHANICS.length)];
-    const wordData = await fetchWord(next === "oneletteroff");
-    state.mechanic = next;
-    state.currentWord = wordData;
-    state.usedWords.push(wordData.word);
-
-    if (next === "scramble") {
-      state.scrambled = scrambleWord(wordData.word.toUpperCase());
-    }
-    if (next === "lettergap") {
-      const hidden = buildGap(wordData.word);
-      state.gapIndices = hidden;
-      state.gapAnswers = wordData.word.split("").map((l, i) => hidden[i] ? "" : l);
-    }
-    if (next === "oneletteroff") {
-      state.misspelled = wordData.misspelled || wordData.word;
-      state.wrongIndex = wordData.wrongIndex !== undefined ? wordData.wrongIndex : -1;
+    function initStorage() {
+      const hs = loadFromStorage("highscore"); if (hs !== null) state.highScore = hs;
+      const diff = loadFromStorage("difficulty"); if (diff !== null) state.difficulty = diff;
+      const ds = loadFromStorage("dailystreak");
+      if (ds) {
+        const today = new Date().toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if (ds.lastDate === today || ds.lastDate === yesterday) state.dailyStreak = ds.streak;
+      }
     }
 
-    state.loading = false; render();
-    if (next === "audio") setTimeout(() => speak(wordData.word), 400);
-    setTimeout(() => {
-      const i = document.getElementById("word-input");
-      if (i) i.focus();
-      const g = document.querySelector(".gap-input");
-      if (g) g.focus();
-    }, 150);
-  } catch(e) {
-    state.loading = false;
-    state.feedback = { type: "wrong", msg: "Connection issue — please retry" };
-    render();
-  }
-}
-
-// Handle correct answer scoring and progression
-function handleCorrect() {
-  const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
-  state.score += pts; state.streak += 1;
-  const prevDiff = state.difficulty;
-  state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
-  if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
-    setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
-  }
-  state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
-  state.transitioning = true;
-  saveProgress();
-  if (state.streak > 0 && state.streak % 3 === 0) showCelebration();
-  render();
-  setTimeout(() => loadNextWord(), 1400);
-}
-
-function handleWrong(revealMsg) {
-  state.lives -= 1; state.streak = 0;
-  state.difficulty = Math.max(1, state.difficulty - 0.3);
-  state.transitioning = true;
-  if (state.lives <= 0) {
-    saveProgress();
-    state.feedback = { type: "wrong", msg: revealMsg };
-    render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
-  } else {
-    state.feedback = { type: "wrong", msg: revealMsg };
-    render(); setTimeout(() => loadNextWord(), 1800);
-  }
-}
-
-function handleMissedAttempt() {
-  state.attempts += 1;
-  if (!state.hint) state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
-  if (state.attempts >= 2) {
-    handleWrong(`It was "${state.currentWord.word}"`);
-  } else {
-    state.feedback = { type: "try", msg: "Not quite — try again!" };
-    const row = document.querySelector(".input-row, .gap-input-row");
-    if (row) { row.classList.add("shake"); setTimeout(() => row.classList.remove("shake"), 300); }
-    render();
-  }
-}
-
-// Standard submit (audio, definition, scramble)
-function handleSubmit() {
-  if (!state.currentWord || state.transitioning) return;
-  const inp = document.getElementById("word-input");
-  if (!inp || !inp.value.trim()) return;
-  const correct = inp.value.trim().toLowerCase() === state.currentWord.word.toLowerCase();
-  inp.value = "";
-  if (correct) { handleCorrect(); }
-  else { handleMissedAttempt(); }
-}
-
-// Letter gap submit
-function handleGapSubmit() {
-  if (!state.currentWord || state.transitioning) return;
-  const word = state.currentWord.word.toUpperCase();
-  const inputs = document.querySelectorAll(".gap-input");
-  let allCorrect = true;
-  let inputIdx = 0;
-  for (let i = 0; i < word.length; i++) {
-    if (state.gapIndices[i]) {
-      const val = inputs[inputIdx] ? inputs[inputIdx].value.trim().toUpperCase() : "";
-      if (val !== word[i]) { allCorrect = false; break; }
-      inputIdx++;
+    function saveProgress() {
+      if (state.score > state.highScore) { state.highScore = state.score; saveToStorage("highscore", state.highScore); }
+      saveToStorage("difficulty", state.difficulty);
+      const today = new Date().toDateString();
+      const ds = loadFromStorage("dailystreak");
+      let s = 1;
+      if (ds) {
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if (ds.lastDate === today) s = ds.streak;
+        else if (ds.lastDate === yesterday) s = ds.streak + 1;
+      }
+      state.dailyStreak = s;
+      saveToStorage("dailystreak", { streak: s, lastDate: today });
     }
-  }
-  if (allCorrect) { handleCorrect(); }
-  else { handleMissedAttempt(); }
-}
 
-// One letter off: click a letter tile
-function oloClickLetter(idx) {
-  if (state.transitioning || state.oloPhase !== "select") return;
-  state.selectedOloIndex = idx;
-  state.oloPhase = "fix";
-  render();
-  setTimeout(() => { const f = document.getElementById("olo-fix-input"); if (f) f.focus(); }, 100);
-}
-
-// One letter off: submit the fix
-function handleOloFix() {
-  if (!state.currentWord || state.transitioning) return;
-  const fixInput = document.getElementById("olo-fix-input");
-  if (!fixInput) return;
-  const typedLetter = fixInput.value.trim().toUpperCase();
-  if (!typedLetter) return;
-
-  const correctIndex = state.wrongIndex;
-  const correctLetter = state.currentWord.word[correctIndex].toUpperCase();
-  const selectedCorrectPosition = state.selectedOloIndex === correctIndex;
-  const typedCorrectLetter = typedLetter === correctLetter;
-
-  if (selectedCorrectPosition && typedCorrectLetter) {
-    handleCorrect();
-  } else {
-    fixInput.value = "";
-    // Wrong selection or wrong letter
-    if (!selectedCorrectPosition) {
-      // Reset to select phase so they can try again
-      state.oloPhase = "select";
-      state.selectedOloIndex = -1;
-      handleMissedAttempt();
-    } else {
-      // Right position, wrong letter
-      handleMissedAttempt();
+    function diffLabel(d) {
+      if (d < 2) return "Beginner";
+      if (d < 4) return "Easy";
+      if (d < 6) return "Medium";
+      if (d < 8) return "Hard";
+      if (d < 9.5) return "Expert";
+      return "Master";
     }
-  }
-}
 
-function selectCategory(id) { state.selectedCategory = id; startGame(); }
+    function scrambleWord(word) {
+      const arr = word.split("");
+      for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[arr[i], arr[j]] = [arr[j], arr[i]]; }
+      const r = arr.join(""); return r === word && word.length > 1 ? scrambleWord(word) : r;
+    }
 
-function startGame() {
-  if (!state.selectedCategory) return;
-  state.screen = "game"; state.lives = 3; state.score = 0;
-  state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
-  loadNextWord();
-}
+    // Build letter gap: hide more letters at higher difficulty
+    function buildGap(word) {
+      const len = word.length;
+      const d = state.difficulty;
+      // At difficulty 1: ~30% hidden, at 10: ~80% hidden
+      const hideFraction = 0.3 + (d / 10) * 0.5;
+      const numHidden = Math.max(1, Math.round(len * hideFraction));
+      const indices = Array.from({ length: len }, (_, i) => i);
+      // Always keep first letter shown
+      const shuffled = indices.slice(1).sort(() => Math.random() - 0.5);
+      const hidden = new Set(shuffled.slice(0, Math.min(numHidden, len - 1)));
+      return Array.from({ length: len }, (_, i) => hidden.has(i));
+    }
 
-function revealHint() {
-  if (!state.currentWord) return;
-  state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
-  state.hintUsed = true; render();
-}
+    function speak(text) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.85; u.pitch = 1;
+      window.speechSynthesis.speak(u);
+    }
 
-function goHome() {
-  window.speechSynthesis.cancel();
-  state.screen = "home"; state.currentWord = null; state.feedback = null;
-  render();
-}
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg; t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2500);
+    }
 
-function render() {
-  const app = document.getElementById("app");
+    function showCelebration() {
+      const el = document.getElementById("celebration");
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1500);
+    }
 
-  // HOME
-  if (state.screen === "home") {
-    const catBtns = CATEGORIES.map(c => {
-      const surprise = c.id === "surprise" ? "surprise" : "";
-      return `<button class="cat-btn ${surprise}" onclick="selectCategory('${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`;
-    }).join("");
-    app.innerHTML = `
+
+    // ─── CAPITALS MODE LOGIC ──────────────────────────────────────────────────
+
+    function isCapitalsMode() {
+      return state.selectedCategory === "countries" || state.selectedCategory === "states";
+    }
+
+    function getCapitalsChallenge() {
+      const dataset = state.selectedCategory === "countries" ? COUNTRIES_CAPITALS : STATES_CAPITALS;
+      const tier = state.difficulty < 4 ? 1 : state.difficulty < 7 ? 2 : 3;
+      const usedSet = new Set(state.usedWords);
+
+      const candidates = dataset.filter(d =>
+        d.difficulty === tier && !usedSet.has(d.country) && !usedSet.has(d.capital)
+      );
+      const pool = candidates.length > 0 ? candidates :
+        dataset.filter(d => !usedSet.has(d.country) && !usedSet.has(d.capital));
+
+      if (pool.length === 0) return null;
+      const entry = pool[Math.floor(Math.random() * pool.length)];
+      const isHardMode = state.difficulty >= 5;
+
+      if (!isHardMode) {
+        const spellCapital = Math.random() < 0.5;
+        const wordToSpell = spellCapital ? entry.capital : entry.country;
+        const context = spellCapital
+          ? `The capital of ${entry.country}`
+          : `The country whose capital is ${entry.capital}`;
+        return {
+          word: wordToSpell,
+          definition: context,
+          sentence: `${context} is ______.`,
+          category: state.selectedCategory === "countries" ? "Countries & Capitals" : "States & Capitals",
+          catId: state.selectedCategory,
+          misspelled: "", wrongIndex: -1
+        };
+      } else {
+        const spellCapital = Math.random() < 0.5;
+        const prompt = spellCapital ? entry.country : entry.capital;
+        const answer = spellCapital ? entry.capital : entry.country;
+        const clue = spellCapital
+          ? `What is the capital of ${prompt}?`
+          : `${state.selectedCategory === "countries" ? "Which country" : "Which state"} has ${prompt} as its capital?`;
+        return {
+          word: answer,
+          definition: clue,
+          sentence: `${clue} → ______`,
+          category: state.selectedCategory === "countries" ? "Countries & Capitals" : "States & Capitals",
+          catId: state.selectedCategory,
+          misspelled: "", wrongIndex: -1
+        };
+      }
+    }
+
+    // --- WORD SELECTION: Library first, AI fallback ---
+
+    function getDifficultyTier(d) {
+      if (d < 4) return 1;
+      if (d < 7) return 2;
+      return 3;
+    }
+
+    function addMisspellingIfNeeded(wordObj, needsMisspelling) {
+      if (!needsMisspelling) return { ...wordObj, misspelled: "", wrongIndex: -1 };
+      const word = wordObj.word;
+      const commonSubs = {
+        a: ["e", "o"], e: ["a", "i"], i: ["e", "y"], o: ["u", "a"], u: ["o", "e"],
+        c: ["k", "s"], k: ["c"], s: ["z"], n: ["m"], m: ["n"], l: ["r"], r: ["l"],
+        t: ["d"], d: ["t"], p: ["b"], b: ["p"], g: ["j"], f: ["v"]
+      };
+      const positions = Array.from({ length: word.length - 1 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+      for (const idx of positions) {
+        const letter = word[idx].toLowerCase();
+        const subs = commonSubs[letter];
+        if (subs) {
+          const sub = subs[Math.floor(Math.random() * subs.length)];
+          const misspelled = word.slice(0, idx) + sub + word.slice(idx + 1);
+          if (misspelled.length === word.length && misspelled.toLowerCase() !== word.toLowerCase()) {
+            return { ...wordObj, misspelled, wrongIndex: idx };
+          }
+        }
+      }
+      // Fallback: swap two adjacent middle letters
+      const mid = Math.floor(word.length / 2);
+      if (mid + 1 < word.length) {
+        const misspelled = word.slice(0, mid) + word[mid + 1] + word[mid] + word.slice(mid + 2);
+        return { ...wordObj, misspelled, wrongIndex: mid };
+      }
+      return { ...wordObj, misspelled: word, wrongIndex: -1 };
+    }
+
+    function getLibraryWord(catId, needsMisspelling) {
+      const tier = getDifficultyTier(state.difficulty);
+      const usedSet = new Set(state.usedWords);
+
+      let srQueue = [];
+      try { srQueue = JSON.parse(localStorage.getItem("beesmart_sr_queue") || "[]"); } catch { }
+
+      // Check for spaced repetition words due
+      const srDue = srQueue.find(item =>
+        (catId === "surprise" || item.catId === catId) &&
+        item.dueAfter <= state.usedWords.length &&
+        !usedSet.has(item.word)
+      );
+      if (srDue) {
+        const libWord = ALL_WORDS.find(w => w.word === srDue.word);
+        if (libWord) return addMisspellingIfNeeded(libWord, needsMisspelling);
+      }
+
+      // Pick fresh word from library
+      const candidates = ALL_WORDS.filter(w =>
+        (catId === "surprise" || w.catId === catId) &&
+        w.difficulty === tier &&
+        !usedSet.has(w.word)
+      );
+
+      if (candidates.length === 0) {
+        const fallback = ALL_WORDS.filter(w =>
+          (catId === "surprise" || w.catId === catId) && !usedSet.has(w.word)
+        );
+        if (fallback.length === 0) return null;
+        const pick = fallback[Math.floor(Math.random() * fallback.length)];
+        return addMisspellingIfNeeded(pick, needsMisspelling);
+      }
+
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      return addMisspellingIfNeeded(pick, needsMisspelling);
+    }
+
+    function updateSpacedRepetition(word, catId, correct) {
+      let srQueue = [];
+      try { srQueue = JSON.parse(localStorage.getItem("beesmart_sr_queue") || "[]"); } catch { }
+      const existing = srQueue.findIndex(i => i.word === word && i.catId === catId);
+      if (correct) {
+        if (existing >= 0) {
+          srQueue[existing].correctCount = (srQueue[existing].correctCount || 0) + 1;
+          if (srQueue[existing].correctCount >= 3) srQueue.splice(existing, 1);
+        }
+      } else {
+        if (existing >= 0) {
+          srQueue[existing].dueAfter = state.usedWords.length + 3;
+          srQueue[existing].correctCount = 0;
+        } else {
+          srQueue.push({ word, catId, dueAfter: state.usedWords.length + 3, correctCount: 0 });
+        }
+      }
+      try { localStorage.setItem("beesmart_sr_queue", JSON.stringify(srQueue)); } catch { }
+    }
+
+    async function fetchWordFromAI(catId, needsMisspelling) {
+      const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[5];
+      const dl = state.difficulty < 3 ? "easy" : state.difficulty < 6 ? "medium" : "hard";
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{
+            role: "user", content:
+              `Generate a spelling challenge word for an adult spelling bee game.\n\nCategory: ${cat.name} — focus on: ${cat.prompt}\nDifficulty: ${dl} (${state.difficulty.toFixed(1)}/10)\nDo NOT use: ${state.usedWords.slice(-20).join(", ") || "none"}\n\nIMPORTANT: In the sentence field replace the word with "______".\n${needsMisspelling ? 'Provide a misspelled version with EXACTLY ONE letter substituted (same word length, no additions or deletions). Include misspelled and wrongIndex (0-based).' : ''}\n\nRespond ONLY raw JSON:\n{"word":"the word","definition":"max 15 words","sentence":"with ______","category":"subcategory","misspelled":"","wrongIndex":-1}`
+          }]
+        })
+      });
+      const data = await res.json();
+      const parsed = JSON.parse(data.content[0].text.trim().replace(/\`\`\`json|\`\`\`/g, ""));
+      if (needsMisspelling && parsed.misspelled && parsed.misspelled.length !== parsed.word.length) {
+        return addMisspellingIfNeeded({ ...parsed, catId }, true);
+      }
+      return { ...parsed, catId };
+    }
+
+    async function fetchWord(needsMisspelling) {
+      const catId = state.selectedCategory || "general";
+      if (isCapitalsMode()) {
+        const challenge = getCapitalsChallenge();
+        if (challenge) return challenge;
+      }
+      const libWord = getLibraryWord(catId, needsMisspelling);
+      if (libWord) return libWord;
+      return await fetchWordFromAI(catId, needsMisspelling);
+    }
+
+    async function loadNextWord() {
+      state.loading = true; state.hint = null; state.hintUsed = false;
+      state.attempts = 0; state.feedback = null; state.transitioning = false;
+      state.selectedOloIndex = -1; state.oloPhase = "select";
+      render();
+      try {
+        const isCapitals = isCapitalsMode();
+        const next = isCapitals ? "definition" : MECHANICS[Math.floor(Math.random() * MECHANICS.length)];
+        const wordData = await fetchWord(!isCapitals && next === "oneletteroff");
+        state.mechanic = next;
+        state.currentWord = wordData;
+        state.usedWords.push(wordData.word);
+
+        if (next === "scramble") {
+          state.scrambled = scrambleWord(wordData.word.toUpperCase());
+        }
+        if (next === "lettergap") {
+          const hidden = buildGap(wordData.word);
+          state.gapIndices = hidden;
+          state.gapAnswers = wordData.word.split("").map((l, i) => hidden[i] ? "" : l);
+        }
+        if (next === "oneletteroff") {
+          state.misspelled = wordData.misspelled || wordData.word;
+          state.wrongIndex = wordData.wrongIndex !== undefined ? wordData.wrongIndex : -1;
+        }
+
+        state.loading = false; render();
+        if (next === "audio") setTimeout(() => speak(wordData.word), 400);
+        setTimeout(() => {
+          const i = document.getElementById("word-input");
+          if (i) i.focus();
+          const g = document.querySelector(".gap-input");
+          if (g) g.focus();
+        }, 150);
+      } catch (e) {
+        state.loading = false;
+        state.feedback = { type: "wrong", msg: "Connection issue — please retry" };
+        render();
+      }
+    }
+
+    // Handle correct answer scoring and progression
+    function handleCorrect() {
+      if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, true);
+      const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
+      state.score += pts; state.streak += 1;
+      const prevDiff = state.difficulty;
+      state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
+      if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
+        setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
+      }
+      state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
+      state.transitioning = true;
+      saveProgress();
+      if (state.streak > 0 && state.streak % 3 === 0) showCelebration();
+      render();
+      setTimeout(() => loadNextWord(), 1400);
+    }
+
+    function handleWrong(revealMsg) {
+      if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, false);
+      state.lives -= 1; state.streak = 0;
+      state.difficulty = Math.max(1, state.difficulty - 0.3);
+      state.transitioning = true;
+      if (state.lives <= 0) {
+        saveProgress();
+        state.feedback = { type: "wrong", msg: revealMsg };
+        render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
+      } else {
+        state.feedback = { type: "wrong", msg: revealMsg };
+        render(); setTimeout(() => loadNextWord(), 1800);
+      }
+    }
+
+    function handleMissedAttempt() {
+      state.attempts += 1;
+      if (!state.hint) state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
+      if (state.attempts >= 2) {
+        handleWrong(`It was "${state.currentWord.word}"`);
+      } else {
+        state.feedback = { type: "try", msg: "Not quite — try again!" };
+        const row = document.querySelector(".input-row, .gap-input-row");
+        if (row) { row.classList.add("shake"); setTimeout(() => row.classList.remove("shake"), 300); }
+        render();
+      }
+    }
+
+    // Standard submit (audio, definition, scramble)
+    function handleSubmit() {
+      if (!state.currentWord || state.transitioning) return;
+      const inp = document.getElementById("word-input");
+      if (!inp || !inp.value.trim()) return;
+      const correct = inp.value.trim().toLowerCase() === state.currentWord.word.toLowerCase();
+      inp.value = "";
+      if (correct) { handleCorrect(); }
+      else { handleMissedAttempt(); }
+    }
+
+    // Letter gap submit
+    function handleGapSubmit() {
+      if (!state.currentWord || state.transitioning) return;
+      const word = state.currentWord.word.toUpperCase();
+      const inputs = document.querySelectorAll(".gap-input");
+      let allCorrect = true;
+      let inputIdx = 0;
+      for (let i = 0; i < word.length; i++) {
+        if (state.gapIndices[i]) {
+          const val = inputs[inputIdx] ? inputs[inputIdx].value.trim().toUpperCase() : "";
+          if (val !== word[i]) { allCorrect = false; break; }
+          inputIdx++;
+        }
+      }
+      if (allCorrect) { handleCorrect(); }
+      else { handleMissedAttempt(); }
+    }
+
+    // One letter off: click a letter tile
+    function oloClickLetter(idx) {
+      if (state.transitioning || state.oloPhase !== "select") return;
+      state.selectedOloIndex = idx;
+      state.oloPhase = "fix";
+      render();
+      setTimeout(() => { const f = document.getElementById("olo-fix-input"); if (f) f.focus(); }, 100);
+    }
+
+    // One letter off: submit the fix
+    function handleOloFix() {
+      if (!state.currentWord || state.transitioning) return;
+      const fixInput = document.getElementById("olo-fix-input");
+      if (!fixInput) return;
+      const typedLetter = fixInput.value.trim().toUpperCase();
+      if (!typedLetter) return;
+
+      const correctIndex = state.wrongIndex;
+      const correctLetter = state.currentWord.word[correctIndex].toUpperCase();
+      const selectedCorrectPosition = state.selectedOloIndex === correctIndex;
+      const typedCorrectLetter = typedLetter === correctLetter;
+
+      if (selectedCorrectPosition && typedCorrectLetter) {
+        handleCorrect();
+      } else {
+        fixInput.value = "";
+        // Wrong selection or wrong letter
+        if (!selectedCorrectPosition) {
+          // Reset to select phase so they can try again
+          state.oloPhase = "select";
+          state.selectedOloIndex = -1;
+          handleMissedAttempt();
+        } else {
+          // Right position, wrong letter
+          handleMissedAttempt();
+        }
+      }
+    }
+
+    function selectCategory(id) { state.selectedCategory = id; startGame(); }
+
+    function startGame() {
+      if (!state.selectedCategory) return;
+      state.screen = "game"; state.lives = 3; state.score = 0;
+      state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
+      loadNextWord();
+    }
+
+    function revealHint() {
+      if (!state.currentWord) return;
+      state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
+      state.hintUsed = true; render();
+    }
+
+    function goHome() {
+      window.speechSynthesis.cancel();
+      state.screen = "home"; state.currentWord = null; state.feedback = null;
+      render();
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+
+      // HOME
+      if (state.screen === "home") {
+        const catBtns = CATEGORIES.map(c => {
+          const surprise = c.id === "surprise" ? "surprise" : "";
+          const capitals = (c.id === "countries" || c.id === "states") ? "capitals-mode" : "";
+          return `<button class="cat-btn ${surprise} ${capitals}" onclick="selectCategory('${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`;
+        }).join("");
+        app.innerHTML = `
       <div class="home">
         <div class="logo-area">
           <div class="bee-icon">🐝</div>
@@ -536,14 +1391,14 @@ function render() {
           <p class="how-to-text">5 different spelling challenges — listen, define, unscramble, fill the gaps, or spot the mistake. 3 lives per game. Hints cost points.</p>
         </div>
       </div>`;
-    return;
-  }
+        return;
+      }
 
-  // GAME OVER
-  if (state.screen === "gameover") {
-    const newBest = state.score > 0 && state.score >= state.highScore;
-    const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
-    app.innerHTML = `
+      // GAME OVER
+      if (state.screen === "gameover") {
+        const newBest = state.score > 0 && state.score >= state.highScore;
+        const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        app.innerHTML = `
       <div class="gameover">
         <div class="gameover-bee">🐝</div>
         <h2 class="gameover-title">Game Over</h2>
@@ -555,91 +1410,91 @@ function render() {
         <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
         <button class="btn-secondary" onclick="state.screen='home';render()">Change Category</button>
       </div>`;
-    return;
-  }
+        return;
+      }
 
-  // GAME
-  const hearts = [0,1,2].map(i => `<span class="heart ${i<state.lives?"":"lost"}">♥</span>`).join("");
-  const diffPct = ((state.difficulty-1)/9)*100;
+      // GAME
+      const hearts = [0, 1, 2].map(i => `<span class="heart ${i < state.lives ? "" : "lost"}">♥</span>`).join("");
+      const diffPct = ((state.difficulty - 1) / 9) * 100;
 
-  let cardHTML = "";
-  if (state.loading) {
-    const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
-    cardHTML = `<div class="loading-wrap"><div class="loading-bee">🐝</div><p class="loading-text">Finding your ${cat?cat.name.toLowerCase():"next"} word...</p></div>`;
-  } else if (state.currentWord) {
-    const sw = state.currentWord.word.replace(/'/g,"\\'");
-    let inner = "";
+      let cardHTML = "";
+      if (state.loading) {
+        const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        cardHTML = `<div class="loading-wrap"><div class="loading-bee">🐝</div><p class="loading-text">Finding your ${cat ? cat.name.toLowerCase() : "next"} word...</p></div>`;
+      } else if (state.currentWord) {
+        const sw = state.currentWord.word.replace(/'/g, "\\'");
+        let inner = "";
 
-    if (state.mechanic === "audio") {
-      inner = `<button class="speak-btn" onclick="speak('${sw}')">🔊 Hear word again</button><p class="cat-tag">${state.currentWord.category}</p>`;
+        if (state.mechanic === "audio") {
+          inner = `<button class="speak-btn" onclick="speak('${sw}')">🔊 Hear word again</button><p class="cat-tag">${state.currentWord.category}</p>`;
 
-    } else if (state.mechanic === "definition") {
-      inner = `<p class="def-text">"${state.currentWord.definition}"</p><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
+        } else if (state.mechanic === "definition") {
+          inner = `<p class="def-text">"${state.currentWord.definition}"</p><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
 
-    } else if (state.mechanic === "scramble") {
-      const letters = state.scrambled.split("").map(l=>`<span class="s-letter">${l}</span>`).join("");
-      inner = `<div class="scramble-row">${letters}</div><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
+        } else if (state.mechanic === "scramble") {
+          const letters = state.scrambled.split("").map(l => `<span class="s-letter">${l}</span>`).join("");
+          inner = `<div class="scramble-row">${letters}</div><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
 
-    } else if (state.mechanic === "lettergap") {
-      const word = state.currentWord.word.toUpperCase();
-      const letterTiles = word.split("").map((l, i) =>
-        state.gapIndices[i]
-          ? `<span class="gap-letter hidden">_</span>`
-          : `<span class="gap-letter shown">${l}</span>`
-      ).join("");
-      // Build individual inputs for each hidden letter
-      const hiddenCount = state.gapIndices.filter(Boolean).length;
-      const gapInputs = Array.from({length: hiddenCount}, (_, i) =>
-        `<input class="gap-input" id="gap-${i}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${i},${hiddenCount})" onkeydown="gapKeyDown(event,${i},${hiddenCount})"/>`
-      ).join("");
-      inner = `
+        } else if (state.mechanic === "lettergap") {
+          const word = state.currentWord.word.toUpperCase();
+          const letterTiles = word.split("").map((l, i) =>
+            state.gapIndices[i]
+              ? `<span class="gap-letter hidden">_</span>`
+              : `<span class="gap-letter shown">${l}</span>`
+          ).join("");
+          // Build individual inputs for each hidden letter
+          const hiddenCount = state.gapIndices.filter(Boolean).length;
+          const gapInputs = Array.from({ length: hiddenCount }, (_, i) =>
+            `<input class="gap-input" id="gap-${i}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${i},${hiddenCount})" onkeydown="gapKeyDown(event,${i},${hiddenCount})"/>`
+          ).join("");
+          inner = `
         <div class="gap-row">${letterTiles}</div>
         <p class="gap-instruction">Type the missing letters in order</p>
         <div class="gap-input-row">${gapInputs}</div>
         <div style="margin-top:12px"><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button></div>`;
 
-    } else if (state.mechanic === "oneletteroff") {
-      const display = state.misspelled || state.currentWord.word;
-      const tiles = display.toUpperCase().split("").map((l, i) => {
-        let cls = "olo-letter";
-        if (state.selectedOloIndex === i) cls += " selected-wrong";
-        return `<span class="${cls}" onclick="oloClickLetter(${i})">${l}</span>`;
-      }).join("");
+        } else if (state.mechanic === "oneletteroff") {
+          const display = state.misspelled || state.currentWord.word;
+          const tiles = display.toUpperCase().split("").map((l, i) => {
+            let cls = "olo-letter";
+            if (state.selectedOloIndex === i) cls += " selected-wrong";
+            return `<span class="${cls}" onclick="oloClickLetter(${i})">${l}</span>`;
+          }).join("");
 
-      let fixHTML = "";
-      if (state.oloPhase === "fix") {
-        fixHTML = `<div class="olo-fix-row">
+          let fixHTML = "";
+          if (state.oloPhase === "fix") {
+            fixHTML = `<div class="olo-fix-row">
           <span class="olo-fix-label">Replace with:</span>
           <input id="olo-fix-input" class="olo-fix-input" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" onkeydown="if(event.key==='Enter')handleOloFix()"/>
           <button class="olo-submit" onclick="handleOloFix()">→</button>
         </div>`;
-      }
+          }
 
-      inner = `
+          inner = `
         <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Type the correct letter"}</p>
         <div class="olo-row" style="margin-top:12px">${tiles}</div>
         ${fixHTML}
         <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
         <button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear word</button>`;
-    }
+        }
 
-    cardHTML = `<div class="word-card">${inner}</div>`;
-  }
+        cardHTML = `<div class="word-card">${inner}</div>`;
+      }
 
-  const mechanicLabels = {
-    audio: "🔊 Listen & Spell",
-    definition: "📖 Define & Spell",
-    scramble: "🔀 Unscramble",
-    lettergap: "✏️ Fill the Gaps",
-    oneletteroff: "🔍 One Letter Off",
-  };
+      const mechanicLabels = {
+        audio: "🔊 Listen & Spell",
+        definition: "📖 Define & Spell",
+        scramble: "🔀 Unscramble",
+        lettergap: "✏️ Fill the Gaps",
+        oneletteroff: "🔍 One Letter Off",
+      };
 
-  // Show standard input only for audio/definition/scramble
-  const showStandardInput = state.currentWord && !state.loading &&
-    ["audio","definition","scramble"].includes(state.mechanic);
-  const showGapSubmit = state.currentWord && !state.loading && state.mechanic === "lettergap";
+      // Show standard input only for audio/definition/scramble
+      const showStandardInput = state.currentWord && !state.loading &&
+        ["audio", "definition", "scramble"].includes(state.mechanic);
+      const showGapSubmit = state.currentWord && !state.loading && state.mechanic === "lettergap";
 
-  app.innerHTML = `
+      app.innerHTML = `
     <div class="game-header">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="home-btn" onclick="goHome()" title="Home">⌂</button>
@@ -647,7 +1502,7 @@ function render() {
       </div>
       <div class="score-area">
         <span class="score-num">${state.score}</span>
-        ${state.streak>=2?`<span class="streak-pill">🔥 ${state.streak}</span>`:""}
+        ${state.streak >= 2 ? `<span class="streak-pill">🔥 ${state.streak}</span>` : ""}
       </div>
     </div>
     <div class="diff-bar-wrap">
@@ -658,54 +1513,55 @@ function render() {
       <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
     </div>
     <div class="game-body">
-      ${state.currentWord&&!state.loading?`<p class="mechanic-badge">${mechanicLabels[state.mechanic]||""}</p>`:""}
+      ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${mechanicLabels[state.mechanic] || ""}</p>` : ""}
       ${cardHTML}
-      ${state.feedback?`<div class="feedback ${state.feedback.type}">${state.feedback.msg}</div>`:""}
-      ${state.hint?`<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>`:""}
-      ${showStandardInput?`
+      ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}</div>` : ""}
+      ${state.hint ? `<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>` : ""}
+      ${showStandardInput ? `
         <div class="input-row">
-          <input id="word-input" type="text" placeholder="Type your spelling..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning?"disabled":""}/>
-          <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning?"disabled":""}>→</button>
+          <input id="word-input" type="text" placeholder="Type your spelling..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning ? "disabled" : ""}/>
+          <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
         </div>
-        ${!state.hint&&!state.transitioning?`<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>`:""}
-      `:""}
-      ${showGapSubmit?`
-        <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning?"disabled":""} style="margin-top:4px">Check Answers</button>
-        ${!state.hint&&!state.transitioning?`<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>`:""}
-      `:""}
+        ${!state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+      `: ""}
+      ${showGapSubmit ? `
+        <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""} style="margin-top:4px">Check Answers</button>
+        ${!state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+      `: ""}
     </div>`;
 
-  const inp = document.getElementById("word-input");
-  if (inp) inp.addEventListener("keydown", e => { if (e.key==="Enter") handleSubmit(); });
+      const inp = document.getElementById("word-input");
+      if (inp) inp.addEventListener("keydown", e => { if (e.key === "Enter") handleSubmit(); });
 
-  // Focus first gap input
-  if (state.mechanic === "lettergap" && !state.loading) {
-    setTimeout(() => { const g = document.getElementById("gap-0"); if (g) g.focus(); }, 100);
-  }
-}
-
-// Auto-advance between gap inputs
-function gapInputNext(idx, total) {
-  const inp = document.getElementById(`gap-${idx}`);
-  if (inp && inp.value.length === 1 && idx < total - 1) {
-    const next = document.getElementById(`gap-${idx+1}`);
-    if (next) next.focus();
-  }
-}
-
-function gapKeyDown(e, idx, total) {
-  if (e.key === "Backspace") {
-    const inp = document.getElementById(`gap-${idx}`);
-    if (inp && inp.value === "" && idx > 0) {
-      const prev = document.getElementById(`gap-${idx-1}`);
-      if (prev) { prev.value = ""; prev.focus(); }
+      // Focus first gap input
+      if (state.mechanic === "lettergap" && !state.loading) {
+        setTimeout(() => { const g = document.getElementById("gap-0"); if (g) g.focus(); }, 100);
+      }
     }
-  }
-  if (e.key === "Enter") handleGapSubmit();
-}
 
-initStorage();
-render();
-</script>
+    // Auto-advance between gap inputs
+    function gapInputNext(idx, total) {
+      const inp = document.getElementById(`gap-${idx}`);
+      if (inp && inp.value.length === 1 && idx < total - 1) {
+        const next = document.getElementById(`gap-${idx + 1}`);
+        if (next) next.focus();
+      }
+    }
+
+    function gapKeyDown(e, idx, total) {
+      if (e.key === "Backspace") {
+        const inp = document.getElementById(`gap-${idx}`);
+        if (inp && inp.value === "" && idx > 0) {
+          const prev = document.getElementById(`gap-${idx - 1}`);
+          if (prev) { prev.value = ""; prev.focus(); }
+        }
+      }
+      if (e.key === "Enter") handleGapSubmit();
+    }
+
+    initStorage();
+    render();
+  </script>
 </body>
+
 </html>
