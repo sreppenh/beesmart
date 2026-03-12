@@ -897,12 +897,12 @@
           const defDisplay = isFlag
             ? `<div style="font-size:80px;line-height:1.3;margin-bottom:8px">${state.currentWord.definition}</div>`
             : `<p class="def-text">"${state.currentWord.definition}"</p>`;
-          const audioBtn = isFlag ? "" : `<button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
-          inner = `${defDisplay}<p class="cat-tag">${state.currentWord.category}</p>${audioBtn}`;
+          const sentenceClue = (!isFlag && state.currentWord.sentence) ? `<p class="def-text" style="margin-top:8px;font-style:italic;opacity:0.8">${state.currentWord.sentence}</p>` : "";
+          inner = `${defDisplay}<p class="cat-tag">${state.currentWord.category}</p>${sentenceClue}`;
 
         } else if (state.mechanic === "scramble") {
           const letters = state.scrambled.split("").map(l => `<span class="s-letter">${l}</span>`).join("");
-          inner = `<div class="scramble-row">${letters}</div><p class="cat-tag">${state.currentWord.category}</p><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button>`;
+          inner = `<div class="scramble-row">${letters}</div><p class="cat-tag">${state.currentWord.category}</p><p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
 
         } else if (state.mechanic === "lettergap") {
           const word = state.currentWord.word.toUpperCase();
@@ -918,7 +918,7 @@
           inner = `
         <div class="gap-row">${letterTiles}</div>
         <p class="gap-instruction">Type the missing letters</p>
-        <div style="margin-top:12px"><button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear pronunciation</button></div>`;
+        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
 
         } else if (state.mechanic === "oneletteroff") {
           const display = state.misspelled || state.currentWord.word;
@@ -942,7 +942,7 @@
         <div class="olo-row" style="margin-top:12px">${tiles}</div>
         ${fixHTML}
         <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
-        <button class="speak-btn-small" onclick="speak('${sw}')">🔊 Hear word</button>`;
+        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
         }
 
         cardHTML = `<div class="word-card">${inner}</div>`;
