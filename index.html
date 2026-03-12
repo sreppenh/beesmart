@@ -982,7 +982,7 @@
     <div class="game-body">
       ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${mechanicLabels[state.mechanic] || ""}</p>` : ""}
       ${cardHTML}
-      ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em">You typed: <span style="color:#e74c3c;text-decoration:line-through">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
+      ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
       ${state.hint ? `<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>` : ""}
       ${showStandardInput ? `
         <div class="input-row">
