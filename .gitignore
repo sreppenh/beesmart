@@ -1,0 +1,19 @@
+# Backups
+*.bak
+*.backup
+*_backup*
+*_bak*
+*.orig
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Node
+node_modules/
+.env
+.env.local
