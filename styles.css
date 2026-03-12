@@ -1739,3 +1739,88 @@ body.day .game-footer {
   background: #f9f9f9;
   border-top-color: #e5e7eb;
 }
+
+/* ─── MULTIPLE CHOICE ────────────────────────────────────────────────────────── */
+
+.mc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.mc-btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.mc-btn:hover:not(:disabled) {
+  background: var(--border);
+  border-color: var(--yellow);
+  transform: translateY(-1px);
+}
+
+.mc-btn:disabled {
+  cursor: default;
+}
+
+.mc-btn.mc-correct {
+  background: #14532d;
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+
+.mc-btn.mc-wrong {
+  background: #450a0a;
+  border-color: #ef4444;
+  color: #fecaca;
+}
+
+.mc-flag-emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.mc-flag-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+body.day .mc-btn {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  color: var(--text);
+}
+
+body.day .mc-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: var(--yellow);
+}
+
+body.day .mc-btn.mc-correct {
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #14532d;
+}
+
+body.day .mc-btn.mc-wrong {
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #7f1d1d;
+}

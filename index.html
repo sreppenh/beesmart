@@ -34,131 +34,131 @@
 
 
     const ELEMENTS = [
-      { symbol: "H", name: "Hydrogen", number: 1, difficulty: 1 },
-      { symbol: "He", name: "Helium", number: 2, difficulty: 1 },
-      { symbol: "C", name: "Carbon", number: 6, difficulty: 1 },
-      { symbol: "N", name: "Nitrogen", number: 7, difficulty: 1 },
-      { symbol: "O", name: "Oxygen", number: 8, difficulty: 1 },
-      { symbol: "Na", name: "Sodium", number: 11, difficulty: 1 },
-      { symbol: "Mg", name: "Magnesium", number: 12, difficulty: 1 },
-      { symbol: "Al", name: "Aluminum", number: 13, difficulty: 1 },
-      { symbol: "P", name: "Phosphorus", number: 15, difficulty: 1 },
-      { symbol: "S", name: "Sulfur", number: 16, difficulty: 1 },
-      { symbol: "Cl", name: "Chlorine", number: 17, difficulty: 1 },
-      { symbol: "K", name: "Potassium", number: 19, difficulty: 1 },
-      { symbol: "Ca", name: "Calcium", number: 20, difficulty: 1 },
-      { symbol: "Fe", name: "Iron", number: 26, difficulty: 1 },
-      { symbol: "Cu", name: "Copper", number: 29, difficulty: 1 },
-      { symbol: "Zn", name: "Zinc", number: 30, difficulty: 1 },
-      { symbol: "Br", name: "Bromine", number: 35, difficulty: 1 },
-      { symbol: "Ag", name: "Silver", number: 47, difficulty: 1 },
-      { symbol: "I", name: "Iodine", number: 53, difficulty: 1 },
-      { symbol: "Au", name: "Gold", number: 79, difficulty: 1 },
-      { symbol: "Hg", name: "Mercury", number: 80, difficulty: 1 },
-      { symbol: "Pb", name: "Lead", number: 82, difficulty: 1 },
-      { symbol: "Li", name: "Lithium", number: 3, difficulty: 2 },
-      { symbol: "B", name: "Boron", number: 5, difficulty: 2 },
-      { symbol: "F", name: "Fluorine", number: 9, difficulty: 2 },
-      { symbol: "Ne", name: "Neon", number: 10, difficulty: 2 },
-      { symbol: "Ar", name: "Argon", number: 18, difficulty: 2 },
-      { symbol: "Ti", name: "Titanium", number: 22, difficulty: 2 },
-      { symbol: "Cr", name: "Chromium", number: 24, difficulty: 2 },
-      { symbol: "Mn", name: "Manganese", number: 25, difficulty: 2 },
-      { symbol: "Co", name: "Cobalt", number: 27, difficulty: 2 },
-      { symbol: "Ni", name: "Nickel", number: 28, difficulty: 2 },
-      { symbol: "Ga", name: "Gallium", number: 31, difficulty: 2 },
-      { symbol: "As", name: "Arsenic", number: 33, difficulty: 2 },
-      { symbol: "Kr", name: "Krypton", number: 36, difficulty: 2 },
-      { symbol: "Sn", name: "Tin", number: 50, difficulty: 2 },
-      { symbol: "Xe", name: "Xenon", number: 54, difficulty: 2 },
-      { symbol: "Ba", name: "Barium", number: 56, difficulty: 2 },
-      { symbol: "W", name: "Tungsten", number: 74, difficulty: 2 },
-      { symbol: "Pt", name: "Platinum", number: 78, difficulty: 2 },
-      { symbol: "Bi", name: "Bismuth", number: 83, difficulty: 2 },
-      { symbol: "U", name: "Uranium", number: 92, difficulty: 2 },
-      { symbol: "Tc", name: "Technetium", number: 43, difficulty: 3 },
-      { symbol: "Pd", name: "Palladium", number: 46, difficulty: 3 },
-      { symbol: "Cs", name: "Cesium", number: 55, difficulty: 3 },
-      { symbol: "La", name: "Lanthanum", number: 57, difficulty: 3 },
-      { symbol: "Nd", name: "Neodymium", number: 60, difficulty: 3 },
-      { symbol: "Eu", name: "Europium", number: 63, difficulty: 3 },
-      { symbol: "Gd", name: "Gadolinium", number: 64, difficulty: 3 },
-      { symbol: "Os", name: "Osmium", number: 76, difficulty: 3 },
-      { symbol: "Tl", name: "Thallium", number: 81, difficulty: 3 },
-      { symbol: "Po", name: "Polonium", number: 84, difficulty: 3 },
-      { symbol: "Pu", name: "Plutonium", number: 94, difficulty: 3 },
-      { symbol: "Mo", name: "Molybdenum", number: 42, difficulty: 3 },
+      { symbol: "H", name: "Hydrogen", number: 1, difficulty: 1, group: "Nonmetal" },
+      { symbol: "He", name: "Helium", number: 2, difficulty: 1, group: "Noble Gas" },
+      { symbol: "C", name: "Carbon", number: 6, difficulty: 1, group: "Nonmetal" },
+      { symbol: "N", name: "Nitrogen", number: 7, difficulty: 1, group: "Nonmetal" },
+      { symbol: "O", name: "Oxygen", number: 8, difficulty: 1, group: "Nonmetal" },
+      { symbol: "Na", name: "Sodium", number: 11, difficulty: 1, group: "Alkali Metal" },
+      { symbol: "Mg", name: "Magnesium", number: 12, difficulty: 1, group: "Alkaline Earth" },
+      { symbol: "Al", name: "Aluminum", number: 13, difficulty: 1, group: "Post-Transition" },
+      { symbol: "P", name: "Phosphorus", number: 15, difficulty: 1, group: "Nonmetal" },
+      { symbol: "S", name: "Sulfur", number: 16, difficulty: 1, group: "Nonmetal" },
+      { symbol: "Cl", name: "Chlorine", number: 17, difficulty: 1, group: "Halogen" },
+      { symbol: "K", name: "Potassium", number: 19, difficulty: 1, group: "Alkali Metal" },
+      { symbol: "Ca", name: "Calcium", number: 20, difficulty: 1, group: "Alkaline Earth" },
+      { symbol: "Fe", name: "Iron", number: 26, difficulty: 1, group: "Transition Metal" },
+      { symbol: "Cu", name: "Copper", number: 29, difficulty: 1, group: "Transition Metal" },
+      { symbol: "Zn", name: "Zinc", number: 30, difficulty: 1, group: "Transition Metal" },
+      { symbol: "Br", name: "Bromine", number: 35, difficulty: 1, group: "Halogen" },
+      { symbol: "Ag", name: "Silver", number: 47, difficulty: 1, group: "Transition Metal" },
+      { symbol: "I", name: "Iodine", number: 53, difficulty: 1, group: "Halogen" },
+      { symbol: "Au", name: "Gold", number: 79, difficulty: 1, group: "Transition Metal" },
+      { symbol: "Hg", name: "Mercury", number: 80, difficulty: 1, group: "Transition Metal" },
+      { symbol: "Pb", name: "Lead", number: 82, difficulty: 1, group: "Post-Transition" },
+      { symbol: "Li", name: "Lithium", number: 3, difficulty: 2, group: "Alkali Metal" },
+      { symbol: "B", name: "Boron", number: 5, difficulty: 2, group: "Metalloid" },
+      { symbol: "F", name: "Fluorine", number: 9, difficulty: 2, group: "Halogen" },
+      { symbol: "Ne", name: "Neon", number: 10, difficulty: 2, group: "Noble Gas" },
+      { symbol: "Ar", name: "Argon", number: 18, difficulty: 2, group: "Noble Gas" },
+      { symbol: "Ti", name: "Titanium", number: 22, difficulty: 2, group: "Transition Metal" },
+      { symbol: "Cr", name: "Chromium", number: 24, difficulty: 2, group: "Transition Metal" },
+      { symbol: "Mn", name: "Manganese", number: 25, difficulty: 2, group: "Transition Metal" },
+      { symbol: "Co", name: "Cobalt", number: 27, difficulty: 2, group: "Transition Metal" },
+      { symbol: "Ni", name: "Nickel", number: 28, difficulty: 2, group: "Transition Metal" },
+      { symbol: "Ga", name: "Gallium", number: 31, difficulty: 2, group: "Post-Transition" },
+      { symbol: "As", name: "Arsenic", number: 33, difficulty: 2, group: "Metalloid" },
+      { symbol: "Kr", name: "Krypton", number: 36, difficulty: 2, group: "Noble Gas" },
+      { symbol: "Sn", name: "Tin", number: 50, difficulty: 2, group: "Post-Transition" },
+      { symbol: "Xe", name: "Xenon", number: 54, difficulty: 2, group: "Noble Gas" },
+      { symbol: "Ba", name: "Barium", number: 56, difficulty: 2, group: "Alkaline Earth" },
+      { symbol: "W", name: "Tungsten", number: 74, difficulty: 2, group: "Transition Metal" },
+      { symbol: "Pt", name: "Platinum", number: 78, difficulty: 2, group: "Transition Metal" },
+      { symbol: "Bi", name: "Bismuth", number: 83, difficulty: 2, group: "Post-Transition" },
+      { symbol: "U", name: "Uranium", number: 92, difficulty: 2, group: "Actinide" },
+      { symbol: "Tc", name: "Technetium", number: 43, difficulty: 3, group: "Transition Metal" },
+      { symbol: "Pd", name: "Palladium", number: 46, difficulty: 3, group: "Transition Metal" },
+      { symbol: "Cs", name: "Cesium", number: 55, difficulty: 3, group: "Alkali Metal" },
+      { symbol: "La", name: "Lanthanum", number: 57, difficulty: 3, group: "Lanthanide" },
+      { symbol: "Nd", name: "Neodymium", number: 60, difficulty: 3, group: "Lanthanide" },
+      { symbol: "Eu", name: "Europium", number: 63, difficulty: 3, group: "Lanthanide" },
+      { symbol: "Gd", name: "Gadolinium", number: 64, difficulty: 3, group: "Lanthanide" },
+      { symbol: "Os", name: "Osmium", number: 76, difficulty: 3, group: "Transition Metal" },
+      { symbol: "Tl", name: "Thallium", number: 81, difficulty: 3, group: "Post-Transition" },
+      { symbol: "Po", name: "Polonium", number: 84, difficulty: 3, group: "Post-Transition" },
+      { symbol: "Pu", name: "Plutonium", number: 94, difficulty: 3, group: "Actinide" },
+      { symbol: "Mo", name: "Molybdenum", number: 42, difficulty: 3, group: "Transition Metal" },
     ];
 
     const FLAGS = [
-      { flag: "🇺🇸", country: "United States", difficulty: 1 },
-      { flag: "🇬🇧", country: "United Kingdom", difficulty: 1 },
-      { flag: "🇫🇷", country: "France", difficulty: 1 },
-      { flag: "🇩🇪", country: "Germany", difficulty: 1 },
-      { flag: "🇯🇵", country: "Japan", difficulty: 1 },
-      { flag: "🇨🇳", country: "China", difficulty: 1 },
-      { flag: "🇧🇷", country: "Brazil", difficulty: 1 },
-      { flag: "🇨🇦", country: "Canada", difficulty: 1 },
-      { flag: "🇦🇺", country: "Australia", difficulty: 1 },
-      { flag: "🇮🇳", country: "India", difficulty: 1 },
-      { flag: "🇲🇽", country: "Mexico", difficulty: 1 },
-      { flag: "🇮🇹", country: "Italy", difficulty: 1 },
-      { flag: "🇪🇸", country: "Spain", difficulty: 1 },
-      { flag: "🇷🇺", country: "Russia", difficulty: 1 },
-      { flag: "🇰🇷", country: "South Korea", difficulty: 1 },
-      { flag: "🇿🇦", country: "South Africa", difficulty: 1 },
-      { flag: "🇦🇷", country: "Argentina", difficulty: 1 },
-      { flag: "🇳🇴", country: "Norway", difficulty: 1 },
-      { flag: "🇸🇪", country: "Sweden", difficulty: 1 },
-      { flag: "🇬🇷", country: "Greece", difficulty: 1 },
-      { flag: "🇵🇹", country: "Portugal", difficulty: 1 },
-      { flag: "🇳🇱", country: "Netherlands", difficulty: 1 },
-      { flag: "🇵🇱", country: "Poland", difficulty: 1 },
-      { flag: "🇹🇷", country: "Turkey", difficulty: 1 },
-      { flag: "🇪🇬", country: "Egypt", difficulty: 1 },
-      { flag: "🇦🇹", country: "Austria", difficulty: 2 },
-      { flag: "🇧🇪", country: "Belgium", difficulty: 2 },
-      { flag: "🇨🇭", country: "Switzerland", difficulty: 2 },
-      { flag: "🇩🇰", country: "Denmark", difficulty: 2 },
-      { flag: "🇫🇮", country: "Finland", difficulty: 2 },
-      { flag: "🇨🇿", country: "Czech Republic", difficulty: 2 },
-      { flag: "🇭🇺", country: "Hungary", difficulty: 2 },
-      { flag: "🇷🇴", country: "Romania", difficulty: 2 },
-      { flag: "🇺🇦", country: "Ukraine", difficulty: 2 },
-      { flag: "🇮🇱", country: "Israel", difficulty: 2 },
-      { flag: "🇸🇦", country: "Saudi Arabia", difficulty: 2 },
-      { flag: "🇮🇷", country: "Iran", difficulty: 2 },
-      { flag: "🇮🇶", country: "Iraq", difficulty: 2 },
-      { flag: "🇵🇰", country: "Pakistan", difficulty: 2 },
-      { flag: "🇧🇩", country: "Bangladesh", difficulty: 2 },
-      { flag: "🇳🇬", country: "Nigeria", difficulty: 2 },
-      { flag: "🇰🇪", country: "Kenya", difficulty: 2 },
-      { flag: "🇹🇭", country: "Thailand", difficulty: 2 },
-      { flag: "🇻🇳", country: "Vietnam", difficulty: 2 },
-      { flag: "🇮🇩", country: "Indonesia", difficulty: 2 },
-      { flag: "🇲🇾", country: "Malaysia", difficulty: 2 },
-      { flag: "🇵🇭", country: "Philippines", difficulty: 2 },
-      { flag: "🇨🇱", country: "Chile", difficulty: 2 },
-      { flag: "🇨🇴", country: "Colombia", difficulty: 2 },
-      { flag: "🇵🇪", country: "Peru", difficulty: 2 },
-      { flag: "🇦🇿", country: "Azerbaijan", difficulty: 3 },
-      { flag: "🇧🇾", country: "Belarus", difficulty: 3 },
-      { flag: "🇬🇪", country: "Georgia", difficulty: 3 },
-      { flag: "🇰🇿", country: "Kazakhstan", difficulty: 3 },
-      { flag: "🇲🇩", country: "Moldova", difficulty: 3 },
-      { flag: "🇲🇰", country: "North Macedonia", difficulty: 3 },
-      { flag: "🇦🇲", country: "Armenia", difficulty: 3 },
-      { flag: "🇹🇯", country: "Tajikistan", difficulty: 3 },
-      { flag: "🇹🇲", country: "Turkmenistan", difficulty: 3 },
-      { flag: "🇺🇿", country: "Uzbekistan", difficulty: 3 },
-      { flag: "🇧🇫", country: "Burkina Faso", difficulty: 3 },
-      { flag: "🇩🇯", country: "Djibouti", difficulty: 3 },
-      { flag: "🇲🇿", country: "Mozambique", difficulty: 3 },
-      { flag: "🇲🇬", country: "Madagascar", difficulty: 3 },
-      { flag: "🇸🇷", country: "Suriname", difficulty: 3 },
-      { flag: "🇲🇷", country: "Mauritania", difficulty: 3 },
-      { flag: "🇪🇷", country: "Eritrea", difficulty: 3 },
-      { flag: "🇰🇮", country: "Kiribati", difficulty: 3 },
+      { flag: "🇺🇸", country: "United States", difficulty: 1, region: "North America" },
+      { flag: "🇬🇧", country: "United Kingdom", difficulty: 1, region: "Western Europe" },
+      { flag: "🇫🇷", country: "France", difficulty: 1, region: "Western Europe" },
+      { flag: "🇩🇪", country: "Germany", difficulty: 1, region: "Western Europe" },
+      { flag: "🇯🇵", country: "Japan", difficulty: 1, region: "East Asia" },
+      { flag: "🇨🇳", country: "China", difficulty: 1, region: "East Asia" },
+      { flag: "🇧🇷", country: "Brazil", difficulty: 1, region: "South America" },
+      { flag: "🇨🇦", country: "Canada", difficulty: 1, region: "North America" },
+      { flag: "🇦🇺", country: "Australia", difficulty: 1, region: "Pacific" },
+      { flag: "🇮🇳", country: "India", difficulty: 1, region: "South Asia" },
+      { flag: "🇲🇽", country: "Mexico", difficulty: 1, region: "North America" },
+      { flag: "🇮🇹", country: "Italy", difficulty: 1, region: "Western Europe" },
+      { flag: "🇪🇸", country: "Spain", difficulty: 1, region: "Western Europe" },
+      { flag: "🇷🇺", country: "Russia", difficulty: 1, region: "Eastern Europe" },
+      { flag: "🇰🇷", country: "South Korea", difficulty: 1, region: "East Asia" },
+      { flag: "🇿🇦", country: "South Africa", difficulty: 1, region: "Sub-Saharan Africa" },
+      { flag: "🇦🇷", country: "Argentina", difficulty: 1, region: "South America" },
+      { flag: "🇳🇴", country: "Norway", difficulty: 1, region: "Western Europe" },
+      { flag: "🇸🇪", country: "Sweden", difficulty: 1, region: "Western Europe" },
+      { flag: "🇬🇷", country: "Greece", difficulty: 1, region: "Eastern Europe" },
+      { flag: "🇵🇹", country: "Portugal", difficulty: 1, region: "Western Europe" },
+      { flag: "🇳🇱", country: "Netherlands", difficulty: 1, region: "Western Europe" },
+      { flag: "🇵🇱", country: "Poland", difficulty: 1, region: "Eastern Europe" },
+      { flag: "🇹🇷", country: "Turkey", difficulty: 1, region: "Middle East" },
+      { flag: "🇪🇬", country: "Egypt", difficulty: 1, region: "North Africa" },
+      { flag: "🇦🇹", country: "Austria", difficulty: 2, region: "Western Europe" },
+      { flag: "🇧🇪", country: "Belgium", difficulty: 2, region: "Western Europe" },
+      { flag: "🇨🇭", country: "Switzerland", difficulty: 2, region: "Western Europe" },
+      { flag: "🇩🇰", country: "Denmark", difficulty: 2, region: "Western Europe" },
+      { flag: "🇫🇮", country: "Finland", difficulty: 2, region: "Western Europe" },
+      { flag: "🇨🇿", country: "Czech Republic", difficulty: 2, region: "Eastern Europe" },
+      { flag: "🇭🇺", country: "Hungary", difficulty: 2, region: "Eastern Europe" },
+      { flag: "🇷🇴", country: "Romania", difficulty: 2, region: "Eastern Europe" },
+      { flag: "🇺🇦", country: "Ukraine", difficulty: 2, region: "Eastern Europe" },
+      { flag: "🇮🇱", country: "Israel", difficulty: 2, region: "Middle East" },
+      { flag: "🇸🇦", country: "Saudi Arabia", difficulty: 2, region: "Middle East" },
+      { flag: "🇮🇷", country: "Iran", difficulty: 2, region: "Middle East" },
+      { flag: "🇮🇶", country: "Iraq", difficulty: 2, region: "Middle East" },
+      { flag: "🇵🇰", country: "Pakistan", difficulty: 2, region: "South Asia" },
+      { flag: "🇧🇩", country: "Bangladesh", difficulty: 2, region: "South Asia" },
+      { flag: "🇳🇬", country: "Nigeria", difficulty: 2, region: "Sub-Saharan Africa" },
+      { flag: "🇰🇪", country: "Kenya", difficulty: 2, region: "Sub-Saharan Africa" },
+      { flag: "🇹🇭", country: "Thailand", difficulty: 2, region: "Southeast Asia" },
+      { flag: "🇻🇳", country: "Vietnam", difficulty: 2, region: "Southeast Asia" },
+      { flag: "🇮🇩", country: "Indonesia", difficulty: 2, region: "Southeast Asia" },
+      { flag: "🇲🇾", country: "Malaysia", difficulty: 2, region: "Southeast Asia" },
+      { flag: "🇵🇭", country: "Philippines", difficulty: 2, region: "Southeast Asia" },
+      { flag: "🇨🇱", country: "Chile", difficulty: 2, region: "South America" },
+      { flag: "🇨🇴", country: "Colombia", difficulty: 2, region: "South America" },
+      { flag: "🇵🇪", country: "Peru", difficulty: 2, region: "South America" },
+      { flag: "🇦🇿", country: "Azerbaijan", difficulty: 3, region: "Central Asia" },
+      { flag: "🇧🇾", country: "Belarus", difficulty: 3, region: "Eastern Europe" },
+      { flag: "🇬🇪", country: "Georgia", difficulty: 3, region: "Central Asia" },
+      { flag: "🇰🇿", country: "Kazakhstan", difficulty: 3, region: "Central Asia" },
+      { flag: "🇲🇩", country: "Moldova", difficulty: 3, region: "Eastern Europe" },
+      { flag: "🇲🇰", country: "North Macedonia", difficulty: 3, region: "Eastern Europe" },
+      { flag: "🇦🇲", country: "Armenia", difficulty: 3, region: "Central Asia" },
+      { flag: "🇹🇯", country: "Tajikistan", difficulty: 3, region: "Central Asia" },
+      { flag: "🇹🇲", country: "Turkmenistan", difficulty: 3, region: "Central Asia" },
+      { flag: "🇺🇿", country: "Uzbekistan", difficulty: 3, region: "Central Asia" },
+      { flag: "🇧🇫", country: "Burkina Faso", difficulty: 3, region: "Sub-Saharan Africa" },
+      { flag: "🇩🇯", country: "Djibouti", difficulty: 3, region: "Sub-Saharan Africa" },
+      { flag: "🇲🇿", country: "Mozambique", difficulty: 3, region: "Sub-Saharan Africa" },
+      { flag: "🇲🇬", country: "Madagascar", difficulty: 3, region: "Sub-Saharan Africa" },
+      { flag: "🇸🇷", country: "Suriname", difficulty: 3, region: "South America" },
+      { flag: "🇲🇷", country: "Mauritania", difficulty: 3, region: "North Africa" },
+      { flag: "🇪🇷", country: "Eritrea", difficulty: 3, region: "Sub-Saharan Africa" },
+      { flag: "🇰🇮", country: "Kiribati", difficulty: 3, region: "Pacific" },
     ];
 
     const SPELLING_CATEGORIES = [
@@ -213,6 +213,10 @@
       blitzCountdown: null,
       sessionWordCount: 0,
       warmupRamp: false,
+      // Multiple choice
+      isMultipleChoice: false,
+      multipleChoiceOptions: [],
+      mcAnswered: false,
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
@@ -256,7 +260,7 @@
     }
 
     function getCatStats(catId) {
-      return state.categoryStats[catId] || { difficulty: 1, hasPlayed: false, bestScore: 0, wordsAttempted: 0, wordsCorrectFirstTry: 0 };
+      return state.categoryStats[catId] || { difficulty: 1, hasPlayed: false, bestScore: 0, wordsAttempted: 0, wordsCorrectFirstTry: 0, mcAttempted: 0, mcCorrect: 0 };
     }
 
     function setCatStats(catId, updates) {
@@ -358,6 +362,168 @@
       return ["countries", "states", "elements", "flags"].includes(state.selectedCategory);
     }
 
+    function shouldShowMultipleChoice() {
+      if (!isQuizMode()) return false;
+      const d = state.warmupRamp
+        ? Math.min(state.difficulty, getDifficultyTier(state.difficulty) <= 1 ? 3 : state.difficulty)
+        : state.difficulty;
+      if (d < 2) return Math.random() < 0.85;
+      if (d < 4) return Math.random() < 0.65;
+      if (d < 6) return Math.random() < 0.40;
+      if (d < 8) return Math.random() < 0.20;
+      return false;
+    }
+
+    function generateMCOptions() {
+      const word = state.currentWord;
+      if (!word) return [];
+      const correctAnswer = word.word;
+      const catId = word.catId || state.selectedCategory;
+      const isMobile = window.innerWidth < 600;
+      const numOptions = isMobile ? 3 : 4;
+      const numDistractors = numOptions - 1;
+      const currentTier = getDifficultyTier(state.difficulty);
+
+      function pickRandom(arr, n, exclude) {
+        const pool = arr.filter(x => !exclude.has(x)).sort(() => Math.random() - 0.5);
+        return pool.slice(0, n);
+      }
+
+      let distractors = [];
+
+      if (catId === 'countries' || catId === 'states') {
+        const dataset = catId === 'countries' ? COUNTRIES_CAPITALS : STATES_CAPITALS;
+        const entry = word.entry;
+        const isCapitalAnswer = entry && word.word === entry.capital;
+        const region = entry && entry.region;
+        // Countries use .country field, states use .state field
+        const idField = catId === 'countries' ? 'country' : 'state';
+        const correctId = entry && entry[idField];
+
+        const getAnswer = (e) => isCapitalAnswer ? e.capital : e[idField];
+        const notCorrect = (e) => e[idField] !== correctId;
+
+        // Prefer same-region distractors
+        const sameRegion = region
+          ? dataset.filter(e => e.region === region && notCorrect(e))
+          : [];
+        const higherTier = currentTier < 3
+          ? dataset.filter(e => e.difficulty > currentTier && notCorrect(e))
+          : [];
+        const anyOther = dataset.filter(notCorrect);
+
+        const used = new Set([correctAnswer]);
+
+        // 1 higher-tier distractor
+        if (higherTier.length > 0 && numDistractors > 1) {
+          const picks = pickRandom(higherTier.map(getAnswer), 1, used);
+          picks.forEach(p => { distractors.push(p); used.add(p); });
+        }
+        // Fill from same region
+        const regionAnswers = sameRegion.map(getAnswer).filter(a => a && !used.has(a));
+        const regionPicks = regionAnswers.sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
+        regionPicks.forEach(p => { distractors.push(p); used.add(p); });
+        // Fill remainder from any
+        if (distractors.length < numDistractors) {
+          const anyAnswers = anyOther.map(getAnswer).filter(a => a && !used.has(a));
+          const anyPicks = anyAnswers.sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
+          anyPicks.forEach(p => { distractors.push(p); used.add(p); });
+        }
+
+      } else if (catId === 'elements') {
+        const entry = word.entry;
+        const isNameAnswer = word.isElementName;
+        const group = entry && entry.group;
+        const number = entry && entry.number;
+
+        // For symbol answer: pick symbols from nearby atomic numbers or same group
+        // For name answer: pick names from same group or nearby numbers
+        const getAnswer = (e) => isNameAnswer ? e.name : e.symbol;
+        const used = new Set([correctAnswer]);
+
+        const sameGroup = group ? ELEMENTS.filter(e => e.group === group && e.name !== entry.name) : [];
+        const nearbyNum = number ? ELEMENTS.filter(e => Math.abs(e.number - number) <= 10 && e.name !== entry.name) : [];
+        const higherTier = currentTier < 3
+          ? ELEMENTS.filter(e => e.difficulty > currentTier && e.name !== entry.name)
+          : [];
+
+        // If symbol answer, prefer visually/numerically similar symbols
+        if (!isNameAnswer) {
+          // Nearby elements (similar atomic numbers) = similar symbols often
+          const nearby = nearbyNum.map(getAnswer).filter(a => !used.has(a));
+          const nearbyPicks = nearby.sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
+          nearbyPicks.forEach(p => { distractors.push(p); used.add(p); });
+        } else {
+          const groupAnswers = sameGroup.map(getAnswer).filter(a => !used.has(a));
+          const groupPicks = groupAnswers.sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
+          groupPicks.forEach(p => { distractors.push(p); used.add(p); });
+        }
+
+        // 1 higher-tier distractor
+        if (higherTier.length > 0 && distractors.length < numDistractors) {
+          const picks = higherTier.map(getAnswer).filter(a => !used.has(a)).sort(() => Math.random() - 0.5).slice(0, 1);
+          picks.forEach(p => { distractors.push(p); used.add(p); });
+        }
+        // Fill remainder from any element
+        if (distractors.length < numDistractors) {
+          const any = ELEMENTS.filter(e => e.name !== entry.name).map(getAnswer).filter(a => !used.has(a));
+          const anyPicks = any.sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
+          anyPicks.forEach(p => { distractors.push(p); used.add(p); });
+        }
+
+      } else if (catId === 'flags') {
+        const entry = word.entry;
+        const region = entry && entry.region;
+        const used = new Set([correctAnswer]);
+
+        const sameRegion = region ? FLAGS.filter(f => f.region === region && f.country !== entry.country) : [];
+        const higherTier = currentTier < 3
+          ? FLAGS.filter(f => f.difficulty > currentTier && f.country !== entry.country)
+          : [];
+        const anyOther = FLAGS.filter(f => f.country !== entry.country);
+
+        // 1 higher-tier distractor
+        if (higherTier.length > 0 && numDistractors > 1) {
+          const picks = higherTier.filter(f => !used.has(f.country)).sort(() => Math.random() - 0.5).slice(0, 1);
+          picks.forEach(f => { distractors.push(f.country); used.add(f.country); });
+        }
+        // Same region
+        const regionPicks = sameRegion.filter(f => !used.has(f.country)).sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
+        regionPicks.forEach(f => { distractors.push(f.country); used.add(f.country); });
+        // Any remainder
+        if (distractors.length < numDistractors) {
+          const anyPicks = anyOther.filter(f => !used.has(f.country)).sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
+          anyPicks.forEach(f => { distractors.push(f.country); used.add(f.country); });
+        }
+      }
+
+      // Assemble and shuffle
+      const options = [correctAnswer, ...distractors.slice(0, numDistractors)];
+      for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+      }
+      return options.map(o => ({ answer: o, isCorrect: o === correctAnswer }));
+    }
+
+    function handleMCAnswer(answer) {
+      if (!state.currentWord || state.transitioning || state.mcAnswered) return;
+      state.mcAnswered = true;
+      state.lastAttempt = answer;
+      const isCorrect = answer === state.currentWord.word;
+      const key = getStatsKey();
+      const cs = getCatStats(key);
+      setCatStats(key, { mcAttempted: (cs.mcAttempted || 0) + 1, mcCorrect: (cs.mcCorrect || 0) + (isCorrect ? 1 : 0) });
+
+      // Re-render to show button color feedback, then process result
+      render();
+      if (isCorrect) {
+        setTimeout(() => handleCorrect(), 300);
+      } else {
+        setTimeout(() => handleWrong(`It was "${state.currentWord.word}"`), 400);
+      }
+    }
+
     function getElementChallenge() {
       const rawTier = getEffectiveTier();
       const tier = rawTier === 0 ? 1 : rawTier; // elements have no tier 0; fall back to tier 1
@@ -372,19 +538,19 @@
         return {
           word: entry.name, definition: "Symbol: " + entry.symbol + "  •  Atomic #" + entry.number,
           sentence: "Unscramble to find the element with symbol " + entry.symbol + ": ______",
-          category: "Elements & Symbols", catId: "elements", mechanic: "scramble", misspelled: "", wrongIndex: -1
+          category: "Elements & Symbols", catId: "elements", mechanic: "scramble", misspelled: "", wrongIndex: -1, entry
         };
       } else if (showSymbolTypeName) {
         return {
           word: entry.name, definition: "Symbol: " + entry.symbol + "  •  Atomic #" + entry.number,
           sentence: "The element with symbol " + entry.symbol + " is ______.",
-          category: "Elements & Symbols", catId: "elements", misspelled: "", wrongIndex: -1
+          category: "Elements & Symbols", catId: "elements", misspelled: "", wrongIndex: -1, entry, isElementName: true
         };
       } else {
         return {
           word: entry.symbol, definition: "Element: " + entry.name + "  •  Atomic #" + entry.number,
           sentence: "The chemical symbol for " + entry.name + " is ______.",
-          category: "Elements & Symbols", catId: "elements", misspelled: "", wrongIndex: -1
+          category: "Elements & Symbols", catId: "elements", misspelled: "", wrongIndex: -1, entry, isElementName: false
         };
       }
     }
@@ -400,7 +566,7 @@
       return {
         word: entry.country, definition: entry.flag,
         sentence: "The country with this flag " + entry.flag + " is ______.",
-        category: "Flag to Country", catId: "flags", isFlag: true, misspelled: "", wrongIndex: -1
+        category: "Flag to Country", catId: "flags", isFlag: true, misspelled: "", wrongIndex: -1, entry
       };
     }
 
@@ -420,25 +586,30 @@
       const dataset = getCapitalsDataset();
       const tier = getEffectiveTier();
       const usedSet = new Set(state.usedWords);
+      const isStates = state.selectedCategory === "states";
+      // Countries use .country field, states use .state field
+      const nameField = isStates ? "state" : "country";
+      const nameLabel = isStates ? "state" : "country";
 
       const candidates = dataset.filter(d =>
-        d.difficulty === tier && !usedSet.has(d.country) && !usedSet.has(d.capital)
+        d.difficulty === tier && !usedSet.has(d[nameField]) && !usedSet.has(d.capital)
       );
       const pool = candidates.length > 0 ? candidates :
-        dataset.filter(d => !usedSet.has(d.country) && !usedSet.has(d.capital));
+        dataset.filter(d => !usedSet.has(d[nameField]) && !usedSet.has(d.capital));
 
       if (pool.length === 0) return null;
       const entry = pool[Math.floor(Math.random() * pool.length)];
+      const entryName = entry[nameField]; // the country or state name
 
       const isHardMode = state.difficulty >= 5;
 
       if (!isHardMode) {
-        // Easy: just spell the country or capital (random pick)
+        // Easy: just spell the country/state or capital (random pick)
         const spellCapital = Math.random() < 0.5;
-        const wordToSpell = spellCapital ? entry.capital : entry.country;
+        const wordToSpell = spellCapital ? entry.capital : entryName;
         const context = spellCapital
-          ? `The capital of ${entry.country}`
-          : `The country whose capital is ${entry.capital}`;
+          ? `The capital of ${entryName}`
+          : `The ${nameLabel} whose capital is ${entry.capital}`;
         return {
           word: wordToSpell,
           definition: context,
@@ -449,13 +620,13 @@
           entry
         };
       } else {
-        // Hard: see the country, spell the capital (or vice versa, alternating)
+        // Hard: see the country/state, spell the capital (or vice versa, alternating)
         const spellCapital = Math.random() < 0.5;
-        const prompt = spellCapital ? entry.country : entry.capital;
-        const answer = spellCapital ? entry.capital : entry.country;
+        const prompt = spellCapital ? entryName : entry.capital;
+        const answer = spellCapital ? entry.capital : entryName;
         const clue = spellCapital
           ? `What is the capital of ${prompt}?`
-          : `${state.selectedCategory === "countries" ? "Which country" : "Which state"} has ${prompt} as its capital?`;
+          : `Which ${nameLabel} has ${prompt} as its capital?`;
         return {
           word: answer,
           definition: clue,
@@ -623,6 +794,7 @@
       state.loading = true; state.hint = null; state.hintUsed = false;
       state.attempts = 0; state.feedback = null; state.transitioning = false;
       state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null;
+      state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
       render();
       try {
         const isCapitals = isCapitalsMode();
@@ -642,6 +814,13 @@
         state.currentWord = wordData;
         state.usedWords.push(wordData.word);
         state.sessionWordCount += 1;
+
+        // Determine multiple choice (quiz mode only, not scramble mechanic)
+        if (isQuizMode() && next !== "scramble" && shouldShowMultipleChoice()) {
+          state.isMultipleChoice = true;
+          state.multipleChoiceOptions = generateMCOptions();
+          state.mechanic = "definition"; // MC always shows definition-style clue
+        }
 
         if (next === "scramble") {
           state.scrambled = scrambleWord(wordData.word.toUpperCase());
@@ -682,7 +861,8 @@
       if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, true);
       state.streak += 1;
       const prevDiff = state.difficulty;
-      state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
+      const diffIncrease = state.isMultipleChoice ? 0.1 : (state.hintUsed ? 0.2 : 0.4);
+      state.difficulty = Math.min(10, state.difficulty + diffIncrease);
       if ([3, 5, 8].includes(state.streak)) showCelebration(state.streak);
 
       if (state.blitz) {
@@ -701,7 +881,7 @@
         render();
         setTimeout(() => { if (state.blitzExpired) { endBlitzGame(); return; } loadNextWord(); }, 1000);
       } else {
-        const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
+        const pts = state.isMultipleChoice ? 1 : (state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2);
         state.score += pts;
         const key = getStatsKey();
         const cs = getCatStats(key);
@@ -713,7 +893,7 @@
         if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
           setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
         }
-        state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
+        state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct!${pts > 0 ? ` +${pts} pts` : ""}` };
         state.transitioning = true;
         saveProgress();
         saveSession();
@@ -1061,7 +1241,9 @@
               </div>`;
             }
             const winRate = s.wordsAttempted > 0 ? Math.round((s.wordsCorrectFirstTry / s.wordsAttempted) * 100) : 0;
+            const mcWinRate = s.mcAttempted > 0 ? Math.round((s.mcCorrect / s.mcAttempted) * 100) : null;
             const diffPct = ((s.difficulty - 1) / 9) * 100;
+            const isQuizCat = ["countries", "states", "elements", "flags"].includes(c.id);
             return `<div class="stat-card">
               <div class="stat-card-header"><span class="stat-card-emoji">${c.emoji}</span><span class="stat-card-name">${c.name}</span></div>
               <div class="stat-card-best">${s.bestScore}</div>
@@ -1073,6 +1255,7 @@
                 <span>${s.wordsAttempted} words</span>
                 <span>${winRate}% first try</span>
               </div>
+              ${isQuizCat && mcWinRate !== null ? `<div class="stat-card-meta" style="margin-top:4px"><span>👆 MC: ${mcWinRate}% (${s.mcAttempted} q's)</span></div>` : ""}
             </div>`;
           }).join("");
           app.innerHTML = `
@@ -1312,12 +1495,33 @@
         oneletteroff: "🔍 One Letter Off",
       };
 
-      const showStandardInput = state.currentWord && !state.loading && ["audio", "definition"].includes(state.mechanic);
-      const showGapSubmit = state.currentWord && !state.loading && state.mechanic === "lettergap";
-      const showScrambleSubmit = state.currentWord && !state.loading && state.mechanic === "scramble";
+      const showMC = state.isMultipleChoice && state.currentWord && !state.loading;
+      const showStandardInput = !showMC && state.currentWord && !state.loading && ["audio", "definition"].includes(state.mechanic);
+      const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
+      const showScrambleSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "scramble";
       const hintAllowed = !state.blitz;
 
+      let mcButtonsHTML = "";
+      if (showMC && state.multipleChoiceOptions.length > 0) {
+        // For flags, look up the flag emoji for each option
+        const isFlagsMode = state.selectedCategory === "flags";
+        mcButtonsHTML = state.multipleChoiceOptions.map(opt => {
+          let btnContent = opt.answer;
+          let btnClass = "mc-btn";
+          if (state.mcAnswered) {
+            btnClass += opt.isCorrect ? " mc-correct" : (opt.answer === state.lastAttempt ? " mc-wrong" : "");
+          }
+          if (isFlagsMode) {
+            const flagEntry = FLAGS.find(f => f.country === opt.answer);
+            const flagEmoji = flagEntry ? flagEntry.flag : "";
+            btnContent = `<span class="mc-flag-emoji">${flagEmoji}</span><span class="mc-flag-label">${opt.answer}</span>`;
+          }
+          return `<button class="${btnClass}" onclick="handleMCAnswer('${opt.answer.replace(/'/g, "\\'")}')" ${state.mcAnswered || state.transitioning ? "disabled" : ""}>${btnContent}</button>`;
+        }).join("");
+      }
+
       const footerHTML = `
+        ${showMC ? `<div class="mc-options">${mcButtonsHTML}</div>` : ""}
         ${showStandardInput ? `
           <div class="input-row">
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning ? "disabled" : ""}/>
@@ -1367,7 +1571,7 @@
         <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
       </div>`}
       <div class="game-body">
-        ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${mechanicLabels[state.mechanic] || ""}</p>` : ""}
+        ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${state.isMultipleChoice ? "👆 Multiple Choice" : (mechanicLabels[state.mechanic] || "")}</p>` : ""}
         ${cardHTML}
         ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
         ${state.hint ? `<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>` : ""}
