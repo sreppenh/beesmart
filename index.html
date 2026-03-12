@@ -12,7 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  
+
 </head>
 
 <body>
@@ -167,6 +167,7 @@
       { id: "science", name: "Science & Nature", emoji: "🔬", prompt: "scientific terms, animals, plants, elements, phenomena, anatomy" },
       { id: "arts", name: "Arts & Culture", emoji: "🎭", prompt: "art movements, musicians, authors, films, cultural terms, architecture" },
       { id: "food", name: "Food & Cooking", emoji: "🍽️", prompt: "ingredients, dishes, cooking techniques, cuisines, chefs, food terms" },
+      { id: "sports", name: "Sports & Games", emoji: "🏅", prompt: "sports terms, athletic events, game rules, board games, chess, classic video game terms" },
       { id: "general", name: "General", emoji: "📚", prompt: "mixed nouns, concepts, commonly misspelled words, vocabulary, idioms" },
       { id: "surprise", name: "Surprise Me", emoji: "🎲", prompt: "anything goes — a wild unpredictable mix of all categories" },
     ];
@@ -277,7 +278,7 @@
     }
 
     function clearSession() {
-      try { localStorage.removeItem("beesmart_session"); } catch {}
+      try { localStorage.removeItem("beesmart_session"); } catch { }
     }
 
     function resumeGame() {
@@ -339,13 +340,13 @@
       const el = document.getElementById("celebration");
       let emojis, tier, duration;
       if (streak >= 8) {
-        emojis = ["🐝","⭐","🎊","🐝","✨","🎉","🐝","⭐","🎊","✨","🐝","🎉"];
+        emojis = ["🐝", "⭐", "🎊", "🐝", "✨", "🎉", "🐝", "⭐", "🎊", "✨", "🐝", "🎉"];
         tier = "tier-3"; duration = 1800;
       } else if (streak >= 5) {
-        emojis = ["🐝","⭐","🐝","✨","🐝"];
+        emojis = ["🐝", "⭐", "🐝", "✨", "🐝"];
         tier = "tier-2"; duration = 1300;
       } else {
-        emojis = ["🐝","✨"];
+        emojis = ["🐝", "✨"];
         tier = "tier-1"; duration = 900;
       }
       el.innerHTML = emojis.map((e, i) =>
@@ -1217,8 +1218,8 @@
               </div>
               <div class="blitz-hero-stat">
                 ${isWords
-                  ? `<span class="blitz-hero-num">${bsStats.bestWordsCorrect || 0}</span><span class="blitz-hero-label">best words</span>`
-                  : `<span class="blitz-hero-num">${bsStats.bestTimeSurvived || 0}s</span><span class="blitz-hero-label">best time</span>`}
+              ? `<span class="blitz-hero-num">${bsStats.bestWordsCorrect || 0}</span><span class="blitz-hero-label">best words</span>`
+              : `<span class="blitz-hero-num">${bsStats.bestTimeSurvived || 0}s</span><span class="blitz-hero-label">best time</span>`}
               </div>
               <div class="blitz-hero-meta">
                 <span>${bsStats.totalRuns || 0} runs</span>
@@ -1544,13 +1545,13 @@
         <div style="display:flex;align-items:center;gap:8px">
           <button class="home-btn" onclick="goHome()" title="Home">⌂</button>
           ${state.blitz
-            ? `<span class="blitz-badge">⚡ Blitz</span>`
-            : `<div class="lives">${hearts}</div>`}
+          ? `<span class="blitz-badge">⚡ Blitz</span>`
+          : `<div class="lives">${hearts}</div>`}
         </div>
         <div class="score-area">
           ${state.blitz
-            ? `<span class="score-num">${state.blitzWordsCorrect}</span><span style="font-size:12px;color:var(--muted);margin-left:4px">words</span>`
-            : `<span class="score-num">${state.score}</span>`}
+          ? `<span class="score-num">${state.blitzWordsCorrect}</span><span style="font-size:12px;color:var(--muted);margin-left:4px">words</span>`
+          : `<span class="score-num">${state.score}</span>`}
           ${state.streak >= 2 ? `<span class="streak-pill">🔥 ${state.streak}</span>` : ""}
         </div>
       </div>
