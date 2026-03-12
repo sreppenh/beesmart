@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="bee-icon.svg" />
   <meta name="theme-color" content="#FFD100" />
   <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   
@@ -30,6 +30,7 @@
   <script>
     const API = "/api/word";
     const MECHANICS = ["audio", "definition", "scramble", "lettergap", "oneletteroff"];
+    const BLITZ_MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff"];
 
 
     const ELEMENTS = [
@@ -200,6 +201,16 @@
       theme: "night",
       lastAttempt: null,
       categoryStats: {},
+      blitzStatView: "words",
+      // blitz runtime
+      blitz: false,
+      blitzTimeRemaining: 60,
+      blitzTimerInterval: null,
+      blitzWordsCorrect: 0,
+      blitzStartTime: 0,
+      blitzTimeSurvived: 0,
+      blitzExpired: false,
+      blitzCountdown: null,
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
@@ -318,11 +329,27 @@
       setTimeout(() => t.classList.remove("show"), 2500);
     }
 
-    function showCelebration() {
+    function showCelebration(streak) {
       const el = document.getElementById("celebration");
-      el.classList.add("show");
-      setTimeout(() => el.classList.remove("show"), 1500);
+      let emojis, tier, duration;
+      if (streak >= 8) {
+        emojis = ["🐝","⭐","🎊","🐝","✨","🎉","🐝","⭐","🎊","✨","🐝","🎉"];
+        tier = "tier-3"; duration = 1800;
+      } else if (streak >= 5) {
+        emojis = ["🐝","⭐","🐝","✨","🐝"];
+        tier = "tier-2"; duration = 1300;
+      } else {
+        emojis = ["🐝","✨"];
+        tier = "tier-1"; duration = 900;
+      }
+      el.innerHTML = emojis.map((e, i) =>
+        `<span class="celeb-emoji" style="font-size:${tier === 'tier-3' ? 52 : tier === 'tier-2' ? 44 : 36}px;animation-delay:${i * 0.05}s">${e}</span>`
+      ).join("");
+      el.className = `show ${tier}`;
+      setTimeout(() => { el.className = ""; el.innerHTML = ""; }, duration);
     }
+
+    function showShareToast() { showToast("Sharing coming soon!"); }
 
 
     function isQuizMode() {
@@ -575,6 +602,7 @@
     }
 
     async function loadNextWord() {
+      if (state.blitz && state.blitzExpired) { endBlitzGame(); return; }
       state.loading = true; state.hint = null; state.hintUsed = false;
       state.attempts = 0; state.feedback = null; state.transitioning = false;
       state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null;
@@ -588,7 +616,8 @@
         } else if (state.selectedCategory === "elements") {
           next = "definition";
         } else {
-          next = MECHANICS[Math.floor(Math.random() * MECHANICS.length)];
+          const pool = state.blitz ? BLITZ_MECHANICS : MECHANICS;
+          next = pool[Math.floor(Math.random() * pool.length)];
         }
         const wordData = await fetchWord(!isQuiz && next === "oneletteroff");
         if (wordData.mechanic) next = wordData.mechanic;
@@ -612,6 +641,10 @@
         }
 
         state.loading = false; render();
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const card = document.querySelector(".word-card");
+          if (card) { card.classList.add("word-card-enter"); }
+        }));
         if (next === "audio") setTimeout(() => speak(wordData.word), 400);
         setTimeout(() => {
           const i = document.getElementById("word-input");
@@ -629,48 +662,81 @@
     // Handle correct answer scoring and progression
     function handleCorrect() {
       if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, true);
-      const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
-      state.score += pts; state.streak += 1;
+      state.streak += 1;
       const prevDiff = state.difficulty;
       state.difficulty = Math.min(10, state.difficulty + (state.hintUsed ? 0.2 : 0.4));
-      const key = getStatsKey();
-      const cs = getCatStats(key);
-      setCatStats(key, {
-        difficulty: state.difficulty,
-        wordsAttempted: cs.wordsAttempted + 1,
-        wordsCorrectFirstTry: cs.wordsCorrectFirstTry + (state.attempts === 0 ? 1 : 0),
-      });
-      if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
-        setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
+      if ([3, 5, 8].includes(state.streak)) showCelebration(state.streak);
+
+      if (state.blitz) {
+        state.blitzWordsCorrect++;
+        const streakBonus = state.streak > 0 && state.streak % 3 === 0;
+        const timeBonus = streakBonus ? 10 : 5;
+        state.blitzTimeRemaining += timeBonus;
+        const bs = getCatStats("blitz");
+        setCatStats("blitz", {
+          wordsAttempted: bs.wordsAttempted + 1,
+          wordsCorrectFirstTry: bs.wordsCorrectFirstTry + (state.attempts === 0 ? 1 : 0),
+        });
+        state.feedback = { type: "correct", msg: `✓ +${timeBonus}s${streakBonus ? " 🔥" : ""}` };
+        state.transitioning = true;
+        saveProgress();
+        render();
+        setTimeout(() => { if (state.blitzExpired) { endBlitzGame(); return; } loadNextWord(); }, 1000);
+      } else {
+        const pts = state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2;
+        state.score += pts;
+        const key = getStatsKey();
+        const cs = getCatStats(key);
+        setCatStats(key, {
+          difficulty: state.difficulty,
+          wordsAttempted: cs.wordsAttempted + 1,
+          wordsCorrectFirstTry: cs.wordsCorrectFirstTry + (state.attempts === 0 ? 1 : 0),
+        });
+        if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
+          setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
+        }
+        state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
+        state.transitioning = true;
+        saveProgress();
+        saveSession();
+        render();
+        setTimeout(() => loadNextWord(), 1400);
       }
-      state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct! +${pts} pts` };
-      state.transitioning = true;
-      saveProgress();
-      saveSession();
-      if (state.streak > 0 && state.streak % 3 === 0) showCelebration();
-      render();
-      setTimeout(() => loadNextWord(), 1400);
     }
 
     function handleWrong(revealMsg) {
       if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, false);
-      state.lives -= 1; state.streak = 0;
+      state.streak = 0;
       state.difficulty = Math.max(1, state.difficulty - 0.3);
-      const key = getStatsKey();
-      const cs = getCatStats(key);
-      setCatStats(key, { difficulty: state.difficulty, wordsAttempted: cs.wordsAttempted + 1 });
       state.transitioning = true;
-      if (state.lives <= 0) {
-        saveProgress();
-        clearSession();
-        const finalCs = getCatStats(key);
-        if (state.score > finalCs.bestScore) setCatStats(key, { bestScore: state.score });
+
+      if (state.blitz) {
+        state.blitzTimeRemaining = Math.max(0, state.blitzTimeRemaining - 5);
+        const bs = getCatStats("blitz");
+        setCatStats("blitz", { wordsAttempted: bs.wordsAttempted + 1 });
         state.feedback = { type: "wrong", msg: revealMsg };
-        render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
+        render();
+        setTimeout(() => {
+          if (state.blitzExpired || state.blitzTimeRemaining <= 0) { endBlitzGame(); return; }
+          loadNextWord();
+        }, 1400);
       } else {
-        saveSession();
-        state.feedback = { type: "wrong", msg: revealMsg };
-        render(); setTimeout(() => loadNextWord(), 1800);
+        state.lives -= 1;
+        const key = getStatsKey();
+        const cs = getCatStats(key);
+        setCatStats(key, { difficulty: state.difficulty, wordsAttempted: cs.wordsAttempted + 1 });
+        if (state.lives <= 0) {
+          saveProgress();
+          clearSession();
+          const finalCs = getCatStats(key);
+          if (state.score > finalCs.bestScore) setCatStats(key, { bestScore: state.score });
+          state.feedback = { type: "wrong", msg: revealMsg };
+          render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
+        } else {
+          saveSession();
+          state.feedback = { type: "wrong", msg: revealMsg };
+          render(); setTimeout(() => loadNextWord(), 1800);
+        }
       }
     }
 
@@ -819,7 +885,9 @@
 
     function goToMode(mode) {
       state.gameMode = mode;
-      if (mode === "mixed") {
+      if (mode === "blitz") {
+        startBlitzCountdown();
+      } else if (mode === "mixed") {
         const all = [...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES].filter(c => c.id !== "surprise");
         const pick = all[Math.floor(Math.random() * all.length)];
         selectCategory(pick.id);
@@ -831,13 +899,92 @@
 
     function goHome() {
       window.speechSynthesis.cancel();
+      if (state.blitzTimerInterval) { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; }
+      state.blitz = false;
       clearSession();
       state.screen = "home"; state.currentWord = null; state.feedback = null;
       render();
     }
 
+    function startBlitzCountdown() {
+      state.gameMode = "blitz";
+      state.screen = "blitz-countdown";
+      state.blitzCountdown = 3;
+      render();
+      const tick = setInterval(() => {
+        state.blitzCountdown--;
+        if (state.blitzCountdown <= 0) {
+          clearInterval(tick);
+          state.blitzCountdown = "GO";
+          render();
+          setTimeout(startBlitzGame, 650);
+        } else {
+          render();
+        }
+      }, 1000);
+    }
+
+    function startBlitzGame() {
+      if (state.blitzTimerInterval) clearInterval(state.blitzTimerInterval);
+      clearSession();
+      state.blitz = true;
+      state.blitzTimeRemaining = 60;
+      state.blitzWordsCorrect = 0;
+      state.blitzExpired = false;
+      state.blitzStartTime = Date.now();
+      state.blitzTimeSurvived = 0;
+      state.difficulty = 1;
+      state.selectedCategory = "surprise";
+      state.screen = "game"; state.lives = 3; state.score = 0;
+      state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
+      const bs = getCatStats("blitz");
+      if (!bs.hasPlayed) setCatStats("blitz", { hasPlayed: true, totalRuns: 0, bestWordsCorrect: 0, bestTimeSurvived: 0, wordsAttempted: 0, wordsCorrectFirstTry: 0 });
+      state.blitzTimerInterval = setInterval(() => {
+        if (!state.blitz || state.screen !== "game") { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; return; }
+        state.blitzTimeRemaining = Math.max(0, state.blitzTimeRemaining - 0.1);
+        const fill = document.getElementById("blitz-bar-fill");
+        const num = document.getElementById("blitz-time-num");
+        if (fill) {
+          fill.style.width = `${(state.blitzTimeRemaining / 60) * 100}%`;
+          fill.style.background = state.blitzTimeRemaining <= 10 ? "#ef4444" : state.blitzTimeRemaining <= 20 ? "#f97316" : "var(--yellow)";
+        }
+        if (num) num.textContent = Math.ceil(state.blitzTimeRemaining);
+        if (state.blitzTimeRemaining <= 0 && !state.blitzExpired) state.blitzExpired = true;
+      }, 100);
+      loadNextWord();
+    }
+
+    function endBlitzGame() {
+      if (state.blitzTimerInterval) { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; }
+      state.blitz = false;
+      const survived = Math.round((Date.now() - state.blitzStartTime) / 1000);
+      state.blitzTimeSurvived = survived;
+      const bs = getCatStats("blitz");
+      setCatStats("blitz", {
+        hasPlayed: true,
+        totalRuns: (bs.totalRuns || 0) + 1,
+        bestWordsCorrect: Math.max(bs.bestWordsCorrect || 0, state.blitzWordsCorrect),
+        bestTimeSurvived: Math.max(bs.bestTimeSurvived || 0, survived),
+      });
+      saveProgress();
+      clearSession();
+      state.screen = "gameover";
+      render();
+    }
+
     function render() {
       const app = document.getElementById("app");
+
+      // BLITZ COUNTDOWN
+      if (state.screen === "blitz-countdown") {
+        const isGo = state.blitzCountdown === "GO";
+        app.innerHTML = `
+        <div class="blitz-countdown-screen">
+          <div class="${isGo ? 'countdown-go' : 'countdown-num'}">${state.blitzCountdown}</div>
+          ${!isGo ? `<p style="font-size:13px;color:var(--muted);letter-spacing:1px">Get ready…</p>` : ""}
+        </div>`;
+        return;
+      }
 
       // HOME
       if (state.screen === "home") {
@@ -854,6 +1001,34 @@
           </div>`;
 
         if (state.homeTab === 'stats') {
+          const bsStats = getCatStats("blitz");
+          const blitzPlayed = bsStats.hasPlayed;
+          const isWords = state.blitzStatView === "words";
+          const blitzCard = blitzPlayed ? `
+            <div class="blitz-hero-card">
+              <div class="blitz-hero-header">
+                <span class="blitz-hero-emoji">⚡</span>
+                <span class="blitz-hero-name">Blitz</span>
+                <div class="blitz-toggle">
+                  <button class="blitz-toggle-btn ${isWords ? 'active' : ''}" onclick="state.blitzStatView='words';render()">Words</button>
+                  <button class="blitz-toggle-btn ${!isWords ? 'active' : ''}" onclick="state.blitzStatView='time';render()">Time</button>
+                </div>
+              </div>
+              <div class="blitz-hero-stat">
+                ${isWords
+                  ? `<span class="blitz-hero-num">${bsStats.bestWordsCorrect || 0}</span><span class="blitz-hero-label">best words</span>`
+                  : `<span class="blitz-hero-num">${bsStats.bestTimeSurvived || 0}s</span><span class="blitz-hero-label">best time</span>`}
+              </div>
+              <div class="blitz-hero-meta">
+                <span>${bsStats.totalRuns || 0} runs</span>
+                ${bsStats.wordsAttempted ? `<span>${Math.round((bsStats.wordsCorrectFirstTry || 0) / bsStats.wordsAttempted * 100)}% first try</span>` : ""}
+              </div>
+            </div>` : `
+            <div class="blitz-hero-card muted">
+              <div class="blitz-hero-header"><span class="blitz-hero-emoji">⚡</span><span class="blitz-hero-name">Blitz</span></div>
+              <p class="stat-card-unplayed">Not yet played</p>
+            </div>`;
+
           const MIXED_CAT = { id: "mixed", name: "Mixed Mode", emoji: "🎲" };
           const statsCats = [MIXED_CAT, ...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES];
           const cards = statsCats.map(c => {
@@ -887,7 +1062,7 @@
               <span class="stats-streak-num">${state.dailyStreak}</span>
               <span class="stats-streak-label">day streak 🔥</span>
             </div>
-            <div class="stats-list">${cards}</div>
+            <div class="stats-list">${blitzCard}${cards}</div>
           </div>`;
           return;
         }
@@ -929,6 +1104,9 @@
           <button class="mode-btn mixed" onclick="goToMode('mixed')">
             🎲 &nbsp; Mixed Mode — a bit of everything
           </button>
+          <button class="mode-btn blitz" onclick="goToMode('blitz')">
+            ⚡ &nbsp; Blitz — 60 seconds, go!
+          </button>
         </div>
         <div class="how-to">
           <p class="how-to-title">How to play</p>
@@ -949,7 +1127,7 @@
         <button class="back-btn" onclick="state.screen='home';render()">&#8592; Back</button>
         <div class="logo-area">
           <div class="bee-icon">🐝</div>
-          <p style="font-size:20px;color:var(--yellow);font-family:'Playfair Display',serif;font-weight:700;margin-top:4px">Spelling</p>
+          <p style="font-size:20px;color:var(--yellow);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-top:4px">Spelling</p>
         </div>
         <div style="width:100%">
           <p class="section-title">Choose a category</p>
@@ -969,7 +1147,7 @@
         <button class="back-btn" onclick="state.screen='home';render()">&#8592; Back</button>
         <div class="logo-area">
           <div class="bee-icon">🧠</div>
-          <p style="font-size:20px;color:#7aadff;font-family:'Playfair Display',serif;font-weight:700;margin-top:4px">Quiz</p>
+          <p style="font-size:20px;color:#7aadff;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-top:4px">Quiz</p>
         </div>
         <div style="width:100%">
           <p class="section-title">Choose a quiz</p>
@@ -981,34 +1159,60 @@
 
       // GAME OVER
       if (state.screen === "gameover") {
-        const gameOverKey = getStatsKey();
-        const gameOverCatStats = getCatStats(gameOverKey);
-        const newBest = state.score > 0 && state.score >= gameOverCatStats.bestScore;
-        const catId = state.gameMode === "mixed" ? "mixed" : state.selectedCategory;
-        const cat = catId === "mixed" ? { emoji: "🎲", name: "Mixed Mode" } : CATEGORIES.find(c => c.id === catId);
-        app.innerHTML = `
-      <div class="gameover">
-        <div class="gameover-bee">🐝</div>
-        <h2 class="gameover-title">Game Over</h2>
-        <div class="gameover-score">${state.score}</div>
-        <p class="gameover-label">points</p>
-        ${cat ? `<p class="gameover-cat">${cat.emoji} ${cat.name}</p>` : ""}
-        ${newBest ? `<p class="new-best">✨ New personal best!</p>` : ""}
-        <div style="height:8px"></div>
-        <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
-        <button class="btn-secondary" onclick="state.screen='home';render()">Change Category</button>
-      </div>`;
+        const isBlitzOver = state.gameMode === "blitz";
+        if (isBlitzOver) {
+          const blitzBs = getCatStats("blitz");
+          const blitzNewBest = state.blitzWordsCorrect > 0 && state.blitzWordsCorrect >= (blitzBs.bestWordsCorrect || 0);
+          app.innerHTML = `
+          <div class="gameover">
+            <div class="share-card">
+              <div class="gameover-bee">⚡</div>
+              <h2 class="gameover-title">Blitz Over</h2>
+              <div class="gameover-score">${state.blitzWordsCorrect}</div>
+              <p class="gameover-label">words correct</p>
+              <p class="gameover-cat">⏱ ${state.blitzTimeSurvived}s survived</p>
+              ${blitzNewBest ? `<p class="new-best">✨ New best!</p>` : ""}
+            </div>
+            <button class="share-btn" onclick="showShareToast()">🔗 Share result</button>
+            <div style="height:4px"></div>
+            <button class="btn-primary" onclick="startBlitzCountdown()">PLAY AGAIN</button>
+            <button class="btn-secondary" onclick="state.screen='home';render()">Home</button>
+          </div>`;
+        } else {
+          const gameOverKey = getStatsKey();
+          const gameOverCatStats = getCatStats(gameOverKey);
+          const newBest = state.score > 0 && state.score >= gameOverCatStats.bestScore;
+          const catId = state.gameMode === "mixed" ? "mixed" : state.selectedCategory;
+          const cat = catId === "mixed" ? { emoji: "🎲", name: "Mixed Mode" } : CATEGORIES.find(c => c.id === catId);
+          app.innerHTML = `
+          <div class="gameover">
+            <div class="share-card">
+              <div class="gameover-bee">🐝</div>
+              <h2 class="gameover-title">Game Over</h2>
+              <div class="gameover-score">${state.score}</div>
+              <p class="gameover-label">points</p>
+              ${cat ? `<p class="gameover-cat">${cat.emoji} ${cat.name}</p>` : ""}
+              ${newBest ? `<p class="new-best">✨ New personal best!</p>` : ""}
+            </div>
+            <button class="share-btn" onclick="showShareToast()">🔗 Share result</button>
+            <div style="height:4px"></div>
+            <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
+            <button class="btn-secondary" onclick="state.screen='home';render()">Change Category</button>
+          </div>`;
+        }
         return;
       }
 
       // GAME
       const hearts = [0, 1, 2].map(i => `<span class="heart ${i < state.lives ? "" : "lost"}">♥</span>`).join("");
       const diffPct = ((state.difficulty - 1) / 9) * 100;
+      const blitzTimePct = Math.max(0, (state.blitzTimeRemaining / 60) * 100);
+      const blitzBarColor = state.blitzTimeRemaining <= 10 ? "#ef4444" : state.blitzTimeRemaining <= 20 ? "#f97316" : "var(--yellow)";
 
       let cardHTML = "";
       if (state.loading) {
-        const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
-        cardHTML = `<div class="loading-wrap"><div class="loading-bee">🐝</div><p class="loading-text">Finding your ${cat ? cat.name.toLowerCase() : "next"} word...</p></div>`;
+        const loadCat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        cardHTML = `<div class="loading-wrap"><div class="loading-bee">🐝</div><p class="loading-text">Finding your ${loadCat ? loadCat.name.toLowerCase() : "next"} word…</p></div>`;
       } else if (state.currentWord) {
         const sw = state.currentWord.word.replace(/'/g, "\\'");
         let inner = "";
@@ -1038,10 +1242,10 @@
         <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
 
         } else if (state.mechanic === "lettergap") {
-          const word = state.currentWord.word.toUpperCase();
+          const gapWord = state.currentWord.word.toUpperCase();
           const hiddenCount = state.gapIndices.filter(Boolean).length;
           let hiddenIdx = 0;
-          const letterTiles = word.split("").map((l, i) => {
+          const letterTiles = gapWord.split("").map((l, i) => {
             if (state.gapIndices[i]) {
               const idx = hiddenIdx++;
               return `<input class="gap-input" id="gap-${idx}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${idx},${hiddenCount})" onkeydown="gapKeyDown(event,${idx},${hiddenCount})"/>`;
@@ -1060,7 +1264,6 @@
             if (state.selectedOloIndex === i) cls += " selected-wrong";
             return `<span class="${cls}" onclick="oloClickLetter(${i})">${l}</span>`;
           }).join("");
-
           let fixHTML = "";
           if (state.oloPhase === "fix") {
             fixHTML = `<div class="olo-fix-row">
@@ -1069,7 +1272,6 @@
           <button class="olo-submit" onclick="handleOloFix()">→</button>
         </div>`;
           }
-
           inner = `
         <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Type the correct letter"}</p>
         <div class="olo-row" style="margin-top:12px">${tiles}</div>
@@ -1089,50 +1291,67 @@
         oneletteroff: "🔍 One Letter Off",
       };
 
-      // Show standard input only for audio/definition
-      const showStandardInput = state.currentWord && !state.loading &&
-        ["audio", "definition"].includes(state.mechanic);
+      const showStandardInput = state.currentWord && !state.loading && ["audio", "definition"].includes(state.mechanic);
       const showGapSubmit = state.currentWord && !state.loading && state.mechanic === "lettergap";
       const showScrambleSubmit = state.currentWord && !state.loading && state.mechanic === "scramble";
+      const hintAllowed = !state.blitz;
+
+      const footerHTML = `
+        ${showStandardInput ? `
+          <div class="input-row">
+            <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning ? "disabled" : ""}/>
+            <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
+          </div>
+          ${hintAllowed && !state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+        ` : ""}
+        ${showGapSubmit ? `
+          <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
+          ${hintAllowed && !state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+        ` : ""}
+        ${showScrambleSubmit ? `
+          <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
+          ${hintAllowed && !state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+        ` : ""}`;
 
       app.innerHTML = `
-    <div class="game-header">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="home-btn" onclick="goHome()" title="Home">⌂</button>
-        <div class="lives">${hearts}</div>
-      </div>
-      <div class="score-area">
-        <span class="score-num">${state.score}</span>
-        ${state.streak >= 2 ? `<span class="streak-pill">🔥 ${state.streak}</span>` : ""}
-      </div>
-    </div>
-    <div class="diff-bar-wrap">
-      <div class="diff-bar-label">
-        <span class="diff-bar-title">Difficulty</span>
-        <span class="diff-bar-value">${diffLabel(state.difficulty)}</span>
-      </div>
-      <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
-    </div>
-    <div class="game-body">
-      ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${mechanicLabels[state.mechanic] || ""}</p>` : ""}
-      ${cardHTML}
-      ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
-      ${state.hint ? `<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>` : ""}
-      ${showStandardInput ? `
-        <div class="input-row">
-          <input id="word-input" type="text" placeholder="Type your spelling..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning ? "disabled" : ""}/>
-          <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
+    <div class="game-screen">
+      <div class="game-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="home-btn" onclick="goHome()" title="Home">⌂</button>
+          ${state.blitz
+            ? `<span class="blitz-badge">⚡ Blitz</span>`
+            : `<div class="lives">${hearts}</div>`}
         </div>
-        ${!state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
-      `: ""}
-      ${showGapSubmit ? `
-        <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""} style="margin-top:4px">Check Answers</button>
-        ${!state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
-      `: ""}
-      ${showScrambleSubmit ? `
-        <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""} style="margin-top:4px">Check</button>
-        ${!state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
-      `: ""}
+        <div class="score-area">
+          ${state.blitz
+            ? `<span class="score-num">${state.blitzWordsCorrect}</span><span style="font-size:12px;color:var(--muted);margin-left:4px">words</span>`
+            : `<span class="score-num">${state.score}</span>`}
+          ${state.streak >= 2 ? `<span class="streak-pill">🔥 ${state.streak}</span>` : ""}
+        </div>
+      </div>
+      ${state.blitz ? `
+      <div class="blitz-timer-wrap">
+        <div class="blitz-time-row">
+          <span class="blitz-time-label">${diffLabel(state.difficulty)}</span>
+          <span id="blitz-time-num" class="blitz-time-num">${Math.ceil(state.blitzTimeRemaining)}</span>
+        </div>
+        <div class="blitz-bar-track">
+          <div id="blitz-bar-fill" class="blitz-bar-fill" style="width:${blitzTimePct}%;background:${blitzBarColor}"></div>
+        </div>
+      </div>` : `
+      <div class="diff-bar-wrap">
+        <div class="diff-bar-label">
+          <span class="diff-bar-value">${diffLabel(state.difficulty)}</span>
+        </div>
+        <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
+      </div>`}
+      <div class="game-body">
+        ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${mechanicLabels[state.mechanic] || ""}</p>` : ""}
+        ${cardHTML}
+        ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
+        ${state.hint ? `<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>` : ""}
+      </div>
+      <div class="game-footer">${footerHTML}</div>
     </div>`;
 
       const inp = document.getElementById("word-input");
