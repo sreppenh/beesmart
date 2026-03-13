@@ -257,7 +257,10 @@
     }
 
     function getStatsKey() {
-      return state.gameMode === "mixed" ? "mixed" : (state.selectedCategory || "general");
+      if (state.gameMode === "mixed") return "mixed";
+      const quizCats = ["countries", "states", "elements", "flags"];
+      if (quizCats.includes(state.selectedCategory)) return state.selectedCategory;
+      return "spelling";
     }
 
     function getCatStats(catId) {
@@ -1100,6 +1103,9 @@
         const all = [...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES].filter(c => c.id !== "surprise");
         const pick = all[Math.floor(Math.random() * all.length)];
         selectCategory(pick.id);
+      } else if (mode === "spelling") {
+        state.selectedCategory = "surprise";
+        startGame();
       } else {
         state.screen = mode;
         render();
@@ -1201,7 +1207,8 @@
         const showResume = savedSession && savedSession.lives > 0 && savedSession.score > 0;
         const allCatStats = Object.values(state.categoryStats);
         const overallBest = allCatStats.length ? Math.max(0, ...allCatStats.map(s => s.bestScore || 0)) : 0;
-        const catsPlayed = allCatStats.filter(s => s.hasPlayed).length;
+        const spellingStats = state.categoryStats["spelling"];
+        const totalSpellingWords = spellingStats ? (spellingStats.wordsAttempted || 0) : 0;
         const themeBtn = `<button class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">${state.theme === 'day' ? '🌙' : '☀️'}</button>`;
         const tabsHTML = `
           <div class="home-tabs">
@@ -1239,7 +1246,8 @@
             </div>`;
 
           const MIXED_CAT = { id: "mixed", name: "Mixed Mode", emoji: "🎲" };
-          const statsCats = [MIXED_CAT, ...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES];
+          const SPELLING_STAT_CAT = { id: "spelling", name: "Spelling", emoji: "🐝" };
+          const statsCats = [MIXED_CAT, SPELLING_STAT_CAT, ...QUIZ_CATEGORIES];
           const cards = statsCats.map(c => {
             const s = getCatStats(c.id);
             if (!s.hasPlayed) {
@@ -1294,7 +1302,7 @@
           <div class="stat-divider"></div>
           <div class="stat-box"><span class="stat-num">${state.dailyStreak}</span><span class="stat-label">Day Streak</span></div>
           <div class="stat-divider"></div>
-          <div class="stat-box"><span class="stat-num">${catsPlayed}</span><span class="stat-label">Categories</span></div>
+          <div class="stat-box"><span class="stat-num">${totalSpellingWords}</span><span class="stat-label">Words</span></div>
         </div>
         <div class="mode-select">
           <button class="mode-btn spelling" onclick="goToMode('spelling')">
@@ -1323,27 +1331,6 @@
         <div class="how-to">
           <p class="how-to-title">How to play</p>
           <p class="how-to-text">3 lives per game. Difficulty adapts as you play. Hints are available in spelling mode but cost points.</p>
-        </div>
-      </div>`;
-        return;
-      }
-
-      // SPELLING CATEGORY SELECT
-      if (state.screen === "spelling") {
-        const catBtns = SPELLING_CATEGORIES.map(c => {
-          const surprise = c.id === "surprise" ? "surprise" : "";
-          return `<button class="cat-btn ${surprise}" onclick="selectCategory('${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`;
-        }).join("");
-        app.innerHTML = `
-      <div class="home">
-        <button class="back-btn" onclick="state.screen='home';render()">&#8592; Back</button>
-        <div class="logo-area">
-          <div class="bee-icon">🐝</div>
-          <p style="font-size:20px;color:var(--yellow);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-top:4px">Spelling</p>
-        </div>
-        <div style="width:100%">
-          <p class="section-title">Choose a category</p>
-          <div class="category-grid">${catBtns}</div>
         </div>
       </div>`;
         return;
@@ -1409,7 +1396,7 @@
             <button class="share-btn" onclick="showShareToast()">🔗 Share result</button>
             <div style="height:4px"></div>
             <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
-            <button class="btn-secondary" onclick="state.screen='home';render()">Change Category</button>
+            <button class="btn-secondary" onclick="state.screen='home';render()">${state.gameMode === "quiz" ? "Change Category" : "Home"}</button>
           </div>`;
         }
         return;
