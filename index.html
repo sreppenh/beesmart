@@ -1524,9 +1524,7 @@
             btnClass += opt.isCorrect ? " mc-correct" : (opt.answer === state.lastAttempt ? " mc-wrong" : "");
           }
           if (isFlagsMode) {
-            const flagEntry = FLAGS.find(f => f.country === opt.answer);
-            const flagEmoji = flagEntry ? flagEntry.flag : "";
-            btnContent = `<span class="mc-flag-emoji">${flagEmoji}</span><span class="mc-flag-label">${opt.answer}</span>`;
+            btnContent = `<span class="mc-flag-label">${opt.answer}</span>`;
           }
           return `<button class="${btnClass}" onclick="handleMCAnswer('${opt.answer.replace(/'/g, "\\'")}')" ${state.mcAnswered || state.transitioning ? "disabled" : ""}>${btnContent}</button>`;
         }).join("");
