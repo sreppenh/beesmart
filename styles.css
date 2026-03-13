@@ -377,6 +377,7 @@ h1 {
   gap: 14px;
 }
 
+
 .mechanic-badge {
   font-size: 11px;
   color: var(--muted);
@@ -1402,30 +1403,37 @@ body.day .stat-mini-bar-fill {
   }
 }
 
-/* Mobile: full-bleed, game footer anchored at bottom */
+/* Mobile: full-bleed, input always visible, no page scroll */
 @media (max-width: 599px) {
   body {
     padding: 0;
     align-items: flex-start;
+    overflow: hidden;
+    height: 100dvh;
   }
   #app {
     width: 100%;
     max-width: 100%;
+    height: 100dvh;
+    overflow: hidden;
   }
   .game-screen {
     display: flex;
     flex-direction: column;
-    min-height: 100dvh;
-    padding: 16px 16px 0;
+    height: 100dvh;
+    padding: 14px 16px 0;
+    overflow: hidden;
   }
   .game-body {
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .game-footer {
-    position: sticky;
-    bottom: 0;
+    flex-shrink: 0;
     background: var(--black);
-    padding: 10px 0 max(18px, env(safe-area-inset-bottom));
+    padding: 10px 0 max(14px, env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -1433,6 +1441,23 @@ body.day .stat-mini-bar-fill {
   }
   .home, .gameover {
     padding: 24px 20px;
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Word card grows to fill available space — no dead zone between card and input */
+  .word-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 18px 16px;
+  }
+  .score-num {
+    font-size: 26px;
+  }
+  .game-header {
+    margin-bottom: 6px;
   }
 }
 
