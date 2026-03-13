@@ -190,7 +190,7 @@
       lives: 3, score: 0, streak: 0,
       dailyStreak: 0,
       difficulty: 1, currentWord: null,
-      mechanic: "audio", hint: null,
+      mechanic: "audio", hintLevel: 0, hintRevealed: [],
       hintUsed: false, attempts: 0,
       usedWords: [], transitioning: false,
       scrambled: "", scrambleSelected: [], scrambleRemaining: [], loading: false, feedback: null,
@@ -795,7 +795,7 @@
 
     async function loadNextWord() {
       if (state.blitz && state.blitzExpired) { endBlitzGame(); return; }
-      state.loading = true; state.hint = null; state.hintUsed = false;
+      state.loading = true; state.hintLevel = 0; state.hintRevealed = []; state.hintUsed = false;
       state.attempts = 0; state.feedback = null; state.transitioning = false;
       state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null;
       state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
@@ -942,7 +942,7 @@
 
     function handleMissedAttempt() {
       state.attempts += 1;
-      if (!state.hint) state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
+      // hint no longer auto-revealed on failed attempts
       if (state.attempts >= 2) {
         handleWrong(`It was "${state.currentWord.word}"`);
       } else {
@@ -1105,10 +1105,29 @@
       loadNextWord();
     }
 
-    function revealHint() {
+    function revealNextHint() {
       if (!state.currentWord) return;
-      state.hint = { definition: state.currentWord.definition, sentence: state.currentWord.sentence };
-      state.hintUsed = true; render();
+      const word = state.currentWord.word.toLowerCase();
+
+      if (state.hintLevel === 0) {
+        // First tap: show blank tiles, deduct 1 point
+        state.hintLevel = 1;
+        state.hintRevealed = Array(word.length).fill(null);
+        state.score = Math.max(0, state.score - 1);
+        state.hintUsed = true;
+
+      } else {
+        // Subsequent taps: reveal one more letter
+        const unrevealed = state.hintRevealed
+          .map((v, i) => v === null ? i : -1)
+          .filter(i => i !== -1);
+        if (unrevealed.length <= 1) return; // guard: last letter never revealed
+        const pick = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+        state.hintRevealed[pick] = word[pick];
+        state.hintLevel++;
+        state.score = Math.max(0, state.score - state.hintLevel);
+      }
+      render();
     }
 
     function goToMode(mode) {
@@ -1541,7 +1560,7 @@
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
             <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
-          ${hintAllowed && !state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Reveal hint (costs points)' : 'Reveal a letter'}</button>` : ""}
           <div class="builtin-keyboard"${state.transitioning ? ' style="opacity:0.5;pointer-events:none"' : ""}>
             <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
@@ -1554,11 +1573,11 @@
         ` : ""}
         ${showGapSubmit ? `
           <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
-          ${hintAllowed && !state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Reveal hint (costs points)' : 'Reveal a letter'}</button>` : ""}
         ` : ""}
         ${showScrambleSubmit ? `
           <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
-          ${hintAllowed && !state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Reveal hint (costs points)' : 'Reveal a letter'}</button>` : ""}
         ` : ""}`;
 
       app.innerHTML = `
@@ -1597,7 +1616,13 @@
         ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${state.isMultipleChoice ? "👆 Multiple Choice" : (mechanicLabels[state.mechanic] || "")}</p>` : ""}
         ${cardHTML}
         ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
-        ${state.hint ? `<div class="hint-box"><p class="hint-text"><span class="hint-label">Definition:</span> ${state.hint.definition}</p><p class="hint-text"><span class="hint-label">Example:</span> ${state.hint.sentence}</p></div>` : ""}
+        ${state.hintLevel >= 1 ? `
+  <div class="hint-tiles">
+    ${state.hintRevealed.map(ch =>
+      ch ? `<span class="hint-tile revealed">${ch.toUpperCase()}</span>`
+         : `<span class="hint-tile blank"></span>`
+    ).join('')}
+  </div>` : ""}
       </div>
       <div class="game-footer">${footerHTML}</div>
     </div>`;
