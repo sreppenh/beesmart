@@ -964,7 +964,8 @@
       const inp = document.getElementById("word-input");
       if (!inp || !inp.value.trim()) return;
       const typed = inp.value.trim();
-      const correct = typed.toLowerCase() === state.currentWord.word.toLowerCase();
+      const normalize = s => s.toLowerCase().replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ').trim();
+      const correct = normalize(typed) === normalize(state.currentWord.word);
       inp.value = "";
       if (correct) { handleCorrect(); }
       else { state.lastAttempt = typed; handleMissedAttempt(); }
@@ -1581,9 +1582,12 @@
             <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">
-              <button class="kb-key kb-submit" onpointerdown="kbSubmit(event)">↵</button>
+              <button class="kb-key kb-submit" onpointerdown="kbSubmit(event)">→</button>
               ${"ZXCVBNM".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}
               <button class="kb-key kb-backspace" onpointerdown="kbBackspace(event)">⌫</button>
+            </div>
+            <div class="kb-row">
+              <button class="kb-key kb-space" onpointerdown="kbPress(event,' ')">SPACE</button>
             </div>
           </div>
         ` : ""}

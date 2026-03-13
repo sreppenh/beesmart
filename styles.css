@@ -1987,6 +1987,12 @@ body.day .olo-key:hover {
   opacity: 0.85;
 }
 
+.kb-space {
+  width: 200px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
 body.day .kb-key {
   background: #ffffff;
   border-color: #d1d5db;
