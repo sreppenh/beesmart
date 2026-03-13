@@ -29,7 +29,7 @@
   <script src="words.js"></script>
   <script>
     const API = "/api/word";
-    const MECHANICS = ["audio", "definition", "scramble", "lettergap", "oneletteroff"];
+    const MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff"];
     const BLITZ_MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff"];
 
 
@@ -754,15 +754,20 @@
     async function fetchWordFromAI(catId, needsMisspelling) {
       const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[5];
       const dl = state.difficulty < 3 ? "easy" : state.difficulty < 6 ? "medium" : "hard";
+      const defInstruction = state.difficulty < 4
+        ? 'Write a definition so clear and specific that the word is obvious — the player should recognise the word immediately and only need to think about spelling it. Write an example sentence where the word is very obvious in context.'
+        : state.difficulty < 7
+        ? 'Write a clear definition that strongly implies the word without giving it away trivially. Write an example sentence that clearly contextualises the word.'
+        : 'Write a definition that is precise but uses formal or elevated language — the player must know the word to recognise it. Write a formal example sentence that is less obvious in context.';
       const res = await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
+          max_tokens: 1200,
           messages: [{
             role: "user", content:
-              `Generate a spelling challenge word for an adult spelling bee game.\n\nCategory: ${cat.name} — focus on: ${cat.prompt}\nDifficulty: ${dl} (${state.difficulty.toFixed(1)}/10)\nDo NOT use: ${state.usedWords.slice(-20).join(", ") || "none"}\n\nIMPORTANT: In the sentence field replace the word with "______".\n${needsMisspelling ? 'Provide a misspelled version with EXACTLY ONE letter substituted (same word length, no additions or deletions). Include misspelled and wrongIndex (0-based).' : ''}\n\nRespond ONLY raw JSON:\n{"word":"the word","definition":"max 15 words","sentence":"with ______","category":"subcategory","misspelled":"","wrongIndex":-1}`
+              `Generate a spelling challenge word for an adult spelling bee game.\n\nCategory: ${cat.name} — focus on: ${cat.prompt}\nDifficulty: ${dl} (${state.difficulty.toFixed(1)}/10)\nDo NOT use: ${state.usedWords.slice(-20).join(", ") || "none"}\n\n${defInstruction}\n\nIMPORTANT: In the sentence field replace the word with "______".\n${needsMisspelling ? 'Provide a misspelled version with EXACTLY ONE letter substituted (same word length, no additions or deletions). Include misspelled and wrongIndex (0-based).' : ''}\n\nRespond ONLY raw JSON:\n{"word":"the word","definition":"max 15 words","sentence":"with ______","category":"subcategory","misspelled":"","wrongIndex":-1}`
           }]
         })
       });
@@ -804,7 +809,9 @@
         const isCapitals = isCapitalsMode();
         const isQuiz = isQuizMode();
         let next;
-        if (isCapitals || state.selectedCategory === "flags") {
+        if (state.gameMode === "audio") {
+          next = "audio";
+        } else if (isCapitals || state.selectedCategory === "flags") {
           next = "definition";
         } else if (state.selectedCategory === "elements") {
           next = "definition";
@@ -883,7 +890,7 @@
         render();
         setTimeout(() => { if (state.blitzExpired) { endBlitzGame(); return; } loadNextWord(); }, 1000);
       } else {
-        const pts = state.isMultipleChoice ? 1 : (state.hintUsed ? 1 : state.attempts === 0 ? 3 : 2);
+        const pts = state.isMultipleChoice ? 1 : (state.hintUsed ? Math.max(1, 2 - Math.floor(state.hintLevel / 2)) : state.attempts === 0 ? 3 : 2);
         state.score += pts;
         const key = getStatsKey();
         const cs = getCatStats(key);
@@ -1141,6 +1148,9 @@
       } else if (mode === "spelling") {
         state.selectedCategory = "surprise";
         startGame();
+      } else if (mode === "audio") {
+        state.selectedCategory = "surprise";
+        startGame();
       } else {
         state.screen = mode;
         render();
@@ -1356,6 +1366,14 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
+          <button class="mode-btn audio" onclick="goToMode('audio')">
+            <span class="mode-icon">🔊</span>
+            <div class="mode-info">
+              <div class="mode-title">Listen &amp; Spell</div>
+              <div class="mode-subtitle">Hear the word, then spell it</div>
+            </div>
+            <span class="mode-arrow">&#8250;</span>
+          </button>
           <button class="mode-btn mixed" onclick="goToMode('mixed')">
             🎲 &nbsp; Mixed Mode — a bit of everything
           </button>
@@ -1560,7 +1578,7 @@
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
             <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Reveal hint (costs points)' : 'Reveal a letter'}</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
           <div class="builtin-keyboard"${state.transitioning ? ' style="opacity:0.5;pointer-events:none"' : ""}>
             <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
@@ -1573,11 +1591,11 @@
         ` : ""}
         ${showGapSubmit ? `
           <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Reveal hint (costs points)' : 'Reveal a letter'}</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
         ` : ""}
         ${showScrambleSubmit ? `
           <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Reveal hint (costs points)' : 'Reveal a letter'}</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
         ` : ""}`;
 
       app.innerHTML = `

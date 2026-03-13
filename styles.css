@@ -958,6 +958,15 @@ input[type="text"]:focus {
   background: #0d1f3c;
 }
 
+.mode-btn.audio {
+  border-color: #2a5a4a;
+}
+
+.mode-btn.audio:hover {
+  border-color: #4abf9a;
+  background: #0d2d22;
+}
+
 .mode-btn.mixed {
   padding: 14px 20px;
   border-style: dashed;
@@ -1107,6 +1116,19 @@ body.day .mode-btn.quiz:hover {
 
 body.day .mode-btn.quiz .mode-title {
   color: #1d4ed8;
+}
+
+body.day .mode-btn.audio {
+  border-color: #6ee7b7;
+}
+
+body.day .mode-btn.audio:hover {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+body.day .mode-btn.audio .mode-title {
+  color: #065f46;
 }
 
 body.day .cat-btn.quiz-mode {
