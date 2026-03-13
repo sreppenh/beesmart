@@ -1030,7 +1030,21 @@
 
     // One letter off: click a letter tile
     function oloClickLetter(idx) {
-      if (state.transitioning || state.oloPhase !== "select") return;
+      if (state.transitioning) return;
+      if (state.oloPhase === "fix" && state.selectedOloIndex === idx) {
+        // Clicking the selected letter again deselects it
+        state.selectedOloIndex = -1;
+        state.oloPhase = "select";
+        render();
+        return;
+      }
+      if (state.oloPhase === "fix") {
+        // Clicking a different letter switches the selection
+        state.selectedOloIndex = idx;
+        render();
+        setTimeout(() => { const f = document.getElementById("olo-fix-input"); if (f) f.focus(); }, 100);
+        return;
+      }
       state.selectedOloIndex = idx;
       state.oloPhase = "fix";
       render();
