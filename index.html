@@ -848,8 +848,6 @@
         }));
         if (next === "audio") setTimeout(() => speak(wordData.word), 400);
         setTimeout(() => {
-          const i = document.getElementById("word-input");
-          if (i) i.focus();
           const g = document.querySelector(".gap-input");
           if (g) g.focus();
         }, 150);
@@ -995,6 +993,12 @@
       const [item] = state.scrambleRemaining.splice(idx, 1);
       state.scrambleSelected.push(item);
       render();
+      if (state.scrambleSelected.length === state.currentWord.word.length) {
+        setTimeout(() => {
+          if (state.scrambleSelected.length === state.currentWord.word.length && !state.transitioning)
+            handleScrambleSubmit();
+        }, 450);
+      }
     }
 
     // Scramble: click a placed tile to return it to the pool
@@ -1042,13 +1046,11 @@
         // Clicking a different letter switches the selection
         state.selectedOloIndex = idx;
         render();
-        setTimeout(() => { const f = document.getElementById("olo-fix-input"); if (f) f.focus(); }, 100);
         return;
       }
       state.selectedOloIndex = idx;
       state.oloPhase = "fix";
       render();
-      setTimeout(() => { const f = document.getElementById("olo-fix-input"); if (f) f.focus(); }, 100);
     }
 
     // One letter off: submit the fix
@@ -1482,14 +1484,16 @@
           }).join("");
           let fixHTML = "";
           if (state.oloPhase === "fix") {
-            fixHTML = `<div class="olo-fix-row">
-          <span class="olo-fix-label">Replace with:</span>
-          <input id="olo-fix-input" class="olo-fix-input" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" onkeydown="if(event.key==='Enter')handleOloFix()"/>
-          <button class="olo-submit" onclick="handleOloFix()">→</button>
+            const oloKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+              .map(l => `<button class="olo-key" onclick="oloPickLetter('${l}')">${l}</button>`)
+              .join("");
+            fixHTML = `<div class="olo-fix-section">
+          <p class="olo-fix-label">Replace with:</p>
+          <div class="olo-key-grid">${oloKeys}</div>
         </div>`;
           }
           inner = `
-        <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Type the correct letter"}</p>
+        <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Tap the correct letter"}</p>
         <div class="olo-row" style="margin-top:12px">${tiles}</div>
         ${fixHTML}
         <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
@@ -1534,10 +1538,19 @@
         ${showMC ? `<div class="mc-options">${mcButtonsHTML}</div>` : ""}
         ${showStandardInput ? `
           <div class="input-row">
-            <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" ${state.transitioning ? "disabled" : ""}/>
+            <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
             <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
           ${hintAllowed && !state.hint && !state.transitioning ? `<button class="hint-btn" onclick="revealHint()">💡 Reveal hint (costs points)</button>` : ""}
+          <div class="builtin-keyboard"${state.transitioning ? ' style="opacity:0.5;pointer-events:none"' : ""}>
+            <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
+            <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
+            <div class="kb-row">
+              <button class="kb-key kb-submit" onclick="handleSubmit()">↵</button>
+              ${"ZXCVBNM".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}
+              <button class="kb-key kb-backspace" onclick="kbBackspace()">⌫</button>
+            </div>
+          </div>
         ` : ""}
         ${showGapSubmit ? `
           <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
@@ -1589,10 +1602,7 @@
       <div class="game-footer">${footerHTML}</div>
     </div>`;
 
-      const inp = document.getElementById("word-input");
-      if (inp) inp.addEventListener("keydown", e => { if (e.key === "Enter") handleSubmit(); });
-
-      // Focus first gap input
+      // Focus first gap input (other mechanics use built-in keyboard or doc-level listener)
       if (state.mechanic === "lettergap" && !state.loading) {
         setTimeout(() => { const g = document.getElementById("gap-0"); if (g) g.focus(); }, 100);
       }
@@ -1604,6 +1614,16 @@
       if (inp && inp.value.length === 1 && idx < total - 1) {
         const next = document.getElementById(`gap-${idx + 1}`);
         if (next) next.focus();
+      }
+      if (idx === total - 1 && inp && inp.value.trim()) {
+        setTimeout(() => {
+          let allFilled = true;
+          for (let i = 0; i < total; i++) {
+            const g = document.getElementById(`gap-${i}`);
+            if (!g || !g.value.trim()) { allFilled = false; break; }
+          }
+          if (allFilled && !state.transitioning) handleGapSubmit();
+        }, 400);
       }
     }
 
@@ -1617,6 +1637,51 @@
       }
       if (e.key === "Enter") handleGapSubmit();
     }
+
+    // OLO: pick a letter from the A-Z grid
+    function oloPickLetter(letter) {
+      if (!state.currentWord || state.transitioning) return;
+      const correctIndex = state.wrongIndex;
+      const correctLetter = state.currentWord.word[correctIndex].toUpperCase();
+      const selectedCorrectPosition = state.selectedOloIndex === correctIndex;
+      const typedCorrectLetter = letter === correctLetter;
+      if (selectedCorrectPosition && typedCorrectLetter) {
+        handleCorrect();
+      } else {
+        if (!selectedCorrectPosition) {
+          state.oloPhase = "select";
+          state.selectedOloIndex = -1;
+          state.feedback = { type: "try", msg: "Wrong position — try again!" };
+          render();
+        } else {
+          // Right position, wrong letter — consume an attempt
+          handleMissedAttempt();
+        }
+      }
+    }
+
+    // Built-in keyboard helpers (audio/definition mechanics)
+    function kbPress(letter) {
+      const inp = document.getElementById("word-input");
+      if (!inp || state.transitioning) return;
+      inp.value += letter;
+    }
+
+    function kbBackspace() {
+      const inp = document.getElementById("word-input");
+      if (!inp || state.transitioning) return;
+      inp.value = inp.value.slice(0, -1);
+    }
+
+    // Physical keyboard support for built-in keyboard mechanics
+    document.addEventListener("keydown", function(e) {
+      if (!["audio", "definition"].includes(state.mechanic)) return;
+      if (state.screen !== "game" || state.loading || state.transitioning) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "Enter") { e.preventDefault(); handleSubmit(); }
+      else if (e.key === "Backspace") { e.preventDefault(); kbBackspace(); }
+      else if (e.key.length === 1) { e.preventDefault(); kbPress(e.key.toUpperCase()); }
+    });
 
     initStorage();
     render();

@@ -1847,3 +1847,130 @@ body.day .mc-btn.mc-wrong {
   border-color: #dc2626;
   color: #7f1d1d;
 }
+
+/* ─── OLO LETTER GRID ───────────────────────────────────────────────────────── */
+
+.olo-fix-section {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.olo-key-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: 320px;
+}
+
+.olo-key {
+  width: 36px;
+  height: 44px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--yellow);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.olo-key:hover {
+  border-color: var(--yellow);
+  background: #1f1a00;
+}
+
+.olo-key:active {
+  transform: scale(0.93);
+}
+
+body.day .olo-key {
+  background: #fff;
+  border-color: #e5e7eb;
+  color: #1a1a1a;
+}
+
+body.day .olo-key:hover {
+  border-color: var(--yellow);
+  background: #fef9c3;
+}
+
+/* ─── BUILT-IN QWERTY KEYBOARD ──────────────────────────────────────────────── */
+
+.builtin-keyboard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0 2px;
+}
+
+.kb-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.kb-key {
+  width: 30px;
+  height: 44px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+
+.kb-key:active {
+  background: var(--border);
+}
+
+.kb-backspace {
+  width: 44px;
+  font-size: 16px;
+}
+
+.kb-submit {
+  width: 44px;
+  font-size: 18px;
+  background: var(--yellow);
+  color: var(--black);
+  border-color: var(--yellow);
+}
+
+.kb-submit:active {
+  opacity: 0.85;
+}
+
+body.day .kb-key {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #1a1a1a;
+}
+
+body.day .kb-key:active {
+  background: #e5e7eb;
+}
+
+body.day .kb-submit {
+  background: var(--yellow);
+  color: #1a1a1a;
+  border-color: var(--yellow);
+}
