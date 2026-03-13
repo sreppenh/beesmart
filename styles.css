@@ -1881,6 +1881,9 @@ body.day .mc-btn.mc-wrong {
   align-items: center;
   justify-content: center;
   transition: background 0.1s, border-color 0.1s;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .olo-key:hover {
@@ -1936,6 +1939,9 @@ body.day .olo-key:hover {
   justify-content: center;
   transition: background 0.1s;
   flex-shrink: 0;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .kb-key:active {
