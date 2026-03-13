@@ -771,6 +771,23 @@ input[type="text"]:focus {
   color: var(--yellow);
 }
 
+.skip-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 13px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  width: 100%;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.skip-btn:hover {
+  color: #ef4444;
+}
+
 /* ─── LOADING ───────────────────────────────────────────────────────────────── */
 
 .loading-wrap {

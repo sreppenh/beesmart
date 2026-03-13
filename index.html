@@ -1598,6 +1598,9 @@
         ${showScrambleSubmit ? `
           <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
           ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
+        ` : ""}
+        ${state.blitz && state.currentWord && !state.loading && !state.transitioning ? `
+          <button class="skip-btn" onclick="skipWord()">Skip −3s</button>
         ` : ""}`;
 
       app.innerHTML = `
@@ -1724,6 +1727,13 @@
       event.preventDefault();
       if (state.transitioning) return;
       handleSubmit();
+    }
+
+    function skipWord() {
+      if (!state.blitz || !state.currentWord || state.transitioning) return;
+      state.blitzTimeRemaining = Math.max(0, state.blitzTimeRemaining - 3);
+      if (state.blitzTimeRemaining <= 0) { endBlitzGame(); return; }
+      loadNextWord();
     }
 
     // Physical keyboard support for built-in keyboard mechanics
