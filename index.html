@@ -1578,12 +1578,12 @@
           </div>
           ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
           <div class="builtin-keyboard"${state.transitioning ? ' style="opacity:0.5;pointer-events:none"' : ""}>
-            <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
-            <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}</div>
+            <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
+            <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">
-              <button class="kb-key kb-submit" onclick="handleSubmit()">↵</button>
-              ${"ZXCVBNM".split("").map(l => `<button class="kb-key" onclick="kbPress('${l}')">${l}</button>`).join("")}
-              <button class="kb-key kb-backspace" onclick="kbBackspace()">⌫</button>
+              <button class="kb-key kb-submit" onpointerdown="kbSubmit(event)">↵</button>
+              ${"ZXCVBNM".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}
+              <button class="kb-key kb-backspace" onpointerdown="kbBackspace(event)">⌫</button>
             </div>
           </div>
         ` : ""}
@@ -1702,16 +1702,24 @@
     }
 
     // Built-in keyboard helpers (audio/definition mechanics)
-    function kbPress(letter) {
+    function kbPress(event, letter) {
+      event.preventDefault();
       const inp = document.getElementById("word-input");
       if (!inp || state.transitioning) return;
       inp.value += letter;
     }
 
-    function kbBackspace() {
+    function kbBackspace(event) {
+      event.preventDefault();
       const inp = document.getElementById("word-input");
       if (!inp || state.transitioning) return;
       inp.value = inp.value.slice(0, -1);
+    }
+
+    function kbSubmit(event) {
+      event.preventDefault();
+      if (state.transitioning) return;
+      handleSubmit();
     }
 
     // Physical keyboard support for built-in keyboard mechanics
@@ -1720,8 +1728,8 @@
       if (state.screen !== "game" || state.loading || state.transitioning) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === "Enter") { e.preventDefault(); handleSubmit(); }
-      else if (e.key === "Backspace") { e.preventDefault(); kbBackspace(); }
-      else if (e.key.length === 1) { e.preventDefault(); kbPress(e.key.toUpperCase()); }
+      else if (e.key === "Backspace") { e.preventDefault(); kbBackspace(e); }
+      else if (e.key.length === 1) { e.preventDefault(); kbPress(e, e.key.toUpperCase()); }
     });
 
     initStorage();
