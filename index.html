@@ -1002,6 +1002,13 @@
       render();
     }
 
+    function scrambleUndo() {
+      if (state.transitioning || state.scrambleSelected.length === 0) return;
+      const item = state.scrambleSelected.pop();
+      state.scrambleRemaining.push(item);
+      render();
+    }
+
     function handleScrambleSubmit() {
       if (!state.currentWord || state.transitioning) return;
       if (state.scrambleSelected.length !== state.currentWord.word.length) return;
@@ -1434,17 +1441,20 @@
           inner = `${defDisplay}<p class="cat-tag">${state.currentWord.category}</p>${sentenceClue}`;
 
         } else if (state.mechanic === "scramble") {
-          const answerTiles = state.scrambleSelected.map((x, i) =>
-            `<span class="s-answer" onclick="scrambleDeselect(${i})">${x.l}</span>`
-          ).join("");
+          const placed = state.scrambleSelected.map(x => x.l).join("");
+          const remaining = "_".repeat(state.currentWord.word.length - placed.length);
+          const displaySize = state.currentWord.word.length > 12 ? '18px' : '24px';
           const poolTiles = state.scrambleRemaining.map(x =>
             `<span class="s-letter" onclick="scrambleSelect(${x.id})">${x.l}</span>`
           ).join("");
           inner = `
-        <div class="scramble-answer-row">${answerTiles}</div>
-        <div class="scramble-row" style="margin-top:10px">${poolTiles}</div>
-        <p class="cat-tag" style="margin-top:10px">${state.currentWord.category}</p>
-        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
+<div class="scramble-text-display" style="font-size:${displaySize}"><span class="scramble-placed">${placed}</span><span class="scramble-empty">${remaining}</span></div>
+<div style="display:flex;justify-content:flex-end;margin-top:6px">
+  <button class="scramble-undo-btn" onclick="scrambleUndo()" ${state.scrambleSelected.length === 0 ? 'disabled' : ''}>⌫ Undo</button>
+</div>
+<div class="scramble-row" style="margin-top:10px">${poolTiles}</div>
+<p class="cat-tag" style="margin-top:10px">${state.currentWord.category}</p>
+<p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
 
         } else if (state.mechanic === "lettergap") {
           const gapWord = state.currentWord.word.toUpperCase();
