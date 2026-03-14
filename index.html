@@ -516,7 +516,26 @@
       setTimeout(() => { el.className = ""; el.innerHTML = ""; }, duration);
     }
 
-    function showShareToast() { showToast("Sharing coming soon!"); }
+    function showShareToast() {
+      let text;
+      if (state.gameMode === "blitz") {
+        const bsStats = getCatStats("blitz");
+        const isNewBest = state.blitzWordsCorrect > 0 && state.blitzWordsCorrect >= (bsStats.bestWordsCorrect || 0);
+        text = `⚡🐝 BeeBlitz\n${state.blitzWordsCorrect} words correct · ${state.blitzTimeSurvived}s survived${isNewBest ? "\n✨ New best!" : ""}\n#BeeSmart`;
+      } else {
+        const key = getStatsKey();
+        const cs = getCatStats(key);
+        const isNewBest = state.score > 0 && state.score >= cs.bestScore;
+        const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        const modeLabel = state.gameMode === "audio" ? "Listen & Spell" : state.gameMode === "quiz" ? `Quiz – ${cat ? cat.name : ""}` : `Spelling${cat && cat.id !== "surprise" ? ` – ${cat.name}` : ""}`;
+        text = `🐝 BeeSmart – ${modeLabel}\n${state.score} pts · ${diffLabel(cs.difficulty)} level${isNewBest ? "\n✨ New personal best!" : ""}\n#BeeSmart`;
+      }
+      if (navigator.share) {
+        navigator.share({ text }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(text).then(() => showToast("Copied to clipboard!")).catch(() => showToast("Couldn't copy — try again"));
+      }
+    }
 
 
     function isQuizMode() {
