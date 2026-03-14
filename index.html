@@ -1456,7 +1456,6 @@
         }).join("");
         inner = `
         <div class="gap-row">${letterTiles}</div>
-        <p class="gap-instruction">Type the missing letters</p>
         <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
 
       } else if (state.mechanic === "oneletteroff") {
@@ -1718,15 +1717,6 @@
 
       const cardHTML = renderMechanicCard();
 
-      const mechanicLabels = {
-        audio: "🔊 Listen & Spell",
-        definition: "📖 Define & Spell",
-        scramble: "🔀 Unscramble",
-        lettergap: "✏️ Fill the Gaps",
-        oneletteroff: "🔍 One Letter Off",
-        math: "🔢 Mental Math",
-      };
-
       const showMC = state.isMultipleChoice && state.currentWord && !state.loading;
       const showStandardInput = !showMC && state.currentWord && !state.loading && ["audio", "definition"].includes(state.mechanic) && !state.currentWord.isMath;
       const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
@@ -1816,7 +1806,6 @@
         <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
       </div>`}
       <div class="game-body">
-        ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${state.isMultipleChoice ? "👆 Multiple Choice" : (state.currentWord.isMath ? mechanicLabels.math : (mechanicLabels[state.mechanic] || ""))}</p>` : ""}
         ${cardHTML}
         ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
         ${state.hintLevel >= 1 ? `

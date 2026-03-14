@@ -403,7 +403,7 @@ h1 {
   border: none;
   border-radius: 12px;
   padding: 13px 20px;
-  font-size: 15px;
+  font-size: 18px;
   cursor: pointer;
   font-weight: 700;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -437,14 +437,14 @@ h1 {
 
 .cat-tag {
   margin-top: 12px;
-  font-size: 11px;
+  font-size: 13px;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .def-text {
-  font-size: 17px;
+  font-size: 20px;
   line-height: 1.65;
   color: var(--text);
   font-style: italic;
@@ -468,7 +468,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   font-family: 'Plus Jakarta Sans', sans-serif;
   cursor: pointer;
@@ -524,7 +524,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
@@ -554,7 +554,7 @@ h1 {
   border: 2px dashed #555;
   border-radius: 7px;
   text-align: center;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: #fff;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -588,7 +588,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 19px;
+  font-size: 22px;
   font-weight: 700;
   font-family: 'Plus Jakarta Sans', sans-serif;
   color: var(--yellow);
