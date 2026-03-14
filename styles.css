@@ -2084,22 +2084,20 @@ body.day .hint-tile.revealed {
 .math-keyboard {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 10px;
   margin-top: 8px;
-  max-width: 280px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
 }
 
 .math-key {
   background: var(--card);
   border: 1.5px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   color: var(--text);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  padding: 14px 0;
+  padding: 18px 0;
   cursor: pointer;
   touch-action: manipulation;
   user-select: none;
