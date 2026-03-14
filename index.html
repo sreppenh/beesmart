@@ -2315,6 +2315,11 @@
       if (state.mechanic === "lettergap" && !state.loading && !state.blitz) {
         setTimeout(() => { const g = document.getElementById("gap-0"); if (g) g.focus(); }, 100);
       }
+
+      // Scroll built-in keyboard into view when fill-in-the-blank input is shown
+      if (showStandardInput && !state.transitioning) {
+        setTimeout(() => { const kb = document.querySelector(".builtin-keyboard"); if (kb) kb.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 150);
+      }
     }
 
     // Auto-advance between gap inputs
