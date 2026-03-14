@@ -2293,26 +2293,36 @@
 
       // QUIZ CATEGORY SELECT
       if (state.screen === "quiz") {
-        const quizBtns = QUIZ_CATEGORIES.filter(c => c.id !== "math").map(c =>
-          `<button class="cat-btn quiz-mode" onclick="selectCategory('${c.id}')">
-            <span class="cat-emoji">${c.emoji}</span>
-            <div class="cat-btn-text">
-              <span class="cat-name">${c.name}</span>
-              <span class="cat-blitz-tag">⚡ Builds BeeBlitz skills</span>
+        const triviaMeta = {
+          countries: { hook: "Name the capital of every nation",  color: "teal"   },
+          states:    { hook: "All 50 states & their capitals",    color: "blue"   },
+          elements:  { hook: "What does Sn stand for?",           color: "purple" },
+          flags:     { hook: "Can you name that nation?",         color: "orange" },
+          mythology: { hook: "Gods, heroes & ancient legends",    color: "amber"  },
+          anatomy:   { hook: "Know your body inside out",         color: "rose"   },
+        };
+        const quizBtns = QUIZ_CATEGORIES.filter(c => c.id !== "math").map(c => {
+          const meta = triviaMeta[c.id] || {};
+          const cs = getCatStats(c.id);
+          const bestBadge = cs.hasPlayed ? `<span class="trivia-cat-badge">${cs.bestScore}</span>` : "";
+          return `<button class="trivia-cat-btn trivia-${meta.color}" onclick="selectCategory('${c.id}')">
+            <div class="trivia-cat-top">
+              <span class="trivia-cat-emoji">${c.emoji}</span>
+              ${bestBadge}
             </div>
-          </button>`
-        ).join("");
+            <div class="trivia-cat-name">${c.name}</div>
+            <div class="trivia-cat-hook">${meta.hook || ""}</div>
+          </button>`;
+        }).join("");
         app.innerHTML = `
       <div class="home">
         <button class="back-btn" onclick="state.screen='home';render()">&#8592; Back</button>
-        <div class="logo-area">
-          <div class="bee-icon">🧠</div>
-          <p style="font-size:20px;color:#7aadff;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-top:4px">Trivia</p>
+        <div class="trivia-header">
+          <div class="trivia-header-emoji">🧠</div>
+          <h2 class="trivia-header-title">Trivia</h2>
+          <p class="trivia-header-sub">6 categories. How many can you master?</p>
         </div>
-        <div style="width:100%">
-          <p class="section-title">Choose a category</p>
-          <div class="quiz-grid">${quizBtns}</div>
-        </div>
+        <div class="trivia-grid">${quizBtns}</div>
       </div>`;
         return;
       }
