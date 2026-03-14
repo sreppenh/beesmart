@@ -161,6 +161,126 @@
       { flag: "🇰🇮", country: "Kiribati", difficulty: 3, region: "Pacific" },
     ];
 
+    const MYTHOLOGY = [
+      // Tier 1 — well-known gods and figures
+      { name: "Zeus", domain: "King of the Gods, sky and thunder", pantheon: "Greek", roman: "Jupiter", difficulty: 1 },
+      { name: "Hera", domain: "Queen of the Gods, marriage", pantheon: "Greek", roman: "Juno", difficulty: 1 },
+      { name: "Poseidon", domain: "God of the sea and earthquakes", pantheon: "Greek", roman: "Neptune", difficulty: 1 },
+      { name: "Athena", domain: "Goddess of wisdom and warfare", pantheon: "Greek", roman: "Minerva", difficulty: 1 },
+      { name: "Apollo", domain: "God of the sun, music, and prophecy", pantheon: "Greek", roman: "Apollo", difficulty: 1 },
+      { name: "Artemis", domain: "Goddess of the hunt and moon", pantheon: "Greek", roman: "Diana", difficulty: 1 },
+      { name: "Ares", domain: "God of war", pantheon: "Greek", roman: "Mars", difficulty: 1 },
+      { name: "Aphrodite", domain: "Goddess of love and beauty", pantheon: "Greek", roman: "Venus", difficulty: 1 },
+      { name: "Hermes", domain: "Messenger god, commerce and travel", pantheon: "Greek", roman: "Mercury", difficulty: 1 },
+      { name: "Hephaestus", domain: "God of fire and the forge", pantheon: "Greek", roman: "Vulcan", difficulty: 1 },
+      { name: "Demeter", domain: "Goddess of the harvest", pantheon: "Greek", roman: "Ceres", difficulty: 1 },
+      { name: "Dionysus", domain: "God of wine and festivity", pantheon: "Greek", roman: "Bacchus", difficulty: 1 },
+      { name: "Hades", domain: "God of the underworld", pantheon: "Greek", roman: "Pluto", difficulty: 1 },
+      { name: "Hestia", domain: "Goddess of the hearth and home", pantheon: "Greek", roman: "Vesta", difficulty: 1 },
+      { name: "Hercules", domain: "Divine hero famous for twelve labours", pantheon: "Greek", roman: "Hercules", difficulty: 1 },
+      { name: "Achilles", domain: "Greatest Greek warrior of the Trojan War", pantheon: "Greek", roman: "Achilles", difficulty: 1 },
+      { name: "Odysseus", domain: "Hero of the ten-year journey home from Troy", pantheon: "Greek", roman: "Ulysses", difficulty: 1 },
+      { name: "Medusa", domain: "Gorgon whose gaze turned men to stone", pantheon: "Greek", roman: "Medusa", difficulty: 1 },
+      { name: "Minotaur", domain: "Half-man half-bull creature of the Labyrinth", pantheon: "Greek", roman: "Minotaur", difficulty: 1 },
+      // Tier 2 — known but trickier to spell or less familiar
+      { name: "Prometheus", domain: "Titan who gave fire to humanity", pantheon: "Greek", roman: "Prometheus", difficulty: 2 },
+      { name: "Persephone", domain: "Queen of the underworld, goddess of spring", pantheon: "Greek", roman: "Proserpina", difficulty: 2 },
+      { name: "Narcissus", domain: "Youth who fell in love with his own reflection", pantheon: "Greek", roman: "Narcissus", difficulty: 2 },
+      { name: "Orpheus", domain: "Legendary musician who descended to the underworld", pantheon: "Greek", roman: "Orpheus", difficulty: 2 },
+      { name: "Icarus", domain: "Boy who flew too close to the sun on wax wings", pantheon: "Greek", roman: "Icarus", difficulty: 2 },
+      { name: "Theseus", domain: "Hero who slew the Minotaur", pantheon: "Greek", roman: "Theseus", difficulty: 2 },
+      { name: "Perseus", domain: "Hero who slew Medusa and saved Andromeda", pantheon: "Greek", roman: "Perseus", difficulty: 2 },
+      { name: "Cyclops", domain: "One-eyed giant blinded by Odysseus", pantheon: "Greek", roman: "Cyclops", difficulty: 2 },
+      { name: "Sphinx", domain: "Creature that posed riddles to travellers", pantheon: "Greek", roman: "Sphinx", difficulty: 2 },
+      { name: "Cerberus", domain: "Three-headed dog guarding the underworld", pantheon: "Greek", roman: "Cerberus", difficulty: 2 },
+      { name: "Chimera", domain: "Fire-breathing creature with lion, goat, and serpent parts", pantheon: "Greek", roman: "Chimaera", difficulty: 2 },
+      { name: "Hydra", domain: "Multi-headed serpent that regrew heads when cut", pantheon: "Greek", roman: "Hydra", difficulty: 2 },
+      { name: "Pegasus", domain: "Winged horse born from Medusa's blood", pantheon: "Greek", roman: "Pegasus", difficulty: 2 },
+      { name: "Kronos", domain: "Titan ruler of the universe before Zeus", pantheon: "Greek", roman: "Saturn", difficulty: 2 },
+      { name: "Eros", domain: "God of love, son of Aphrodite", pantheon: "Greek", roman: "Cupid", difficulty: 2 },
+      { name: "Hypnos", domain: "God of sleep", pantheon: "Greek", roman: "Somnus", difficulty: 2 },
+      { name: "Thanatos", domain: "God of death, twin of Hypnos", pantheon: "Greek", roman: "Mors", difficulty: 2 },
+      { name: "Nemesis", domain: "Goddess of retribution and revenge", pantheon: "Greek", roman: "Invidia", difficulty: 2 },
+      { name: "Nike", domain: "Goddess of victory", pantheon: "Greek", roman: "Victoria", difficulty: 2 },
+      { name: "Tyche", domain: "Goddess of fortune and chance", pantheon: "Greek", roman: "Fortuna", difficulty: 2 },
+      // Tier 3 — obscure or hard to spell
+      { name: "Eris", domain: "Goddess of discord and strife", pantheon: "Greek", roman: "Discordia", difficulty: 3 },
+      { name: "Mnemosyne", domain: "Titaness of memory, mother of the Muses", pantheon: "Greek", roman: "Moneta", difficulty: 3 },
+      { name: "Charybdis", domain: "Sea monster that created deadly whirlpools", pantheon: "Greek", roman: "Charybdis", difficulty: 3 },
+      { name: "Scylla", domain: "Six-headed sea monster lurking in a narrow strait", pantheon: "Greek", roman: "Scylla", difficulty: 3 },
+      { name: "Hecate", domain: "Goddess of magic, crossroads, and the moon", pantheon: "Greek", roman: "Trivia", difficulty: 3 },
+      { name: "Patroclus", domain: "Best friend of Achilles, killed by Hector", pantheon: "Greek", roman: "Patroclus", difficulty: 3 },
+      { name: "Andromeda", domain: "Princess chained to a rock and saved by Perseus", pantheon: "Greek", roman: "Andromeda", difficulty: 3 },
+      { name: "Cassandra", domain: "Trojan prophetess cursed never to be believed", pantheon: "Greek", roman: "Cassandra", difficulty: 3 },
+      { name: "Agamemnon", domain: "King of Mycenae who led the Greeks at Troy", pantheon: "Greek", roman: "Agamemnon", difficulty: 3 },
+      { name: "Penelope", domain: "Faithful wife of Odysseus who wove and unwove her loom", pantheon: "Greek", roman: "Penelope", difficulty: 3 },
+      { name: "Eurydice", domain: "Wife of Orpheus, lost when he looked back in the underworld", pantheon: "Greek", roman: "Eurydice", difficulty: 3 },
+      { name: "Pygmalion", domain: "Sculptor who fell in love with his ivory statue", pantheon: "Greek", roman: "Pygmalion", difficulty: 3 },
+      { name: "Sisyphus", domain: "King condemned to roll a boulder uphill forever", pantheon: "Greek", roman: "Sisyphus", difficulty: 3 },
+      { name: "Tantalus", domain: "King tortured by food and water just out of reach", pantheon: "Greek", roman: "Tantalus", difficulty: 3 },
+    ];
+
+    const ANATOMY = [
+      // Tier 1 — common, well-known
+      { name: "femur", clue: "The longest bone in the human body, in the thigh", system: "Skeletal", difficulty: 1 },
+      { name: "tibia", clue: "The larger of the two lower leg bones, the shin bone", system: "Skeletal", difficulty: 1 },
+      { name: "sternum", clue: "The flat bone running down the center of the chest", system: "Skeletal", difficulty: 1 },
+      { name: "pelvis", clue: "The bowl-shaped bone structure at the base of the spine", system: "Skeletal", difficulty: 1 },
+      { name: "cerebrum", clue: "The largest part of the brain controlling thought and movement", system: "Nervous", difficulty: 1 },
+      { name: "cerebellum", clue: "Brain region controlling balance and coordination", system: "Nervous", difficulty: 1 },
+      { name: "trachea", clue: "The windpipe connecting throat to lungs", system: "Respiratory", difficulty: 1 },
+      { name: "esophagus", clue: "The muscular tube carrying food from throat to stomach", system: "Digestive", difficulty: 1 },
+      { name: "diaphragm", clue: "The dome-shaped muscle below the lungs that controls breathing", system: "Respiratory", difficulty: 1 },
+      { name: "kidney", clue: "Bean-shaped organ that filters blood and produces urine", system: "Urinary", difficulty: 1 },
+      { name: "liver", clue: "The largest internal organ, processing nutrients and toxins", system: "Digestive", difficulty: 1 },
+      { name: "pancreas", clue: "Gland producing insulin and digestive enzymes", system: "Digestive", difficulty: 1 },
+      { name: "artery", clue: "A blood vessel that carries blood away from the heart", system: "Circulatory", difficulty: 1 },
+      { name: "vein", clue: "A blood vessel that carries blood toward the heart", system: "Circulatory", difficulty: 1 },
+      { name: "tendon", clue: "Fibrous tissue connecting muscle to bone", system: "Musculoskeletal", difficulty: 1 },
+      { name: "ligament", clue: "Fibrous tissue connecting bone to bone at a joint", system: "Skeletal", difficulty: 1 },
+      { name: "cartilage", clue: "Flexible connective tissue found in joints and the ear", system: "Skeletal", difficulty: 1 },
+      { name: "cornea", clue: "The transparent front layer of the eye", system: "Sensory", difficulty: 1 },
+      { name: "retina", clue: "The light-sensitive layer at the back of the eye", system: "Sensory", difficulty: 1 },
+      { name: "cochlea", clue: "The spiral-shaped structure in the inner ear for hearing", system: "Sensory", difficulty: 1 },
+      // Tier 2 — intermediate
+      { name: "mandible", clue: "The lower jawbone, the only movable bone of the skull", system: "Skeletal", difficulty: 2 },
+      { name: "clavicle", clue: "The collarbone connecting the sternum to the shoulder", system: "Skeletal", difficulty: 2 },
+      { name: "scapula", clue: "The shoulder blade, a flat triangular back bone", system: "Skeletal", difficulty: 2 },
+      { name: "humerus", clue: "The upper arm bone between shoulder and elbow", system: "Skeletal", difficulty: 2 },
+      { name: "radius", clue: "The shorter of the two forearm bones on the thumb side", system: "Skeletal", difficulty: 2 },
+      { name: "ulna", clue: "The longer forearm bone on the pinky side", system: "Skeletal", difficulty: 2 },
+      { name: "fibula", clue: "The thin outer bone of the lower leg alongside the tibia", system: "Skeletal", difficulty: 2 },
+      { name: "patella", clue: "The kneecap, a small bone protecting the knee joint", system: "Skeletal", difficulty: 2 },
+      { name: "metatarsal", clue: "One of five long bones in the middle of the foot", system: "Skeletal", difficulty: 2 },
+      { name: "phalanges", clue: "The small bones making up the fingers and toes", system: "Skeletal", difficulty: 2 },
+      { name: "hypothalamus", clue: "Brain region regulating hunger, temperature, and hormones", system: "Nervous", difficulty: 2 },
+      { name: "medulla", clue: "Brain stem region controlling breathing and heart rate", system: "Nervous", difficulty: 2 },
+      { name: "synapse", clue: "The gap between neurons where signals are transmitted", system: "Nervous", difficulty: 2 },
+      { name: "alveoli", clue: "Tiny air sacs in the lungs where gas exchange occurs", system: "Respiratory", difficulty: 2 },
+      { name: "bronchi", clue: "The two main branches of the trachea leading to each lung", system: "Respiratory", difficulty: 2 },
+      { name: "aorta", clue: "The largest artery in the body, leaving the heart", system: "Circulatory", difficulty: 2 },
+      { name: "capillary", clue: "The smallest blood vessels enabling oxygen exchange in tissues", system: "Circulatory", difficulty: 2 },
+      { name: "spleen", clue: "Organ filtering blood and storing white blood cells", system: "Immune", difficulty: 2 },
+      { name: "thyroid", clue: "Butterfly-shaped gland in the neck regulating metabolism", system: "Endocrine", difficulty: 2 },
+      { name: "adrenal", clue: "Glands atop the kidneys producing adrenaline and cortisol", system: "Endocrine", difficulty: 2 },
+      // Tier 3 — advanced
+      { name: "pituitary", clue: "The master gland at the brain's base controlling other glands", system: "Endocrine", difficulty: 3 },
+      { name: "hippocampus", clue: "Brain structure critical for forming long-term memories", system: "Nervous", difficulty: 3 },
+      { name: "amygdala", clue: "Almond-shaped brain structure processing fear and emotion", system: "Nervous", difficulty: 3 },
+      { name: "periosteum", clue: "The dense membrane covering the outer surface of bones", system: "Skeletal", difficulty: 3 },
+      { name: "myocardium", clue: "The muscular tissue of the heart wall", system: "Circulatory", difficulty: 3 },
+      { name: "pericardium", clue: "The double-layered sac surrounding and protecting the heart", system: "Circulatory", difficulty: 3 },
+      { name: "glomerulus", clue: "A tiny cluster of capillaries in the kidney for filtration", system: "Urinary", difficulty: 3 },
+      { name: "jejunum", clue: "The middle section of the small intestine", system: "Digestive", difficulty: 3 },
+      { name: "duodenum", clue: "The first section of the small intestine after the stomach", system: "Digestive", difficulty: 3 },
+      { name: "peristalsis", clue: "The wave-like muscular contractions that move food through the gut", system: "Digestive", difficulty: 3 },
+      { name: "erythrocyte", clue: "The scientific term for a red blood cell", system: "Circulatory", difficulty: 3 },
+      { name: "leukocyte", clue: "The scientific term for a white blood cell", system: "Immune", difficulty: 3 },
+      { name: "thrombocyte", clue: "A platelet — the cell fragment responsible for blood clotting", system: "Circulatory", difficulty: 3 },
+      { name: "sarcomere", clue: "The basic contractile unit of a muscle fiber", system: "Musculoskeletal", difficulty: 3 },
+      { name: "nephron", clue: "The functional filtering unit of the kidney", system: "Urinary", difficulty: 3 },
+    ];
+
     const SPELLING_CATEGORIES = [
       { id: "geography", name: "Geography", emoji: "🌍", prompt: "cities, countries, capitals, rivers, mountains, landmarks, regions" },
       { id: "history", name: "People & History", emoji: "👑", prompt: "historical figures, events, dynasties, explorers, leaders, eras" },
@@ -178,6 +298,8 @@
       { id: "math", name: "Mental Math", emoji: "🔢" },
       { id: "elements", name: "Elements & Symbols", emoji: "⚗️" },
       { id: "flags", name: "Flag to Country", emoji: "🏳️" },
+      { id: "mythology", name: "Mythology", emoji: "⚡" },
+      { id: "anatomy", name: "Human Anatomy", emoji: "🫀" },
     ];
 
     const CATEGORIES = [...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES];
@@ -264,7 +386,7 @@
 
     function getStatsKey() {
       if (state.gameMode === "mixed") return "mixed";
-      const quizCats = ["countries", "states", "elements", "flags", "math"];
+      const quizCats = ["countries", "states", "elements", "flags", "math", "mythology", "anatomy"];
       if (quizCats.includes(state.selectedCategory)) return state.selectedCategory;
       return "spelling";
     }
@@ -504,6 +626,65 @@
         if (distractors.length < numDistractors) {
           const anyPicks = anyOther.filter(f => !used.has(f.country)).sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
           anyPicks.forEach(f => { distractors.push(f.country); used.add(f.country); });
+        }
+
+      } else if (catId === 'mythology') {
+        const entry = word.entry;
+        const pantheon = entry && entry.pantheon;
+        const used = new Set([correctAnswer]);
+
+        const samePantheon = pantheon
+          ? MYTHOLOGY.filter(m => m.pantheon === pantheon && m.name !== entry.name)
+          : [];
+        const higherTier = currentTier < 3
+          ? MYTHOLOGY.filter(m => m.difficulty > currentTier && m.name !== entry.name)
+          : [];
+        const anyOther = MYTHOLOGY.filter(m => m.name !== entry.name);
+
+        // Pick the answer field that matches what was asked
+        const getAns = (m) => word.word === entry.roman ? m.roman : m.name;
+
+        const samePicks = samePantheon.map(getAns).filter(a => a && !used.has(a))
+          .sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
+        samePicks.forEach(p => { distractors.push(p); used.add(p); });
+
+        if (distractors.length < numDistractors && higherTier.length > 0) {
+          const picks = higherTier.map(getAns).filter(a => !used.has(a))
+            .sort(() => Math.random() - 0.5).slice(0, 1);
+          picks.forEach(p => { distractors.push(p); used.add(p); });
+        }
+        if (distractors.length < numDistractors) {
+          const any = anyOther.map(getAns).filter(a => a && !used.has(a))
+            .sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
+          any.forEach(p => { distractors.push(p); used.add(p); });
+        }
+
+      } else if (catId === 'anatomy') {
+        const entry = word.entry;
+        const system = entry && entry.system;
+        const used = new Set([correctAnswer]);
+
+        const sameSystem = system
+          ? ANATOMY.filter(a => a.system === system && a.name !== entry.name)
+          : [];
+        const higherTier = currentTier < 3
+          ? ANATOMY.filter(a => a.difficulty > currentTier && a.name !== entry.name)
+          : [];
+        const anyOther = ANATOMY.filter(a => a.name !== entry.name);
+
+        const systemPicks = sameSystem.map(a => a.name).filter(a => !used.has(a))
+          .sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
+        systemPicks.forEach(p => { distractors.push(p); used.add(p); });
+
+        if (distractors.length < numDistractors && higherTier.length > 0) {
+          const picks = higherTier.map(a => a.name).filter(a => !used.has(a))
+            .sort(() => Math.random() - 0.5).slice(0, 1);
+          picks.forEach(p => { distractors.push(p); used.add(p); });
+        }
+        if (distractors.length < numDistractors) {
+          const any = anyOther.map(a => a.name).filter(a => !used.has(a))
+            .sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
+          any.forEach(p => { distractors.push(p); used.add(p); });
         }
       }
 
@@ -807,6 +988,65 @@
       };
     }
 
+    function getMythologyChallenge() {
+      const tier = getEffectiveTier() === 0 ? 1 : getEffectiveTier();
+      const usedSet = new Set(state.usedWords);
+      const candidates = MYTHOLOGY.filter(m => m.difficulty === tier && !usedSet.has(m.name));
+      const pool = candidates.length > 0 ? candidates : MYTHOLOGY.filter(m => !usedSet.has(m.name));
+      if (pool.length === 0) return null;
+      const entry = pool[Math.floor(Math.random() * pool.length)];
+
+      const questionType = Math.random();
+      let definition, word;
+
+      if (questionType < 0.6 || entry.roman === entry.name) {
+        // Give the domain, ask for the Greek name
+        definition = entry.domain;
+        word = entry.name;
+      } else {
+        const askGreek = Math.random() < 0.5;
+        if (askGreek) {
+          definition = `Roman equivalent: ${entry.roman}`;
+          word = entry.name;
+        } else {
+          definition = `Greek equivalent: ${entry.name}`;
+          word = entry.roman;
+        }
+      }
+
+      return {
+        word,
+        definition,
+        category: `${entry.pantheon} Mythology`,
+        catId: "mythology",
+        isMythology: true,
+        entry,
+        misspelled: "", wrongIndex: -1,
+      };
+    }
+
+    function getAnatomyChallenge() {
+      const tier = getEffectiveTier() === 0 ? 1 : getEffectiveTier();
+      const usedSet = new Set(state.usedWords);
+      const candidates = ANATOMY.filter(a => a.difficulty === tier && !usedSet.has(a.name));
+      const pool = candidates.length > 0 ? candidates : ANATOMY.filter(a => !usedSet.has(a.name));
+      if (pool.length === 0) return null;
+      const entry = pool[Math.floor(Math.random() * pool.length)];
+
+      const useScramble = state.difficulty >= 7 && Math.random() < 0.35;
+
+      return {
+        word: entry.name,
+        definition: entry.clue,
+        category: `Anatomy — ${entry.system}`,
+        catId: "anatomy",
+        isAnatomy: true,
+        entry,
+        mechanic: useScramble ? "scramble" : undefined,
+        misspelled: "", wrongIndex: -1,
+      };
+    }
+
     // ─── CAPITALS MODE LOGIC ────────────────────────────────────────────────────
 
     function isCapitalsMode() {
@@ -1022,6 +1262,14 @@
       }
       if (catId === "flags") {
         const challenge = getFlagChallenge();
+        if (challenge) return challenge;
+      }
+      if (catId === "mythology") {
+        const challenge = getMythologyChallenge();
+        if (challenge) return challenge;
+      }
+      if (catId === "anatomy") {
+        const challenge = getAnatomyChallenge();
         if (challenge) return challenge;
       }
       const libWord = getLibraryWord(catId, needsMisspelling);
@@ -1740,7 +1988,7 @@
             const winRate = s.wordsAttempted > 0 ? Math.round((s.wordsCorrectFirstTry / s.wordsAttempted) * 100) : 0;
             const mcWinRate = s.mcAttempted > 0 ? Math.round((s.mcCorrect / s.mcAttempted) * 100) : null;
             const diffPct = ((s.difficulty - 1) / 9) * 100;
-            const isQuizCat = ["countries", "states", "elements", "flags", "math"].includes(c.id);
+            const isQuizCat = ["countries", "states", "elements", "flags", "math", "mythology", "anatomy"].includes(c.id);
             return `<div class="stat-card">
               <div class="stat-card-header"><span class="stat-card-emoji">${c.emoji}</span><span class="stat-card-name">${c.name}</span></div>
               <div class="stat-card-best">${s.bestScore}</div>
