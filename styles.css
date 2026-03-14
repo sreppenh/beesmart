@@ -2267,7 +2267,14 @@ body.day .hint-tile.revealed {
   color: var(--muted);
 }
 
+.math-key.dec-key {
+  color: var(--yellow);
+  font-weight: 700;
+  font-size: 22px;
+}
+
 .math-key.submit-key {
+  grid-column: 1 / -1;
   background: var(--yellow);
   color: #000;
   border-color: var(--yellow);

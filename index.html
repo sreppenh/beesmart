@@ -897,10 +897,10 @@
         } else if (type === 'tip') {
           const pct = pick([15, 20]);
           const base = rand(2, 10) * 10;
-          answer = Math.round((pct / 100) * base);
+          answer = (pct / 100) * base;
           question = `${pct}% tip on $${base} = ?`;
           label = "Tip Calculator";
-          tolerance = 1;
+          tolerance = 0.5;
         } else {
           const a = rand(11, 25), b = rand(2, 9);
           answer = a * b;
@@ -1022,21 +1022,23 @@
 
     function generateMathMCOptions(mathData) {
       const correct = mathData.answer;
+      const isDecimal = !Number.isInteger(correct);
       const isMobile = window.innerWidth < 600;
       const numDistractors = isMobile ? 2 : 3;
 
-      // Scale offsets to the answer's magnitude so distractors feel plausible
-      const magnitude = correct < 10 ? 1 : correct < 50 ? 5 : correct < 200 ? 10 : 25;
+      const fmt = n => isDecimal ? n.toFixed(1) : String(Math.round(n));
+      const magnitude = isDecimal ? 0.5 : (correct < 10 ? 1 : correct < 50 ? 5 : correct < 200 ? 10 : 25);
       const offsets = [
         magnitude, -magnitude,
         magnitude * 2, -magnitude * 2,
         magnitude * 3, -magnitude * 3,
-      ].map(o => correct + o).filter(n => n !== correct && n > 0 && Number.isInteger(n));
+      ].map(o => correct + o).filter(n => n > 0 && n !== correct);
 
+      const correctStr = fmt(correct);
       const shuffled = offsets.sort(() => Math.random() - 0.5).slice(0, numDistractors);
-      const options = [String(correct), ...shuffled.map(String)];
+      const options = [correctStr, ...shuffled.map(fmt)];
       options.sort(() => Math.random() - 0.5);
-      return options.map(o => ({ answer: o, isCorrect: o === String(correct) }));
+      return options.map(o => ({ answer: o, isCorrect: o === correctStr }));
     }
 
     function handleMCAnswer(answer) {
@@ -1946,15 +1948,35 @@
     }
 
     function renderMathKeyboard() {
-      const keys = ['7','8','9','4','5','6','1','2','3','0','⌫','✓'];
+      const keys = ['7','8','9','4','5','6','1','2','3','.','0','⌫','✓'];
       const btns = keys.map(k => {
         if (k === '⌫') return `<button class="math-key del-key" onpointerdown="mathKeyPress(event,'DEL')">⌫</button>`;
         if (k === '✓') return `<button class="math-key submit-key" onpointerdown="mathKeyPress(event,'SUBMIT')">✓</button>`;
+        if (k === '.') return `<button class="math-key dec-key" onpointerdown="mathKeyPress(event,'.')">${k}</button>`;
         return `<button class="math-key" onpointerdown="mathKeyPress(event,'${k}')">${k}</button>`;
       }).join('');
       return `
         <div class="math-display">${state.mathInput || '?'}</div>
         <div class="math-keyboard">${btns}</div>`;
+    }
+
+    function isMathAnswerAccepted(input, correct, tolerance) {
+      const userVal = parseFloat(input);
+      if (isNaN(userVal)) return false;
+      // Within absolute tolerance (handles integer answers and tip rounding)
+      if (Math.abs(userVal - correct) <= Math.max(tolerance, 0.0001)) return true;
+      // Valid precision-matched approximation:
+      // strip trailing zeros, count how many decimal places the user typed,
+      // then accept if their value equals either the truncation or rounding
+      // of the correct answer to that many places.
+      const decStr = input.includes('.') ? input.split('.')[1].replace(/0+$/, '') : '';
+      if (decStr.length > 0) {
+        const factor = Math.pow(10, decStr.length);
+        const truncated = Math.floor(correct * factor) / factor;
+        const rounded = Math.round(correct * factor) / factor;
+        if (Math.abs(userVal - truncated) < 0.00001 || Math.abs(userVal - rounded) < 0.00001) return true;
+      }
+      return false;
     }
 
     function mathKeyPress(event, key) {
@@ -1964,17 +1986,21 @@
         state.mathInput = state.mathInput.slice(0, -1);
         render();
       } else if (key === 'SUBMIT') {
-        if (!state.mathInput) return;
-        const userAnswer = parseInt(state.mathInput, 10);
+        if (!state.mathInput || state.mathInput === '.') return;
         const tol = state.currentWord.tolerance || 0;
-        if (Math.abs(userAnswer - state.currentWord.answer) <= tol) {
+        if (isMathAnswerAccepted(state.mathInput, state.currentWord.answer, tol)) {
           handleCorrect();
         } else {
           state.mathInput = "";
           handleMissedAttempt();
         }
+      } else if (key === '.') {
+        if (state.mathInput.includes('.')) return;
+        if (!state.mathInput) state.mathInput = '0';
+        state.mathInput += '.';
+        render();
       } else {
-        if (state.mathInput.length >= 6) return;
+        if (state.mathInput.length >= 7) return;
         state.mathInput += key;
         render();
       }
