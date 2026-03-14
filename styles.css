@@ -2376,3 +2376,19 @@ body.day .reset-option-btn {
 body.day .reset-panel {
   border-top-color: rgba(0,0,0,0.08);
 }
+
+/* ─── BEEBLITZ HERO BUTTON — DAY MODE ──────────────────────────────────────── */
+
+body.day .beeblitz-hero {
+  background: linear-gradient(135deg, #fffbe6 0%, #fef3c7 50%, #fde68a 100%);
+  box-shadow: 0 0 20px rgba(180, 83, 9, 0.12);
+}
+
+body.day .beeblitz-hero:active {
+  box-shadow: 0 0 30px rgba(180, 83, 9, 0.28);
+}
+
+body.day .beeblitz-best-row {
+  background: rgba(180, 83, 9, 0.06);
+  border-top-color: rgba(180, 83, 9, 0.2);
+}
