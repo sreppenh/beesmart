@@ -175,6 +175,7 @@
     const QUIZ_CATEGORIES = [
       { id: "countries", name: "Countries & Capitals", emoji: "🌐" },
       { id: "states", name: "States & Capitals", emoji: "🇺🇸" },
+      { id: "math", name: "Mental Math", emoji: "🔢" },
       { id: "elements", name: "Elements & Symbols", emoji: "⚗️" },
       { id: "flags", name: "Flag to Country", emoji: "🏳️" },
     ];
@@ -218,6 +219,8 @@
       isMultipleChoice: false,
       multipleChoiceOptions: [],
       mcAnswered: false,
+      // Math
+      mathInput: "",
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
@@ -258,7 +261,7 @@
 
     function getStatsKey() {
       if (state.gameMode === "mixed") return "mixed";
-      const quizCats = ["countries", "states", "elements", "flags"];
+      const quizCats = ["countries", "states", "elements", "flags", "math"];
       if (quizCats.includes(state.selectedCategory)) return state.selectedCategory;
       return "spelling";
     }
@@ -363,7 +366,7 @@
 
 
     function isQuizMode() {
-      return ["countries", "states", "elements", "flags"].includes(state.selectedCategory);
+      return ["countries", "states", "elements", "flags", "math"].includes(state.selectedCategory);
     }
 
     function shouldShowMultipleChoice() {
@@ -508,6 +511,126 @@
         [options[i], options[j]] = [options[j], options[i]];
       }
       return options.map(o => ({ answer: o, isCorrect: o === correctAnswer }));
+    }
+
+    function generateMathProblem(difficulty) {
+      const d = difficulty;
+      let question, answer, label;
+      const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+      const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+      if (d <= 2) {
+        const op = pick(d <= 1 ? ['+', '-'] : ['+', '-', '×']);
+        let a = rand(2, 9), b = rand(2, 9);
+        if (op === '-' && b > a) [a, b] = [b, a];
+        answer = op === '+' ? a + b : op === '-' ? a - b : a * b;
+        question = `${a} ${op} ${b} = ?`;
+        label = "Arithmetic";
+
+      } else if (d <= 4) {
+        const type = pick(['add', 'sub', 'pct']);
+        if (type === 'pct') {
+          const pct = pick([10, 25, 50]);
+          const base = rand(2, 20) * 10;
+          answer = Math.round((pct / 100) * base);
+          question = `${pct}% of ${base} = ?`;
+          label = "Percentages";
+        } else {
+          const a = rand(10, 99), b = rand(10, 99);
+          if (type === 'sub') {
+            const [big, small] = a >= b ? [a, b] : [b, a];
+            answer = big - small;
+            question = `${big} − ${small} = ?`;
+          } else {
+            answer = a + b;
+            question = `${a} + ${b} = ?`;
+          }
+          label = "Arithmetic";
+        }
+
+      } else if (d <= 6) {
+        const type = pick(['mul', 'tip', 'frac']);
+        if (type === 'mul') {
+          const a = rand(11, 25), b = rand(2, 9);
+          answer = a * b;
+          question = `${a} × ${b} = ?`;
+          label = "Arithmetic";
+        } else if (type === 'tip') {
+          const pct = pick([15, 20]);
+          const base = rand(2, 10) * 10;
+          answer = Math.round((pct / 100) * base);
+          question = `${pct}% tip on $${base} = ?`;
+          label = "Tip Calculator";
+        } else {
+          const denoms = [2, 4, 5, 8, 10];
+          const denom = pick(denoms);
+          const numer = rand(1, denom - 1);
+          const base = rand(2, 12) * denom;
+          answer = (numer / denom) * base;
+          question = `${numer}/${denom} of ${base} = ?`;
+          label = "Fractions";
+        }
+
+      } else if (d <= 8) {
+        const type = pick(['3digit', 'chain', 'pct']);
+        if (type === '3digit') {
+          const a = rand(100, 500), b = rand(10, 99);
+          const op = pick(['+', '-']);
+          answer = op === '+' ? a + b : a - b;
+          question = `${a} ${op === '+' ? '+' : '−'} ${b} = ?`;
+          label = "Arithmetic";
+        } else if (type === 'chain') {
+          const a = rand(10, 50), b = rand(2, 9), c = rand(2, 9);
+          answer = a + b * c;
+          question = `${a} + ${b} × ${c} = ?`;
+          label = "Order of Ops";
+        } else {
+          const pct = pick([15, 20, 30]);
+          const base = rand(3, 15) * 10;
+          answer = Math.round((pct / 100) * base);
+          question = `${pct}% of ${base} = ?`;
+          label = "Percentages";
+        }
+
+      } else {
+        const type = pick(['bigMul', 'wordproblem']);
+        if (type === 'bigMul') {
+          const a = rand(12, 50), b = rand(11, 25);
+          answer = a * b;
+          question = `${a} × ${b} = ?`;
+          label = "Arithmetic";
+        } else {
+          const price = rand(3, 12) * 5;
+          const qty = rand(3, 8);
+          const discount = pick([10, 20, 25]);
+          const total = price * qty;
+          answer = total - Math.round((discount / 100) * total);
+          question = `${qty} × $${price}, then ${discount}% off = ?`;
+          label = "Word Problem";
+        }
+      }
+
+      return {
+        word: String(answer),
+        definition: question,
+        category: label,
+        catId: "math",
+        isMath: true,
+        answer,
+      };
+    }
+
+    function generateMathMCOptions(mathData) {
+      const correct = mathData.answer;
+      const isMobile = window.innerWidth < 600;
+      const numDistractors = isMobile ? 2 : 3;
+      const offsets = [1, -1, 2, -2, 5, -5, 10, -10]
+        .map(o => correct + o)
+        .filter(n => n !== correct && n >= 0);
+      const shuffled = offsets.sort(() => Math.random() - 0.5).slice(0, numDistractors);
+      const options = [String(correct), ...shuffled.map(String)];
+      options.sort(() => Math.random() - 0.5);
+      return options.map(o => ({ answer: o, isCorrect: o === String(correct) }));
     }
 
     function handleMCAnswer(answer) {
@@ -804,6 +927,21 @@
       state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
       render();
       try {
+        // Math mode — generate locally, no API call
+        if (state.selectedCategory === "math") {
+          const mathData = generateMathProblem(state.difficulty);
+          state.currentWord = mathData;
+          state.mechanic = "definition";
+          state.mathInput = "";
+          state.loading = false;
+          if (shouldShowMultipleChoice()) {
+            state.isMultipleChoice = true;
+            state.multipleChoiceOptions = generateMathMCOptions(mathData);
+          }
+          render();
+          return;
+        }
+
         const isCapitals = isCapitalsMode();
         const isQuiz = isQuizMode();
         let next;
@@ -865,7 +1003,7 @@
 
     // Handle correct answer scoring and progression
     function handleCorrect() {
-      if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, true);
+      if (state.currentWord && !state.currentWord.isMath) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, true);
       state.streak += 1;
       const prevDiff = state.difficulty;
       const diffIncrease = state.isMultipleChoice ? 0.1 : (state.hintUsed ? 0.2 : 0.4);
@@ -910,7 +1048,7 @@
     }
 
     function handleWrong(revealMsg) {
-      if (state.currentWord) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, false);
+      if (state.currentWord && !state.currentWord.isMath) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, false);
       state.streak = 0;
       state.difficulty = Math.max(1, state.difficulty - 0.3);
       state.transitioning = true;
@@ -1231,6 +1369,124 @@
       render();
     }
 
+    function renderMathKeyboard() {
+      const keys = ['7','8','9','4','5','6','1','2','3','0','⌫','✓'];
+      const btns = keys.map(k => {
+        if (k === '⌫') return `<button class="math-key del-key" onpointerdown="mathKeyPress(event,'DEL')">⌫</button>`;
+        if (k === '✓') return `<button class="math-key submit-key" onpointerdown="mathKeyPress(event,'SUBMIT')">✓</button>`;
+        return `<button class="math-key" onpointerdown="mathKeyPress(event,'${k}')">${k}</button>`;
+      }).join('');
+      return `
+        <div class="math-display">${state.mathInput || '?'}</div>
+        <div class="math-keyboard">${btns}</div>`;
+    }
+
+    function mathKeyPress(event, key) {
+      event.preventDefault();
+      if (state.transitioning) return;
+      if (key === 'DEL') {
+        state.mathInput = state.mathInput.slice(0, -1);
+        render();
+      } else if (key === 'SUBMIT') {
+        if (!state.mathInput) return;
+        const userAnswer = parseInt(state.mathInput, 10);
+        if (userAnswer === state.currentWord.answer) {
+          handleCorrect();
+        } else {
+          state.mathInput = "";
+          handleMissedAttempt();
+        }
+      } else {
+        if (state.mathInput.length >= 6) return;
+        state.mathInput += key;
+        render();
+      }
+    }
+
+    function renderMechanicCard() {
+      if (state.loading) {
+        const loadCat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        return `<div class="loading-wrap"><div class="loading-bee">🐝</div><p class="loading-text">Finding your ${loadCat ? loadCat.name.toLowerCase() : "next"} word…</p></div>`;
+      }
+      if (!state.currentWord) return "";
+
+      const sw = state.currentWord.word.replace(/'/g, "\\'");
+      let inner = "";
+
+      if (state.mechanic === "audio") {
+        inner = `<button class="speak-btn" onclick="speak('${sw}')">🔊 Hear word again</button><p class="cat-tag">${state.currentWord.category}</p>`;
+
+      } else if (state.mechanic === "definition") {
+        const isFlag = state.currentWord.isFlag;
+        const defDisplay = isFlag
+          ? `<div style="font-size:80px;line-height:1.3;margin-bottom:8px">${state.currentWord.definition}</div>`
+          : `<p class="def-text">"${state.currentWord.definition}"</p>`;
+        const sentenceClue = (!isFlag && state.currentWord.sentence) ? `<p class="def-text" style="margin-top:8px;font-style:italic;opacity:0.8">${state.currentWord.sentence}</p>` : "";
+        inner = `${defDisplay}${state.currentWord.isCapitals ? "" : `<p class="cat-tag">${state.currentWord.category}</p>`}${sentenceClue}`;
+        if (state.currentWord.isMath && !state.isMultipleChoice) {
+          inner += renderMathKeyboard();
+        }
+
+      } else if (state.mechanic === "scramble") {
+        const placed = state.scrambleSelected.map(x => x.l).join("");
+        const remaining = "_".repeat(state.currentWord.word.length - placed.length);
+        const displaySize = state.currentWord.word.length > 12 ? '18px' : '24px';
+        const poolTiles = state.scrambleRemaining.map(x =>
+          `<span class="s-letter" onclick="scrambleSelect(${x.id})">${x.l}</span>`
+        ).join("");
+        inner = `
+<div class="scramble-text-display" style="font-size:${displaySize}"><span class="scramble-placed">${placed}</span><span class="scramble-empty">${remaining}</span></div>
+<div style="display:flex;justify-content:flex-end;margin-top:6px">
+  <button class="scramble-undo-btn" onclick="scrambleUndo()" ${state.scrambleSelected.length === 0 ? 'disabled' : ''}>⌫ Undo</button>
+</div>
+<div class="scramble-row" style="margin-top:10px">${poolTiles}</div>
+<p class="cat-tag" style="margin-top:10px">${state.currentWord.category}</p>
+<p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
+
+      } else if (state.mechanic === "lettergap") {
+        const gapWord = state.currentWord.word.toUpperCase();
+        const hiddenCount = state.gapIndices.filter(Boolean).length;
+        let hiddenIdx = 0;
+        const letterTiles = gapWord.split("").map((l, i) => {
+          if (state.gapIndices[i]) {
+            const idx = hiddenIdx++;
+            return `<input class="gap-input" id="gap-${idx}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${idx},${hiddenCount})" onkeydown="gapKeyDown(event,${idx},${hiddenCount})"/>`;
+          }
+          return `<span class="gap-letter shown">${l}</span>`;
+        }).join("");
+        inner = `
+        <div class="gap-row">${letterTiles}</div>
+        <p class="gap-instruction">Type the missing letters</p>
+        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
+
+      } else if (state.mechanic === "oneletteroff") {
+        const display = state.misspelled || state.currentWord.word;
+        const tiles = display.toUpperCase().split("").map((l, i) => {
+          let cls = "olo-letter";
+          if (state.selectedOloIndex === i) cls += " selected-wrong";
+          return `<span class="${cls}" onclick="oloClickLetter(${i})">${l}</span>`;
+        }).join("");
+        let fixHTML = "";
+        if (state.oloPhase === "fix") {
+          const oloKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+            .map(l => `<button class="olo-key" onclick="oloPickLetter('${l}')">${l}</button>`)
+            .join("");
+          fixHTML = `<div class="olo-fix-section">
+          <p class="olo-fix-label">Replace with:</p>
+          <div class="olo-key-grid">${oloKeys}</div>
+        </div>`;
+        }
+        inner = `
+        <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Tap the correct letter"}</p>
+        <div class="olo-row" style="margin-top:12px">${tiles}</div>
+        ${fixHTML}
+        <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
+        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
+      }
+
+      return `<div class="word-card">${inner}</div>`;
+    }
+
     function render() {
       const app = document.getElementById("app");
 
@@ -1303,7 +1559,7 @@
             const winRate = s.wordsAttempted > 0 ? Math.round((s.wordsCorrectFirstTry / s.wordsAttempted) * 100) : 0;
             const mcWinRate = s.mcAttempted > 0 ? Math.round((s.mcCorrect / s.mcAttempted) * 100) : null;
             const diffPct = ((s.difficulty - 1) / 9) * 100;
-            const isQuizCat = ["countries", "states", "elements", "flags"].includes(c.id);
+            const isQuizCat = ["countries", "states", "elements", "flags", "math"].includes(c.id);
             return `<div class="stat-card">
               <div class="stat-card-header"><span class="stat-card-emoji">${c.emoji}</span><span class="stat-card-name">${c.name}</span></div>
               <div class="stat-card-best">${s.bestScore}</div>
@@ -1312,7 +1568,7 @@
                 <div class="stat-mini-bar"><div class="stat-mini-bar-fill" style="width:${diffPct}%"></div></div>
               </div>
               <div class="stat-card-meta">
-                <span>${s.wordsAttempted} words</span>
+                <span>${s.wordsAttempted} ${c.id === "math" ? "problems" : "words"}</span>
                 <span>${winRate}% first try</span>
               </div>
               ${isQuizCat && mcWinRate !== null ? `<div class="stat-card-meta" style="margin-top:4px"><span>👆 MC: ${mcWinRate}% (${s.mcAttempted} q's)</span></div>` : ""}
@@ -1460,84 +1716,7 @@
       const blitzTimePct = Math.max(0, (state.blitzTimeRemaining / 60) * 100);
       const blitzBarColor = state.blitzTimeRemaining <= 10 ? "#ef4444" : state.blitzTimeRemaining <= 20 ? "#f97316" : "var(--yellow)";
 
-      let cardHTML = "";
-      if (state.loading) {
-        const loadCat = CATEGORIES.find(c => c.id === state.selectedCategory);
-        cardHTML = `<div class="loading-wrap"><div class="loading-bee">🐝</div><p class="loading-text">Finding your ${loadCat ? loadCat.name.toLowerCase() : "next"} word…</p></div>`;
-      } else if (state.currentWord) {
-        const sw = state.currentWord.word.replace(/'/g, "\\'");
-        let inner = "";
-
-        if (state.mechanic === "audio") {
-          inner = `<button class="speak-btn" onclick="speak('${sw}')">🔊 Hear word again</button><p class="cat-tag">${state.currentWord.category}</p>`;
-
-        } else if (state.mechanic === "definition") {
-          const isFlag = state.currentWord.isFlag;
-          const defDisplay = isFlag
-            ? `<div style="font-size:80px;line-height:1.3;margin-bottom:8px">${state.currentWord.definition}</div>`
-            : `<p class="def-text">"${state.currentWord.definition}"</p>`;
-          const sentenceClue = (!isFlag && state.currentWord.sentence) ? `<p class="def-text" style="margin-top:8px;font-style:italic;opacity:0.8">${state.currentWord.sentence}</p>` : "";
-          inner = `${defDisplay}${state.currentWord.isCapitals ? "" : `<p class="cat-tag">${state.currentWord.category}</p>`}${sentenceClue}`;
-
-        } else if (state.mechanic === "scramble") {
-          const placed = state.scrambleSelected.map(x => x.l).join("");
-          const remaining = "_".repeat(state.currentWord.word.length - placed.length);
-          const displaySize = state.currentWord.word.length > 12 ? '18px' : '24px';
-          const poolTiles = state.scrambleRemaining.map(x =>
-            `<span class="s-letter" onclick="scrambleSelect(${x.id})">${x.l}</span>`
-          ).join("");
-          inner = `
-<div class="scramble-text-display" style="font-size:${displaySize}"><span class="scramble-placed">${placed}</span><span class="scramble-empty">${remaining}</span></div>
-<div style="display:flex;justify-content:flex-end;margin-top:6px">
-  <button class="scramble-undo-btn" onclick="scrambleUndo()" ${state.scrambleSelected.length === 0 ? 'disabled' : ''}>⌫ Undo</button>
-</div>
-<div class="scramble-row" style="margin-top:10px">${poolTiles}</div>
-<p class="cat-tag" style="margin-top:10px">${state.currentWord.category}</p>
-<p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
-
-        } else if (state.mechanic === "lettergap") {
-          const gapWord = state.currentWord.word.toUpperCase();
-          const hiddenCount = state.gapIndices.filter(Boolean).length;
-          let hiddenIdx = 0;
-          const letterTiles = gapWord.split("").map((l, i) => {
-            if (state.gapIndices[i]) {
-              const idx = hiddenIdx++;
-              return `<input class="gap-input" id="gap-${idx}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${idx},${hiddenCount})" onkeydown="gapKeyDown(event,${idx},${hiddenCount})"/>`;
-            }
-            return `<span class="gap-letter shown">${l}</span>`;
-          }).join("");
-          inner = `
-        <div class="gap-row">${letterTiles}</div>
-        <p class="gap-instruction">Type the missing letters</p>
-        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
-
-        } else if (state.mechanic === "oneletteroff") {
-          const display = state.misspelled || state.currentWord.word;
-          const tiles = display.toUpperCase().split("").map((l, i) => {
-            let cls = "olo-letter";
-            if (state.selectedOloIndex === i) cls += " selected-wrong";
-            return `<span class="${cls}" onclick="oloClickLetter(${i})">${l}</span>`;
-          }).join("");
-          let fixHTML = "";
-          if (state.oloPhase === "fix") {
-            const oloKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
-              .map(l => `<button class="olo-key" onclick="oloPickLetter('${l}')">${l}</button>`)
-              .join("");
-            fixHTML = `<div class="olo-fix-section">
-          <p class="olo-fix-label">Replace with:</p>
-          <div class="olo-key-grid">${oloKeys}</div>
-        </div>`;
-          }
-          inner = `
-        <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Tap the correct letter"}</p>
-        <div class="olo-row" style="margin-top:12px">${tiles}</div>
-        ${fixHTML}
-        <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
-        <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
-        }
-
-        cardHTML = `<div class="word-card">${inner}</div>`;
-      }
+      const cardHTML = renderMechanicCard();
 
       const mechanicLabels = {
         audio: "🔊 Listen & Spell",
@@ -1545,10 +1724,11 @@
         scramble: "🔀 Unscramble",
         lettergap: "✏️ Fill the Gaps",
         oneletteroff: "🔍 One Letter Off",
+        math: "🔢 Mental Math",
       };
 
       const showMC = state.isMultipleChoice && state.currentWord && !state.loading;
-      const showStandardInput = !showMC && state.currentWord && !state.loading && ["audio", "definition"].includes(state.mechanic);
+      const showStandardInput = !showMC && state.currentWord && !state.loading && ["audio", "definition"].includes(state.mechanic) && !state.currentWord.isMath;
       const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
       const showScrambleSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "scramble";
       const hintAllowed = !state.blitz;
@@ -1636,7 +1816,7 @@
         <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${diffPct}%"></div></div>
       </div>`}
       <div class="game-body">
-        ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${state.isMultipleChoice ? "👆 Multiple Choice" : (mechanicLabels[state.mechanic] || "")}</p>` : ""}
+        ${state.currentWord && !state.loading ? `<p class="mechanic-badge">${state.isMultipleChoice ? "👆 Multiple Choice" : (state.currentWord.isMath ? mechanicLabels.math : (mechanicLabels[state.mechanic] || ""))}</p>` : ""}
         ${cardHTML}
         ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
         ${state.hintLevel >= 1 ? `

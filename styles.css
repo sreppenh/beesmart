@@ -2068,3 +2068,71 @@ body.day .hint-tile.revealed {
   color: #1a1a1a;
   border-color: var(--yellow);
 }
+
+/* ─── MATH KEYBOARD ─────────────────────────────────────────────────────────── */
+
+.math-display {
+  font-size: 42px;
+  font-weight: 800;
+  text-align: center;
+  color: var(--yellow);
+  letter-spacing: 2px;
+  min-height: 56px;
+  margin: 16px 0 8px;
+}
+
+.math-keyboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.math-key {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  padding: 14px 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.1s;
+}
+
+.math-key:active {
+  background: var(--yellow);
+  color: #000;
+}
+
+.math-key.del-key {
+  color: var(--muted);
+}
+
+.math-key.submit-key {
+  background: var(--yellow);
+  color: #000;
+  border-color: var(--yellow);
+}
+
+.math-key.submit-key:active {
+  opacity: 0.85;
+}
+
+body.day .math-key {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #1a1a1a;
+}
+
+body.day .math-key:active {
+  background: var(--yellow);
+  color: #000;
+}
