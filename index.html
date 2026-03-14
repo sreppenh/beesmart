@@ -29,8 +29,8 @@
   <script src="words.js"></script>
   <script>
     const API = "/api/word";
-    const MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff"];
-    const BLITZ_MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff"];
+    const MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff", "typewriter"];
+    const BLITZ_MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff", "typewriter"];
 
 
     const ELEMENTS = [
@@ -200,6 +200,9 @@
       // one letter off
       misspelled: "", wrongIndex: -1,
       selectedOloIndex: -1, oloPhase: "select", // select | fix
+      // typewriter mechanic
+      typewriterRevealed: false,
+      typewriterInterval: null,
       theme: "night",
       lastAttempt: null,
       categoryStats: {},
@@ -1028,6 +1031,8 @@
 
     async function loadNextWord() {
       if (state.blitz && state.blitzExpired) { endBlitzGame(); return; }
+      if (state.typewriterInterval) { clearInterval(state.typewriterInterval); state.typewriterInterval = null; }
+      state.typewriterRevealed = false;
       state.loading = true; state.hintLevel = 0; state.hintRevealed = []; state.hintUsed = false;
       state.attempts = 0; state.feedback = null; state.transitioning = false;
       state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null;
@@ -1068,6 +1073,11 @@
         } else {
           const pool = state.blitz ? BLITZ_MECHANICS : MECHANICS;
           next = pool[Math.floor(Math.random() * pool.length)];
+          // Typewriter only fires at difficulty 6+
+          if (next === "typewriter" && state.difficulty < 6) {
+            const fallbackPool = ["definition", "scramble", "lettergap", "oneletteroff"];
+            next = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+          }
         }
         const wordData = await fetchWord(!isQuiz && next === "oneletteroff");
         if (wordData.mechanic) next = wordData.mechanic;
@@ -1097,11 +1107,17 @@
           state.misspelled = wordData.misspelled || wordData.word;
           state.wrongIndex = wordData.wrongIndex !== undefined ? wordData.wrongIndex : -1;
         }
+        if (next === "typewriter") {
+          state.typewriterRevealed = false;
+          if (state.typewriterInterval) clearInterval(state.typewriterInterval);
+          state.typewriterInterval = null;
+        }
 
         state.loading = false; render();
         requestAnimationFrame(() => requestAnimationFrame(() => {
           const card = document.querySelector(".word-card");
           if (card) { card.classList.add("word-card-enter"); }
+          if (state.mechanic === "typewriter" && !state.typewriterRevealed) startTypewriter();
         }));
         if (next === "audio") setTimeout(() => speak(wordData.word), 400);
         setTimeout(() => {
@@ -1272,6 +1288,45 @@
       const item = state.scrambleSelected.pop();
       state.scrambleRemaining.push(item);
       render();
+    }
+
+    function startTypewriter() {
+      const word = state.currentWord.word.toUpperCase();
+      const letters = word.split("");
+      let i = 0;
+
+      const msPerLetter = state.difficulty >= 9 ? 120 :
+                          state.difficulty >= 7 ? 160 : 200;
+
+      if (state.typewriterInterval) clearInterval(state.typewriterInterval);
+
+      const el = document.getElementById("typewriter-display");
+      if (!el) return;
+
+      el.textContent = "";
+      el.classList.remove("tw-done");
+
+      state.typewriterInterval = setInterval(() => {
+        i++;
+        if (el) el.textContent = letters.slice(0, i).join("");
+
+        if (i >= letters.length) {
+          clearInterval(state.typewriterInterval);
+          state.typewriterInterval = null;
+
+          const holdMs = state.difficulty >= 9 ? 400 :
+                         state.difficulty >= 7 ? 600 : 800;
+
+          setTimeout(() => {
+            if (el) {
+              el.classList.add("tw-done");
+              el.textContent = "?";
+            }
+            state.typewriterRevealed = true;
+            render();
+          }, holdMs);
+        }
+      }, msPerLetter);
     }
 
     function handleScrambleSubmit() {
@@ -1590,6 +1645,25 @@
         ${fixHTML}
         <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
         <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
+
+      } else if (state.mechanic === "typewriter") {
+        const hint = state.currentWord.definition
+          ? `<p class="def-text" style="margin-top:12px">"${state.currentWord.definition}"</p>`
+          : "";
+        const catTag = `<p class="cat-tag">${state.currentWord.category}</p>`;
+        if (!state.typewriterRevealed) {
+          inner = `
+        <p class="tw-instruction">Watch carefully…</p>
+        <div id="typewriter-display" class="typewriter-display"></div>
+        ${catTag}
+        ${hint}`;
+        } else {
+          inner = `
+        <p class="tw-instruction">Now spell it from memory:</p>
+        <div class="typewriter-display tw-done">?</div>
+        ${catTag}
+        ${hint}`;
+        }
       }
 
       return `<div class="word-card">${inner}</div>`;
@@ -1818,7 +1892,7 @@
       const cardHTML = renderMechanicCard();
 
       const showMC = state.isMultipleChoice && state.currentWord && !state.loading;
-      const showStandardInput = !showMC && state.currentWord && !state.loading && ["audio", "definition"].includes(state.mechanic) && !state.currentWord.isMath;
+      const showStandardInput = !showMC && state.currentWord && !state.loading && (["audio", "definition"].includes(state.mechanic) || (state.mechanic === "typewriter" && state.typewriterRevealed)) && !state.currentWord.isMath;
       const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
       const showScrambleSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "scramble";
       const hintAllowed = !state.blitz;
@@ -2007,7 +2081,7 @@
 
     // Physical keyboard support for built-in keyboard mechanics
     document.addEventListener("keydown", function(e) {
-      if (!["audio", "definition"].includes(state.mechanic)) return;
+      if (!["audio", "definition", "typewriter"].includes(state.mechanic)) return;
       if (state.screen !== "game" || state.loading || state.transitioning) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === "Enter") { e.preventDefault(); handleSubmit(); }
