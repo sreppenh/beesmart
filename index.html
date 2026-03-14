@@ -1389,7 +1389,7 @@
         if (next === "audio") setTimeout(() => speak(wordData.word), 400);
         setTimeout(() => {
           const g = document.querySelector(".gap-input");
-          if (g) g.focus();
+          if (g && !state.blitz) g.focus();
         }, 150);
       } catch (e) {
         state.loading = false;
@@ -2311,8 +2311,8 @@
       <div class="game-footer">${footerHTML}</div>
     </div>`;
 
-      // Focus first gap input (other mechanics use built-in keyboard or doc-level listener)
-      if (state.mechanic === "lettergap" && !state.loading) {
+      // Focus first gap input — skip in blitz to prevent native iOS keyboard popping up
+      if (state.mechanic === "lettergap" && !state.loading && !state.blitz) {
         setTimeout(() => { const g = document.getElementById("gap-0"); if (g) g.focus(); }, 100);
       }
     }
