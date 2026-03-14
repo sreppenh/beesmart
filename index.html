@@ -747,7 +747,7 @@
 
     function generateMathProblem(difficulty) {
       const d = difficulty;
-      let question, answer, label;
+      let question, answer, label, tolerance = 0;
       const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
       const pick = arr => arr[Math.floor(Math.random() * arr.length)];
       const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
@@ -838,6 +838,7 @@
           answer = Math.round((pct / 100) * base);
           question = `${pct}% tip on $${base} = ?`;
           label = "Tip Calculator";
+          tolerance = 1;
         } else {
           const a = rand(11, 25), b = rand(2, 9);
           answer = a * b;
@@ -913,6 +914,7 @@
         // Expert: multi-step word problems, fraction↔decimal↔percentage conversions
         const type = pick(['fracpct', 'wordproblem', 'bigmul']);
         if (type === 'fracpct') {
+          tolerance = 1;
           const conversions = [
             { q: `1/4 as a percentage = ?`, a: 25 },
             { q: `3/4 as a percentage = ?`, a: 75 },
@@ -950,6 +952,7 @@
         catId: "math",
         isMath: true,
         answer,
+        tolerance,
       };
     }
 
@@ -1898,7 +1901,8 @@
       } else if (key === 'SUBMIT') {
         if (!state.mathInput) return;
         const userAnswer = parseInt(state.mathInput, 10);
-        if (userAnswer === state.currentWord.answer) {
+        const tol = state.currentWord.tolerance || 0;
+        if (Math.abs(userAnswer - state.currentWord.answer) <= tol) {
           handleCorrect();
         } else {
           state.mathInput = "";
