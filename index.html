@@ -1691,14 +1691,22 @@
     function revealNextHint() {
       if (!state.currentWord) return;
       const word = state.currentWord.word.toLowerCase();
+      const lengthAlreadyKnown = ["lettergap", "scramble", "oneletteroff"].includes(state.mechanic);
 
       if (state.hintLevel === 0) {
-        // First tap: show blank tiles, deduct 1 point
-        state.hintLevel = 1;
-        state.hintRevealed = Array(word.length).fill(null);
-        state.score = Math.max(0, state.score - 1);
         state.hintUsed = true;
-
+        state.hintRevealed = Array(word.length).fill(null);
+        if (lengthAlreadyKnown) {
+          // Length is already visible — skip straight to letter reveal at cost of 1 pt
+          const pick = Math.floor(Math.random() * word.length);
+          state.hintRevealed[pick] = word[pick];
+          state.hintLevel = 1;
+          state.score = Math.max(0, state.score - 1);
+        } else {
+          // First tap: show blank tiles (word length), deduct 1 point
+          state.hintLevel = 1;
+          state.score = Math.max(0, state.score - 1);
+        }
       } else {
         // Subsequent taps: reveal one more letter
         const unrevealed = state.hintRevealed
@@ -2214,6 +2222,9 @@
       const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
       const showScrambleSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "scramble";
       const hintAllowed = !state.blitz;
+      const hintLengthKnown = ["lettergap", "scramble", "oneletteroff"].includes(state.mechanic);
+      const hintFirstLabel = hintLengthKnown ? 'Reveal a letter (−1 pt)' : 'Show word length (−1 pt)';
+      const hintLabel = state.hintLevel === 0 ? hintFirstLabel : `Reveal a letter (−${state.hintLevel + 1} pts)`;
 
       let mcButtonsHTML = "";
       if (showMC && state.multipleChoiceOptions.length > 0) {
@@ -2239,7 +2250,7 @@
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
             <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
           <div class="builtin-keyboard"${state.transitioning ? ' style="opacity:0.5;pointer-events:none"' : ""}>
             <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
@@ -2255,11 +2266,11 @@
         ` : ""}
         ${showGapSubmit ? `
           <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${showScrambleSubmit ? `
           <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${state.hintLevel === 0 ? 'Show word length (−1 pt)' : `Reveal a letter (−${state.hintLevel + 1} pts)`}</button>` : ""}
+          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${state.blitz && state.currentWord && !state.loading && !state.transitioning ? `
           <button class="skip-btn" onclick="skipWord()">Skip −3s</button>
