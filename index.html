@@ -2022,6 +2022,7 @@
           <div class="home-tabs">
             <button class="tab-pill ${state.homeTab === 'play' ? 'active' : ''}" onclick="state.homeTab='play';render()">Play</button>
             <button class="tab-pill ${state.homeTab === 'stats' ? 'active' : ''}" onclick="state.homeTab='stats';render()">Stats</button>
+            <button class="tab-pill ${state.homeTab === 'settings' ? 'active' : ''}" onclick="state.homeTab='settings';render()">Settings</button>
           </div>`;
 
         if (state.homeTab === 'stats') {
@@ -2091,6 +2092,27 @@
               <span class="stats-streak-label">day streak 🔥</span>
             </div>
             <div class="stats-list">${blitzCard}${cards}</div>
+          </div>`;
+          return;
+        }
+
+        if (state.homeTab === 'settings') {
+          const resetOptions = ["blitz", "quiz", "all"].map(type => {
+            const labels = { blitz: "BeeBlitz", quiz: "All Quiz", all: "Everything" };
+            const icons  = { blitz: "⚡", quiz: "🧠", all: "🗑️" };
+            const isPending = state.resetConfirm === type;
+            return isPending
+              ? `<div class="reset-confirm-row">
+                  <span class="reset-confirm-label">Reset ${labels[type]}?</span>
+                  <button class="reset-confirm-yes" onclick="resetStats('${type}')">Yes, reset</button>
+                  <button class="reset-confirm-no" onclick="state.resetConfirm=null;render()">Cancel</button>
+                 </div>`
+              : `<button class="reset-option-btn" onclick="state.resetConfirm='${type}';render()">${icons[type]} ${labels[type]}</button>`;
+          }).join("");
+          app.innerHTML = `
+          <div class="home">
+            ${themeBtn}
+            ${tabsHTML}
             <div class="prefs-panel">
               <p class="reset-panel-title">Preferences</p>
               <div class="pref-row" onclick="toggleStartFromBeginning()">
@@ -2105,20 +2127,7 @@
             </div>
             <div class="reset-panel">
               <p class="reset-panel-title">Reset stats</p>
-              <div class="reset-options">
-                ${["blitz", "quiz", "all"].map(type => {
-                  const labels = { blitz: "BeeBlitz", quiz: "All Quiz", all: "Everything" };
-                  const icons  = { blitz: "⚡", quiz: "🧠", all: "🗑️" };
-                  const isPending = state.resetConfirm === type;
-                  return isPending
-                    ? `<div class="reset-confirm-row">
-                        <span class="reset-confirm-label">Reset ${labels[type]}?</span>
-                        <button class="reset-confirm-yes" onclick="resetStats('${type}')">Yes, reset</button>
-                        <button class="reset-confirm-no" onclick="state.resetConfirm=null;render()">Cancel</button>
-                       </div>`
-                    : `<button class="reset-option-btn" onclick="state.resetConfirm='${type}';render()">${icons[type]} ${labels[type]}</button>`;
-                }).join("")}
-              </div>
+              <div class="reset-options">${resetOptions}</div>
             </div>
           </div>`;
           return;
