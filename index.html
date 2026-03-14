@@ -518,18 +518,40 @@
       let question, answer, label;
       const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
       const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+      const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+      const simplify = (n, den) => { const g = gcd(Math.abs(n), Math.abs(den)); return [n/g, den/g]; };
 
       if (d <= 2) {
-        const op = pick(d <= 1 ? ['+', '-'] : ['+', '-', '×']);
-        let a = rand(2, 9), b = rand(2, 9);
-        if (op === '-' && b > a) [a, b] = [b, a];
-        answer = op === '+' ? a + b : op === '-' ? a - b : a * b;
-        question = `${a} ${op} ${b} = ?`;
-        label = "Arithmetic";
+        // Single-digit arithmetic + unit fractions introduced gently
+        const type = pick(d <= 1 ? ['arith', 'arith', 'arith'] : ['arith', 'arith', 'unitfrac']);
+        if (type === 'unitfrac') {
+          // ½ or ¼ of a small even number
+          const denom = pick([2, 4]);
+          const base = denom === 2 ? rand(1, 9) * 2 : rand(1, 6) * 4;
+          answer = base / denom;
+          question = `1/${denom} of ${base} = ?`;
+          label = "Fractions";
+        } else {
+          const op = pick(d <= 1 ? ['+', '-'] : ['+', '-', '×']);
+          let a = rand(2, 9), b = rand(2, 9);
+          if (op === '-' && b > a) [a, b] = [b, a];
+          answer = op === '+' ? a + b : op === '-' ? a - b : a * b;
+          question = `${a} ${op} ${b} = ?`;
+          label = "Arithmetic";
+        }
 
       } else if (d <= 4) {
-        const type = pick(['add', 'sub', 'pct']);
-        if (type === 'pct') {
+        // 2-digit arithmetic, simple percentages, common fractions of round numbers
+        const type = pick(['add', 'sub', 'pct', 'frac', 'frac']);
+        if (type === 'frac') {
+          // ¾, ⅔, ⅗ of round numbers — answer always a whole number
+          const fracs = [[1,2],[1,4],[3,4],[1,3],[2,3],[1,5],[2,5],[3,5]];
+          let [n, denom] = pick(fracs);
+          const base = rand(2, 15) * denom;
+          answer = (n / denom) * base;
+          question = `${n}/${denom} of ${base} = ?`;
+          label = "Fractions";
+        } else if (type === 'pct') {
           const pct = pick([10, 25, 50]);
           const base = rand(2, 20) * 10;
           answer = Math.round((pct / 100) * base);
@@ -549,12 +571,35 @@
         }
 
       } else if (d <= 6) {
-        const type = pick(['mul', 'tip', 'frac']);
-        if (type === 'mul') {
-          const a = rand(11, 25), b = rand(2, 9);
-          answer = a * b;
-          question = `${a} × ${b} = ?`;
-          label = "Arithmetic";
+        // 2×2 multiply, tips, fraction addition (same denom), fraction × whole
+        const type = pick(['mul', 'tip', 'fracadd', 'fracmul', 'fracmul']);
+        if (type === 'fracadd') {
+          // Same denominator addition — use only when result is a whole number
+          const denom = pick([4, 6, 8, 10]);
+          const a = rand(1, denom - 2);
+          const b = rand(1, denom - a - 1);
+          const [sn, sd] = simplify(a + b, denom);
+          if (sd === 1) {
+            answer = sn;
+            question = `${a}/${denom} + ${b}/${denom} = ?`;
+            label = "Fractions";
+          } else {
+            // Fallback: fraction × whole number
+            const denom2 = pick([2, 3, 4, 5, 6, 8]);
+            const numer2 = rand(1, denom2 - 1);
+            const base2 = rand(2, 15) * denom2;
+            answer = (numer2 / denom2) * base2;
+            question = `${numer2}/${denom2} × ${base2} = ?`;
+            label = "Fractions";
+          }
+        } else if (type === 'fracmul') {
+          // Fraction × whole number
+          const denom = pick([2, 3, 4, 5, 6, 8]);
+          const numer = rand(1, denom - 1);
+          const base = rand(2, 15) * denom;
+          answer = (numer / denom) * base;
+          question = `${numer}/${denom} × ${base} = ?`;
+          label = "Fractions";
         } else if (type === 'tip') {
           const pct = pick([15, 20]);
           const base = rand(2, 10) * 10;
@@ -562,44 +607,95 @@
           question = `${pct}% tip on $${base} = ?`;
           label = "Tip Calculator";
         } else {
-          const denoms = [2, 4, 5, 8, 10];
-          const denom = pick(denoms);
-          const numer = rand(1, denom - 1);
-          const base = rand(2, 12) * denom;
-          answer = (numer / denom) * base;
-          question = `${numer}/${denom} of ${base} = ?`;
-          label = "Fractions";
+          const a = rand(11, 25), b = rand(2, 9);
+          answer = a * b;
+          question = `${a} × ${b} = ?`;
+          label = "Arithmetic";
         }
 
       } else if (d <= 8) {
-        const type = pick(['3digit', 'chain', 'pct']);
-        if (type === '3digit') {
-          const a = rand(100, 500), b = rand(10, 99);
-          const op = pick(['+', '-']);
-          answer = op === '+' ? a + b : a - b;
-          question = `${a} ${op === '+' ? '+' : '−'} ${b} = ?`;
-          label = "Arithmetic";
+        // 3-digit ops, order of ops, fraction subtraction, fraction of a fraction
+        const type = pick(['3digit', 'chain', 'fracsub', 'fracoffrac']);
+        if (type === 'fracsub') {
+          // Same denominator subtraction — use only when result is a whole number
+          const denom = pick([4, 6, 8, 10, 12]);
+          const a = rand(2, denom - 1);
+          const b = rand(1, a - 1);
+          const [sn, sd] = simplify(a - b, denom);
+          if (sd === 1) {
+            answer = sn;
+            question = `${a}/${denom} − ${b}/${denom} = ?`;
+            label = "Fractions";
+          } else {
+            // Fallback: different denominator addition that resolves to a whole number
+            const d1 = pick([2, 3, 4]);
+            const d2 = pick([2, 3, 4].filter(x => x !== d1));
+            const lcm = (d1 * d2) / gcd(d1, d2);
+            const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+            const sumN = n1 * (lcm / d1) + n2 * (lcm / d2);
+            const [rsn, rsd] = simplify(sumN, lcm);
+            if (rsd === 1) {
+              answer = rsn;
+              question = `${n1}/${d1} + ${n2}/${d2} = ?`;
+              label = "Fractions";
+            } else {
+              // Double fallback: 3-digit arithmetic
+              const a2 = rand(100, 500), b2 = rand(10, 99);
+              answer = a2 + b2;
+              question = `${a2} + ${b2} = ?`;
+              label = "Arithmetic";
+            }
+          }
+        } else if (type === 'fracoffrac') {
+          // ½ of ¾ of a number — two-step fraction problem
+          const outer = pick([[1,2],[1,3],[2,3],[1,4],[3,4]]);
+          const inner = pick([[1,2],[1,4],[3,4],[2,3]]);
+          const base = rand(2, 8) * outer[1] * inner[1];
+          const innerResult = (inner[0] / inner[1]) * base;
+          const candidate = (outer[0] / outer[1]) * innerResult;
+          if (Number.isInteger(candidate)) {
+            answer = candidate;
+            question = `${outer[0]}/${outer[1]} of ${inner[0]}/${inner[1]} of ${base} = ?`;
+            label = "Fractions";
+          } else {
+            // Fallback: order of operations
+            const a = rand(10, 50), b = rand(2, 9), c = rand(2, 9);
+            answer = a + b * c;
+            question = `${a} + ${b} × ${c} = ?`;
+            label = "Order of Ops";
+          }
         } else if (type === 'chain') {
           const a = rand(10, 50), b = rand(2, 9), c = rand(2, 9);
           answer = a + b * c;
           question = `${a} + ${b} × ${c} = ?`;
           label = "Order of Ops";
         } else {
-          const pct = pick([15, 20, 30]);
-          const base = rand(3, 15) * 10;
-          answer = Math.round((pct / 100) * base);
-          question = `${pct}% of ${base} = ?`;
-          label = "Percentages";
+          const a = rand(100, 500), b = rand(10, 99);
+          const op = pick(['+', '-']);
+          answer = op === '+' ? a + b : a - b;
+          question = `${a} ${op === '+' ? '+' : '−'} ${b} = ?`;
+          label = "Arithmetic";
         }
 
       } else {
-        const type = pick(['bigMul', 'wordproblem']);
-        if (type === 'bigMul') {
-          const a = rand(12, 50), b = rand(11, 25);
-          answer = a * b;
-          question = `${a} × ${b} = ?`;
-          label = "Arithmetic";
-        } else {
+        // Expert: multi-step word problems, fraction↔decimal↔percentage conversions
+        const type = pick(['fracpct', 'wordproblem', 'bigmul']);
+        if (type === 'fracpct') {
+          const conversions = [
+            { q: `1/4 as a percentage = ?`, a: 25 },
+            { q: `3/4 as a percentage = ?`, a: 75 },
+            { q: `1/5 as a percentage = ?`, a: 20 },
+            { q: `2/5 as a percentage = ?`, a: 40 },
+            { q: `3/5 as a percentage = ?`, a: 60 },
+            { q: `4/5 as a percentage = ?`, a: 80 },
+            { q: `1/3 as a percentage ≈ ?`, a: 33 },
+            { q: `2/3 as a percentage ≈ ?`, a: 67 },
+          ];
+          const chosen = pick(conversions);
+          answer = chosen.a;
+          question = chosen.q;
+          label = "Fractions";
+        } else if (type === 'wordproblem') {
           const price = rand(3, 12) * 5;
           const qty = rand(3, 8);
           const discount = pick([10, 20, 25]);
@@ -607,6 +703,11 @@
           answer = total - Math.round((discount / 100) * total);
           question = `${qty} × $${price}, then ${discount}% off = ?`;
           label = "Word Problem";
+        } else {
+          const a = rand(12, 50), b = rand(11, 25);
+          answer = a * b;
+          question = `${a} × ${b} = ?`;
+          label = "Arithmetic";
         }
       }
 
@@ -624,9 +725,15 @@
       const correct = mathData.answer;
       const isMobile = window.innerWidth < 600;
       const numDistractors = isMobile ? 2 : 3;
-      const offsets = [1, -1, 2, -2, 5, -5, 10, -10]
-        .map(o => correct + o)
-        .filter(n => n !== correct && n >= 0);
+
+      // Scale offsets to the answer's magnitude so distractors feel plausible
+      const magnitude = correct < 10 ? 1 : correct < 50 ? 5 : correct < 200 ? 10 : 25;
+      const offsets = [
+        magnitude, -magnitude,
+        magnitude * 2, -magnitude * 2,
+        magnitude * 3, -magnitude * 3,
+      ].map(o => correct + o).filter(n => n !== correct && n > 0 && Number.isInteger(n));
+
       const shuffled = offsets.sort(() => Math.random() - 0.5).slice(0, numDistractors);
       const options = [String(correct), ...shuffled.map(String)];
       options.sort(() => Math.random() - 0.5);
