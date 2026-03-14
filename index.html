@@ -927,6 +927,13 @@
       state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
       render();
       try {
+        // Blitz: pick a fresh category for each word (50% spelling, 50% quiz)
+        if (state.blitz) {
+          state.selectedCategory = Math.random() < 0.5
+            ? "surprise"
+            : QUIZ_CATEGORIES[Math.floor(Math.random() * QUIZ_CATEGORIES.length)].id;
+        }
+
         // Math mode — generate locally, no API call
         if (state.selectedCategory === "math") {
           const mathData = generateMathProblem(state.difficulty);
@@ -1278,14 +1285,7 @@
       state.gameMode = mode;
       if (mode === "blitz") {
         startBlitzCountdown();
-      } else if (mode === "mixed") {
-        const all = [...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES].filter(c => c.id !== "surprise");
-        const pick = all[Math.floor(Math.random() * all.length)];
-        selectCategory(pick.id);
       } else if (mode === "spelling") {
-        state.selectedCategory = "surprise";
-        startGame();
-      } else if (mode === "audio") {
         state.selectedCategory = "surprise";
         startGame();
       } else {
@@ -1331,7 +1331,6 @@
       state.blitzStartTime = Date.now();
       state.blitzTimeSurvived = 0;
       state.difficulty = 1;
-      state.selectedCategory = "surprise";
       state.screen = "game"; state.lives = 3; state.score = 0;
       state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
       const bs = getCatStats("blitz");
@@ -1544,9 +1543,8 @@
               <p class="stat-card-unplayed">Not yet played</p>
             </div>`;
 
-          const MIXED_CAT = { id: "mixed", name: "Mixed Mode", emoji: "🎲" };
           const SPELLING_STAT_CAT = { id: "spelling", name: "Spelling", emoji: "🐝" };
-          const statsCats = [MIXED_CAT, SPELLING_STAT_CAT, ...QUIZ_CATEGORIES];
+          const statsCats = [SPELLING_STAT_CAT, ...QUIZ_CATEGORIES];
           const cards = statsCats.map(c => {
             const s = getCatStats(c.id);
             if (!s.hasPlayed) {
@@ -1620,17 +1618,6 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
-          <button class="mode-btn audio" onclick="goToMode('audio')">
-            <span class="mode-icon">🔊</span>
-            <div class="mode-info">
-              <div class="mode-title">Listen &amp; Spell</div>
-              <div class="mode-subtitle">Hear the word, then spell it</div>
-            </div>
-            <span class="mode-arrow">&#8250;</span>
-          </button>
-          <button class="mode-btn mixed" onclick="goToMode('mixed')">
-            🎲 &nbsp; Mixed Mode — a bit of everything
-          </button>
           <button class="mode-btn blitz" onclick="goToMode('blitz')">
             ⚡ &nbsp; Blitz — 60 seconds, go!
           </button>
@@ -1688,8 +1675,7 @@
           const gameOverKey = getStatsKey();
           const gameOverCatStats = getCatStats(gameOverKey);
           const newBest = state.score > 0 && state.score >= gameOverCatStats.bestScore;
-          const catId = state.gameMode === "mixed" ? "mixed" : state.selectedCategory;
-          const cat = catId === "mixed" ? { emoji: "🎲", name: "Mixed Mode" } : CATEGORIES.find(c => c.id === catId);
+          const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
           app.innerHTML = `
           <div class="gameover">
             <div class="share-card">
