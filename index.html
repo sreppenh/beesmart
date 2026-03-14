@@ -1910,7 +1910,8 @@
       if (!bs.hasPlayed) setCatStats("blitz", { hasPlayed: true, totalRuns: 0, bestWordsCorrect: 0, bestTimeSurvived: 0, wordsAttempted: 0, wordsCorrectFirstTry: 0 });
       state.blitzTimerInterval = setInterval(() => {
         if (!state.blitz || state.screen !== "game") { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; return; }
-        state.blitzTimeRemaining = Math.max(0, state.blitzTimeRemaining - 0.1);
+        const elapsed = (Date.now() - state.blitzStartTime) / 1000;
+        state.blitzTimeRemaining = Math.max(0, 60 - elapsed);
         const fill = document.getElementById("blitz-bar-fill");
         const num = document.getElementById("blitz-time-num");
         if (fill) {
@@ -1929,7 +1930,7 @@
     function endBlitzGame() {
       if (state.blitzTimerInterval) { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; }
       state.blitz = false;
-      const survived = Math.round(((state.blitzExpiredTime || Date.now()) - state.blitzStartTime) / 1000);
+      const survived = Math.min(60, Math.round(((state.blitzExpiredTime || Date.now()) - state.blitzStartTime) / 1000));
       state.blitzTimeSurvived = survived;
       const bs = getCatStats("blitz");
       setCatStats("blitz", {
