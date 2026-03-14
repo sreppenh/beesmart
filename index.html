@@ -1692,13 +1692,32 @@
       if (!state.currentWord) return;
       const word = state.currentWord.word.toLowerCase();
       const lengthAlreadyKnown = ["lettergap", "scramble", "oneletteroff"].includes(state.mechanic);
+      const isLettergap = state.mechanic === "lettergap";
+
+      // For lettergap: only hint positions that are actual gaps
+      function pickHintPosition() {
+        if (isLettergap && state.gapIndices) {
+          const candidates = state.gapIndices
+            .map((isGap, i) => (isGap && state.hintRevealed[i] === null) ? i : -1)
+            .filter(i => i !== -1);
+          // Keep at least 1 gap for the user to fill
+          if (candidates.length <= 1) return -1;
+          return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+        const unrevealed = state.hintRevealed
+          .map((v, i) => v === null ? i : -1)
+          .filter(i => i !== -1);
+        if (unrevealed.length <= 1) return -1;
+        return unrevealed[Math.floor(Math.random() * unrevealed.length)];
+      }
 
       if (state.hintLevel === 0) {
         state.hintUsed = true;
         state.hintRevealed = Array(word.length).fill(null);
         if (lengthAlreadyKnown) {
           // Length is already visible — skip straight to letter reveal at cost of 1 pt
-          const pick = Math.floor(Math.random() * word.length);
+          const pick = pickHintPosition();
+          if (pick === -1) { render(); return; }
           state.hintRevealed[pick] = word[pick];
           state.hintLevel = 1;
           state.score = Math.max(0, state.score - 1);
@@ -1709,11 +1728,8 @@
         }
       } else {
         // Subsequent taps: reveal one more letter
-        const unrevealed = state.hintRevealed
-          .map((v, i) => v === null ? i : -1)
-          .filter(i => i !== -1);
-        if (unrevealed.length <= 1) return; // guard: last letter never revealed
-        const pick = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+        const pick = pickHintPosition();
+        if (pick === -1) return;
         state.hintRevealed[pick] = word[pick];
         state.hintLevel++;
         state.score = Math.max(0, state.score - state.hintLevel);
@@ -1907,6 +1923,10 @@
         const letterTiles = gapWord.split("").map((l, i) => {
           if (state.gapIndices[i]) {
             const idx = hiddenIdx++;
+            const hinted = state.hintRevealed && state.hintRevealed[i];
+            if (hinted) {
+              return `<input class="gap-input gap-hinted" id="gap-${idx}" maxlength="1" value="${hinted.toUpperCase()}" disabled/>`;
+            }
             return `<input class="gap-input" id="gap-${idx}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${idx},${hiddenCount})" onkeydown="gapKeyDown(event,${idx},${hiddenCount})"/>`;
           }
           return `<span class="gap-letter shown">${l}</span>`;
@@ -2225,6 +2245,13 @@
       const hintLengthKnown = ["lettergap", "scramble", "oneletteroff"].includes(state.mechanic);
       const hintFirstLabel = hintLengthKnown ? 'Reveal a letter (−1 pt)' : 'Show word length (−1 pt)';
       const hintLabel = state.hintLevel === 0 ? hintFirstLabel : `Reveal a letter (−${state.hintLevel + 1} pts)`;
+      // For lettergap, only count unhinted gap positions; elsewhere count all nulls
+      const hintableCount = (state.hintLevel >= 1 && state.hintRevealed.length)
+        ? (state.mechanic === "lettergap" && state.gapIndices
+            ? state.gapIndices.filter((isGap, i) => isGap && state.hintRevealed[i] === null).length
+            : state.hintRevealed.filter(v => v === null).length)
+        : Infinity;
+      const hintStillAvailable = hintableCount > 1;
 
       let mcButtonsHTML = "";
       if (showMC && state.multipleChoiceOptions.length > 0) {
@@ -2250,7 +2277,7 @@
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
             <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
+          ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
           <div class="builtin-keyboard"${state.transitioning ? ' style="opacity:0.5;pointer-events:none"' : ""}>
             <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
@@ -2266,11 +2293,11 @@
         ` : ""}
         ${showGapSubmit ? `
           <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
+          ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${showScrambleSubmit ? `
           <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
-          ${hintAllowed && !state.transitioning && !(state.hintLevel >= 1 && state.hintRevealed.filter(v => v === null).length <= 1) ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
+          ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${state.blitz && state.currentWord && !state.loading && !state.transitioning ? `
           <button class="skip-btn" onclick="skipWord()">Skip −3s</button>
@@ -2311,7 +2338,7 @@
       <div class="game-body">
         ${cardHTML}
         ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
-        ${state.hintLevel >= 1 ? `
+        ${state.hintLevel >= 1 && state.mechanic !== "lettergap" ? `
   <div class="hint-tiles">
     ${state.hintRevealed.map(ch =>
       ch ? `<span class="hint-tile revealed">${ch.toUpperCase()}</span>`
@@ -2322,9 +2349,12 @@
       <div class="game-footer">${footerHTML}</div>
     </div>`;
 
-      // Focus first gap input — skip in blitz to prevent native iOS keyboard popping up
+      // Focus first non-hinted gap input — skip in blitz to prevent native iOS keyboard popping up
       if (state.mechanic === "lettergap" && !state.loading && !state.blitz) {
-        setTimeout(() => { const g = document.getElementById("gap-0"); if (g) g.focus(); }, 100);
+        setTimeout(() => {
+          const g = document.querySelector(".gap-input:not([disabled])");
+          if (g) g.focus();
+        }, 100);
       }
 
       // Scroll built-in keyboard into view when fill-in-the-blank input is shown
@@ -2337,15 +2367,21 @@
     function gapInputNext(idx, total) {
       const inp = document.getElementById(`gap-${idx}`);
       if (inp && inp.value.length === 1 && idx < total - 1) {
-        const next = document.getElementById(`gap-${idx + 1}`);
-        if (next) next.focus();
+        // Skip disabled (hinted) inputs when advancing
+        let next = idx + 1;
+        while (next < total) {
+          const nextEl = document.getElementById(`gap-${next}`);
+          if (nextEl && !nextEl.disabled) { nextEl.focus(); break; }
+          next++;
+        }
       }
-      if (idx === total - 1 && inp && inp.value.trim()) {
+      // Auto-submit when all non-disabled gaps are filled
+      if (inp && inp.value.trim()) {
         setTimeout(() => {
           let allFilled = true;
           for (let i = 0; i < total; i++) {
             const g = document.getElementById(`gap-${i}`);
-            if (!g || !g.value.trim()) { allFilled = false; break; }
+            if (!g || (!g.disabled && !g.value.trim())) { allFilled = false; break; }
           }
           if (allFilled && !state.transitioning) handleGapSubmit();
         }, 400);
@@ -2356,8 +2392,13 @@
       if (e.key === "Backspace") {
         const inp = document.getElementById(`gap-${idx}`);
         if (inp && inp.value === "" && idx > 0) {
-          const prev = document.getElementById(`gap-${idx - 1}`);
-          if (prev) { prev.value = ""; prev.focus(); }
+          // Skip back over disabled (hinted) inputs
+          let prev = idx - 1;
+          while (prev >= 0) {
+            const prevEl = document.getElementById(`gap-${prev}`);
+            if (prevEl && !prevEl.disabled) { prevEl.value = ""; prevEl.focus(); break; }
+            prev--;
+          }
         }
       }
       if (e.key === "Enter") handleGapSubmit();

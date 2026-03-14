@@ -570,6 +570,20 @@ h1 {
   border-style: solid;
 }
 
+.gap-input.gap-hinted {
+  background: #2a2000;
+  border: 2px solid var(--yellow);
+  color: var(--yellow);
+  opacity: 0.85;
+  cursor: default;
+}
+
+body.day .gap-input.gap-hinted {
+  background: #fef08a;
+  border: 2px solid #b45309;
+  color: #92400e;
+}
+
 /* ─── ONE LETTER OFF ────────────────────────────────────────────────────────── */
 
 .olo-row {
