@@ -413,7 +413,7 @@
     }
 
     function resetStats(type) {
-      const quizIds = ["countries", "states", "elements", "flags", "math", "mythology", "anatomy"];
+      const quizIds = ["countries", "states", "elements", "flags", "mythology", "anatomy"];
       if (type === "blitz") {
         delete state.categoryStats["blitz"];
       } else if (type === "quiz") {
@@ -527,7 +527,7 @@
         const cs = getCatStats(key);
         const isNewBest = state.score > 0 && state.score >= cs.bestScore;
         const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
-        const modeLabel = state.gameMode === "audio" ? "Listen & Spell" : state.gameMode === "quiz" ? `Quiz – ${cat ? cat.name : ""}` : `Spelling${cat && cat.id !== "surprise" ? ` – ${cat.name}` : ""}`;
+        const modeLabel = state.gameMode === "audio" ? "Listen & Spell" : state.gameMode === "quiz" ? `Trivia – ${cat ? cat.name : ""}` : state.gameMode === "math" ? "Mental Math" : `Spelling${cat && cat.id !== "surprise" ? ` – ${cat.name}` : ""}`;
         text = `🐝 BeeSmart – ${modeLabel}\n${state.score} pts · ${diffLabel(cs.difficulty)} level${isNewBest ? "\n✨ New personal best!" : ""}\n#BeeSmart`;
       }
       if (navigator.share) {
@@ -1779,6 +1779,9 @@
       } else if (mode === "audio") {
         state.selectedCategory = "surprise";
         startGame();
+      } else if (mode === "math") {
+        state.selectedCategory = "math";
+        startGame();
       } else {
         state.screen = mode;
         render();
@@ -2117,7 +2120,7 @@
 
         if (state.homeTab === 'settings') {
           const resetOptions = ["blitz", "quiz", "all"].map(type => {
-            const labels = { blitz: "BeeBlitz", quiz: "All Quiz", all: "Everything" };
+            const labels = { blitz: "BeeBlitz", quiz: "All Trivia", all: "Everything" };
             const icons  = { blitz: "⚡", quiz: "🧠", all: "🗑️" };
             const isPending = state.resetConfirm === type;
             return isPending
@@ -2181,7 +2184,7 @@
           <button class="mode-btn quiz" onclick="goToMode('quiz')">
             <span class="mode-icon">🧠</span>
             <div class="mode-info">
-              <div class="mode-title">Quiz</div>
+              <div class="mode-title">Trivia</div>
               <div class="mode-subtitle">Capitals, elements, flags &amp; more</div>
             </div>
             <span class="mode-arrow">&#8250;</span>
@@ -2191,6 +2194,14 @@
             <div class="mode-info">
               <div class="mode-title">Listen &amp; Spell</div>
               <div class="mode-subtitle">Hear the word, then spell it</div>
+            </div>
+            <span class="mode-arrow">&#8250;</span>
+          </button>
+          <button class="mode-btn math" onclick="goToMode('math')">
+            <span class="mode-icon">🔢</span>
+            <div class="mode-info">
+              <div class="mode-title">Mental Math</div>
+              <div class="mode-subtitle">Sharpen your arithmetic skills</div>
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
@@ -2213,7 +2224,7 @@
 
       // QUIZ CATEGORY SELECT
       if (state.screen === "quiz") {
-        const quizBtns = QUIZ_CATEGORIES.map(c =>
+        const quizBtns = QUIZ_CATEGORIES.filter(c => c.id !== "math").map(c =>
           `<button class="cat-btn quiz-mode" onclick="selectCategory('${c.id}')">
             <span class="cat-emoji">${c.emoji}</span>
             <div class="cat-btn-text">
@@ -2227,10 +2238,10 @@
         <button class="back-btn" onclick="state.screen='home';render()">&#8592; Back</button>
         <div class="logo-area">
           <div class="bee-icon">🧠</div>
-          <p style="font-size:20px;color:#7aadff;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-top:4px">Quiz</p>
+          <p style="font-size:20px;color:#7aadff;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;margin-top:4px">Trivia</p>
         </div>
         <div style="width:100%">
-          <p class="section-title">Choose a quiz</p>
+          <p class="section-title">Choose a category</p>
           <div class="quiz-grid">${quizBtns}</div>
         </div>
       </div>`;

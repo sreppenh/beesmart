@@ -998,6 +998,32 @@ input[type="text"]:focus {
   background: #0d2d22;
 }
 
+.mode-btn.math {
+  border-color: #4a2a7f;
+}
+
+.mode-btn.math:hover {
+  border-color: #8a5abf;
+  background: #1a0d3c;
+}
+
+.mode-btn.math .mode-title {
+  color: #b89aff;
+}
+
+body.day .mode-btn.math {
+  border-color: #c4b5fd;
+}
+
+body.day .mode-btn.math:hover {
+  border-color: #7c3aed;
+  background: #f5f3ff;
+}
+
+body.day .mode-btn.math .mode-title {
+  color: #5b21b6;
+}
+
 .mode-btn.mixed {
   padding: 14px 20px;
   border-style: dashed;
