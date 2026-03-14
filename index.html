@@ -510,7 +510,7 @@
 
 
     function isQuizMode() {
-      return ["countries", "states", "elements", "flags", "math"].includes(state.selectedCategory);
+      return ["countries", "states", "elements", "flags", "math", "mythology", "anatomy"].includes(state.selectedCategory);
     }
 
     function shouldShowMultipleChoice() {
@@ -1335,7 +1335,7 @@
           next = "audio";
         } else if (isCapitals || state.selectedCategory === "flags") {
           next = "definition";
-        } else if (state.selectedCategory === "elements") {
+        } else if (state.selectedCategory === "elements" || state.selectedCategory === "mythology" || state.selectedCategory === "anatomy") {
           next = "definition";
         } else {
           const pool = state.blitz ? BLITZ_MECHANICS : MECHANICS;
