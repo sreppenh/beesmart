@@ -2289,6 +2289,80 @@ body.day .math-key:active {
   margin-bottom: 4px;
 }
 
+/* ─── STATS PREFERENCES PANEL ───────────────────────────────────────────────── */
+
+.prefs-panel {
+  width: 100%;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pref-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pref-row-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pref-row-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pref-toggle {
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.15);
+  position: relative;
+  transition: background 0.2s;
+}
+
+.pref-toggle.on {
+  background: var(--yellow);
+}
+
+.pref-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.pref-toggle.on .pref-toggle-thumb {
+  transform: translateX(18px);
+}
+
+body.day .prefs-panel {
+  border-top-color: rgba(0,0,0,0.08);
+}
+
+body.day .pref-toggle {
+  background: rgba(0,0,0,0.12);
+}
+
 /* ─── STATS RESET PANEL ─────────────────────────────────────────────────────── */
 
 .reset-panel {

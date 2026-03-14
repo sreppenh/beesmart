@@ -348,6 +348,8 @@
       mcAnswered: false,
       // Math
       mathInput: "",
+      // Preferences
+      startFromBeginning: false,
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
@@ -364,12 +366,20 @@
       }
       const theme = loadFromStorage("theme");
       if (theme) { state.theme = theme; document.body.classList.toggle("day", theme === "day"); }
+      const sfb = loadFromStorage("startFromBeginning");
+      if (sfb !== null) state.startFromBeginning = sfb;
     }
 
     function toggleTheme() {
       state.theme = state.theme === "day" ? "night" : "day";
       document.body.classList.toggle("day", state.theme === "day");
       saveToStorage("theme", state.theme);
+      render();
+    }
+
+    function toggleStartFromBeginning() {
+      state.startFromBeginning = !state.startFromBeginning;
+      saveToStorage("startFromBeginning", state.startFromBeginning);
       render();
     }
 
@@ -1678,6 +1688,9 @@
         state.difficulty = 1;
         setCatStats(key, { hasPlayed: true, difficulty: 1 });
         state.warmupRamp = false;
+      } else if (state.startFromBeginning) {
+        state.difficulty = 1;
+        state.warmupRamp = false;
       } else {
         state.difficulty = cs.difficulty;
         state.warmupRamp = cs.difficulty > 2;
@@ -2078,6 +2091,18 @@
               <span class="stats-streak-label">day streak 🔥</span>
             </div>
             <div class="stats-list">${blitzCard}${cards}</div>
+            <div class="prefs-panel">
+              <p class="reset-panel-title">Preferences</p>
+              <div class="pref-row" onclick="toggleStartFromBeginning()">
+                <div class="pref-row-text">
+                  <span class="pref-row-label">Always start from level 1</span>
+                  <span class="pref-row-sub">Skip resuming your current level</span>
+                </div>
+                <div class="pref-toggle ${state.startFromBeginning ? 'on' : ''}">
+                  <div class="pref-toggle-thumb"></div>
+                </div>
+              </div>
+            </div>
             <div class="reset-panel">
               <p class="reset-panel-title">Reset stats</p>
               <div class="reset-options">
