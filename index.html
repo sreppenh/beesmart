@@ -1416,6 +1416,9 @@
         if (Math.floor(state.difficulty) > Math.floor(prevDiff)) {
           setTimeout(() => showToast(`🐝 Level Up! ${diffLabel(state.difficulty)}`), 700);
         }
+        if (state.streak === 5 && isQuizMode() && !state.blitz) {
+          setTimeout(() => showToast("⚡ Feeling sharp? Try BeeBlitz!"), 1200);
+        }
         state.feedback = { type: "correct", msg: state.streak >= 3 ? `🔥 ${state.streak} in a row! +${pts}pts` : `✓ Correct!${pts > 0 ? ` +${pts} pts` : ""}` };
         state.transitioning = true;
         saveProgress();
@@ -1716,6 +1719,17 @@
       render();
     }
 
+    function updateBeeBlitzHero() {
+      const el = document.getElementById("beeblitz-best-row");
+      if (!el) return;
+      const bs = getCatStats("blitz");
+      if (bs.hasPlayed) {
+        el.innerHTML = `<span class="beeblitz-best-label">Best: ${bs.bestWordsCorrect || 0} words</span><span class="beeblitz-best-sep">·</span><span class="beeblitz-best-label">${bs.bestTimeSurvived || 0}s survived</span>`;
+      } else {
+        el.innerHTML = `<span class="beeblitz-best-label">Ready to swarm?</span>`;
+      }
+    }
+
     function startBlitzCountdown() {
       state.gameMode = "blitz";
       state.screen = "blitz-countdown";
@@ -1926,7 +1940,7 @@
         app.innerHTML = `
         <div class="blitz-countdown-screen">
           <div class="${isGo ? 'countdown-go' : 'countdown-num'}">${state.blitzCountdown}</div>
-          ${!isGo ? `<p style="font-size:13px;color:var(--muted);letter-spacing:1px">Get ready…</p>` : ""}
+          ${!isGo ? `<p style="font-size:13px;color:var(--muted);letter-spacing:1px">BeeBlitz starts now…</p>` : ""}
         </div>`;
         return;
       }
@@ -1953,14 +1967,15 @@
           const blitzCard = blitzPlayed ? `
             <div class="blitz-hero-card">
               <div class="blitz-hero-header">
-                <span class="blitz-hero-emoji">⚡</span>
-                <span class="blitz-hero-name">Blitz</span>
+                <span class="blitz-hero-emoji">⚡🐝</span>
+                <span class="blitz-hero-name">BeeBlitz</span>
                 <div class="blitz-toggle">
                   <button class="blitz-toggle-btn ${isWords ? 'active' : ''}" onclick="state.blitzStatView='words';render()">Words</button>
                   <button class="blitz-toggle-btn ${!isWords ? 'active' : ''}" onclick="state.blitzStatView='time';render()">Time</button>
                 </div>
               </div>
               <div class="blitz-hero-stat">
+                <span class="blitz-hero-your-best">YOUR BEST</span>
                 ${isWords
               ? `<span class="blitz-hero-num">${bsStats.bestWordsCorrect || 0}</span><span class="blitz-hero-label">best words</span>`
               : `<span class="blitz-hero-num">${bsStats.bestTimeSurvived || 0}s</span><span class="blitz-hero-label">best time</span>`}
@@ -1971,8 +1986,8 @@
               </div>
             </div>` : `
             <div class="blitz-hero-card muted">
-              <div class="blitz-hero-header"><span class="blitz-hero-emoji">⚡</span><span class="blitz-hero-name">Blitz</span></div>
-              <p class="stat-card-unplayed">Not yet played</p>
+              <div class="blitz-hero-header"><span class="blitz-hero-emoji">⚡🐝</span><span class="blitz-hero-name">BeeBlitz</span></div>
+              <p class="stat-card-unplayed">The swarm awaits 🐝</p>
             </div>`;
 
           const SPELLING_STAT_CAT = { id: "spelling", name: "Spelling", emoji: "🐝" };
@@ -2058,18 +2073,33 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
-          <button class="mode-btn blitz" onclick="goToMode('blitz')">
-            ⚡ &nbsp; Blitz — 60 seconds, go!
+          <button class="beeblitz-hero" onclick="goToMode('blitz')">
+            <div class="beeblitz-hero-inner">
+              <div class="beeblitz-icon">⚡🐝</div>
+              <div class="beeblitz-text">
+                <div class="beeblitz-title">BeeBlitz</div>
+                <div class="beeblitz-sub">60 seconds of pure chaos</div>
+              </div>
+              <div class="beeblitz-arrow">›</div>
+            </div>
+            <div class="beeblitz-best-row" id="beeblitz-best-row"></div>
           </button>
         </div>
       </div>`;
+        updateBeeBlitzHero();
         return;
       }
 
       // QUIZ CATEGORY SELECT
       if (state.screen === "quiz") {
         const quizBtns = QUIZ_CATEGORIES.map(c =>
-          `<button class="cat-btn quiz-mode" onclick="selectCategory('${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-name">${c.name}</span></button>`
+          `<button class="cat-btn quiz-mode" onclick="selectCategory('${c.id}')">
+            <span class="cat-emoji">${c.emoji}</span>
+            <div class="cat-btn-text">
+              <span class="cat-name">${c.name}</span>
+              <span class="cat-blitz-tag">⚡ Builds BeeBlitz skills</span>
+            </div>
+          </button>`
         ).join("");
         app.innerHTML = `
       <div class="home">
@@ -2096,7 +2126,7 @@
           <div class="gameover">
             <div class="share-card">
               <div class="gameover-bee">⚡</div>
-              <h2 class="gameover-title">Blitz Over</h2>
+              <h2 class="gameover-title">BeeBlitz Over</h2>
               <div class="gameover-score">${state.blitzWordsCorrect}</div>
               <p class="gameover-label">words correct</p>
               <p class="gameover-cat">⏱ ${state.blitzTimeSurvived}s survived</p>
@@ -2201,7 +2231,7 @@
         <div style="display:flex;align-items:center;gap:8px">
           <button class="home-btn" onclick="goHome()" title="Home">⌂</button>
           ${state.blitz
-          ? `<span class="blitz-badge">⚡ Blitz</span>`
+          ? `<span class="blitz-badge">⚡ BeeBlitz</span>`
           : `<div class="lives">${hearts}</div>`}
         </div>
         <div class="score-area">

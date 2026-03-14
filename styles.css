@@ -2163,3 +2163,114 @@ body.day .math-key:active {
   margin-bottom: 4px;
   text-transform: uppercase;
 }
+
+/* ─── BEEBLITZ HERO CARD ────────────────────────────────────────────────────── */
+
+.beeblitz-hero {
+  width: 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: 2px solid var(--yellow);
+  border-radius: 16px;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  margin-top: 8px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 20px rgba(255, 209, 0, 0.15);
+}
+
+.beeblitz-hero:active {
+  transform: scale(0.98);
+  box-shadow: 0 0 30px rgba(255, 209, 0, 0.3);
+}
+
+.beeblitz-hero-inner {
+  display: flex;
+  align-items: center;
+  padding: 16px 18px;
+  gap: 14px;
+}
+
+.beeblitz-icon {
+  font-size: 32px;
+  line-height: 1;
+  animation: beeblitz-pulse 2s ease-in-out infinite;
+}
+
+@keyframes beeblitz-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+.beeblitz-text {
+  flex: 1;
+  text-align: left;
+}
+
+.beeblitz-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--yellow);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.beeblitz-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.beeblitz-arrow {
+  font-size: 28px;
+  color: var(--yellow);
+  opacity: 0.7;
+  font-weight: 300;
+}
+
+.beeblitz-best-row {
+  background: rgba(255, 209, 0, 0.08);
+  border-top: 1px solid rgba(255, 209, 0, 0.2);
+  padding: 8px 18px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.beeblitz-best-label {
+  font-size: 12px;
+  color: var(--yellow);
+  opacity: 0.8;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.beeblitz-best-sep {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cat-blitz-tag {
+  display: block;
+  font-size: 11px;
+  color: var(--yellow);
+  opacity: 0.7;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.cat-btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.blitz-hero-your-best {
+  display: block;
+  font-size: 10px;
+  color: var(--yellow);
+  opacity: 0.6;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
