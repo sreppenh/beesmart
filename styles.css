@@ -2274,3 +2274,91 @@ body.day .math-key:active {
   font-weight: 700;
   margin-bottom: 4px;
 }
+
+/* ─── STATS RESET PANEL ─────────────────────────────────────────────────────── */
+
+.reset-panel {
+  width: 100%;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.reset-panel-title {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.reset-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reset-option-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 10px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.reset-option-btn:active {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.reset-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.reset-confirm-label {
+  flex: 1;
+  font-size: 13px;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.reset-confirm-yes {
+  background: #ef4444;
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.reset-confirm-no {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+body.day .reset-option-btn {
+  border-color: rgba(0,0,0,0.12);
+  color: #666;
+}
+
+body.day .reset-panel {
+  border-top-color: rgba(0,0,0,0.08);
+}

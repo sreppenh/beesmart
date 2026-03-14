@@ -335,11 +335,13 @@
       blitzTimerInterval: null,
       blitzWordsCorrect: 0,
       blitzStartTime: 0,
+      blitzExpiredTime: 0,
       blitzTimeSurvived: 0,
       blitzExpired: false,
       blitzCountdown: null,
       sessionWordCount: 0,
       warmupRamp: false,
+      resetConfirm: null, // 'blitz' | 'quiz' | 'all' | null
       // Multiple choice
       isMultipleChoice: false,
       multipleChoiceOptions: [],
@@ -398,6 +400,23 @@
     function setCatStats(catId, updates) {
       state.categoryStats[catId] = { ...getCatStats(catId), ...updates };
       saveToStorage("category_stats", state.categoryStats);
+    }
+
+    function resetStats(type) {
+      const quizIds = ["countries", "states", "elements", "flags", "math", "mythology", "anatomy"];
+      if (type === "blitz") {
+        delete state.categoryStats["blitz"];
+      } else if (type === "quiz") {
+        quizIds.forEach(id => delete state.categoryStats[id]);
+      } else if (type === "all") {
+        state.categoryStats = {};
+        state.dailyStreak = 0;
+        saveToStorage("daily_streak", 0);
+        saveToStorage("last_played_date", null);
+      }
+      saveToStorage("category_stats", state.categoryStats);
+      state.resetConfirm = null;
+      render();
     }
 
     function saveSession() {
@@ -1755,6 +1774,7 @@
       state.blitzTimeRemaining = 60;
       state.blitzWordsCorrect = 0;
       state.blitzExpired = false;
+      state.blitzExpiredTime = 0;
       state.blitzStartTime = Date.now();
       state.blitzTimeSurvived = 0;
       state.difficulty = 1;
@@ -1772,7 +1792,10 @@
           fill.style.background = state.blitzTimeRemaining <= 10 ? "#ef4444" : state.blitzTimeRemaining <= 20 ? "#f97316" : "var(--yellow)";
         }
         if (num) num.textContent = Math.ceil(state.blitzTimeRemaining);
-        if (state.blitzTimeRemaining <= 0 && !state.blitzExpired) state.blitzExpired = true;
+        if (state.blitzTimeRemaining <= 0 && !state.blitzExpired) {
+          state.blitzExpired = true;
+          state.blitzExpiredTime = Date.now();
+        }
       }, 100);
       loadNextWord();
     }
@@ -1780,7 +1803,7 @@
     function endBlitzGame() {
       if (state.blitzTimerInterval) { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; }
       state.blitz = false;
-      const survived = Math.round((Date.now() - state.blitzStartTime) / 1000);
+      const survived = Math.round(((state.blitzExpiredTime || Date.now()) - state.blitzStartTime) / 1000);
       state.blitzTimeSurvived = survived;
       const bs = getCatStats("blitz");
       setCatStats("blitz", {
@@ -2027,6 +2050,23 @@
               <span class="stats-streak-label">day streak 🔥</span>
             </div>
             <div class="stats-list">${blitzCard}${cards}</div>
+            <div class="reset-panel">
+              <p class="reset-panel-title">Reset stats</p>
+              <div class="reset-options">
+                ${["blitz", "quiz", "all"].map(type => {
+                  const labels = { blitz: "BeeBlitz", quiz: "All Quiz", all: "Everything" };
+                  const icons  = { blitz: "⚡", quiz: "🧠", all: "🗑️" };
+                  const isPending = state.resetConfirm === type;
+                  return isPending
+                    ? `<div class="reset-confirm-row">
+                        <span class="reset-confirm-label">Reset ${labels[type]}?</span>
+                        <button class="reset-confirm-yes" onclick="resetStats('${type}')">Yes, reset</button>
+                        <button class="reset-confirm-no" onclick="state.resetConfirm=null;render()">Cancel</button>
+                       </div>`
+                    : `<button class="reset-option-btn" onclick="state.resetConfirm='${type}';render()">${icons[type]} ${labels[type]}</button>`;
+                }).join("")}
+              </div>
+            </div>
           </div>`;
           return;
         }
