@@ -1288,6 +1288,9 @@
       } else if (mode === "spelling") {
         state.selectedCategory = "surprise";
         startGame();
+      } else if (mode === "audio") {
+        state.selectedCategory = "surprise";
+        startGame();
       } else {
         state.screen = mode;
         render();
@@ -1618,13 +1621,17 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
+          <button class="mode-btn audio" onclick="goToMode('audio')">
+            <span class="mode-icon">🔊</span>
+            <div class="mode-info">
+              <div class="mode-title">Listen &amp; Spell</div>
+              <div class="mode-subtitle">Hear the word, then spell it</div>
+            </div>
+            <span class="mode-arrow">&#8250;</span>
+          </button>
           <button class="mode-btn blitz" onclick="goToMode('blitz')">
             ⚡ &nbsp; Blitz — 60 seconds, go!
           </button>
-        </div>
-        <div class="how-to">
-          <p class="how-to-title">How to play</p>
-          <p class="how-to-text">3 lives per game. Difficulty adapts as you play. Hints are available in spelling mode but cost points.</p>
         </div>
       </div>`;
         return;
