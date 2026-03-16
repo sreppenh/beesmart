@@ -520,10 +520,12 @@
 
     function showShareToast() {
       let text;
-      if (state.gameMode === "blitz") {
-        const bsStats = getCatStats("blitz");
+      if (state.gameMode === "blitz" || state.gameMode === "math-blitz") {
+        const bsStats = getCatStats(blitzStatKey());
         const isNewBest = state.blitzWordsCorrect > 0 && state.blitzWordsCorrect >= (bsStats.bestWordsCorrect || 0);
-        text = `⚡🐝 BeeBlitz\n${state.blitzWordsCorrect} words correct · ${state.blitzTimeSurvived}s survived${isNewBest ? "\n✨ New best!" : ""}\n#BeeSmart`;
+        const blitzLabel = state.gameMode === "math-blitz" ? "Math Blitz ⚡🔢" : "BeeBlitz";
+        const blitzUnit = state.gameMode === "math-blitz" ? "problems" : "words";
+        text = `⚡🐝 ${blitzLabel}\n${state.blitzWordsCorrect} ${blitzUnit} correct · ${state.blitzTimeSurvived}s survived${isNewBest ? "\n✨ New best!" : ""}\n#BeeSmart`;
       } else {
         const key = getStatsKey();
         const cs = getCatStats(key);
@@ -1520,8 +1522,9 @@
         const streakBonus = state.streak > 0 && state.streak % 3 === 0;
         const timeBonus = streakBonus ? 10 : 5;
         state.blitzTimeRemaining += timeBonus;
-        const bs = getCatStats("blitz");
-        setCatStats("blitz", {
+        const bk = blitzStatKey();
+        const bs = getCatStats(bk);
+        setCatStats(bk, {
           wordsAttempted: bs.wordsAttempted + 1,
           wordsCorrectFirstTry: bs.wordsCorrectFirstTry + (state.attempts === 0 ? 1 : 0),
         });
@@ -1563,8 +1566,9 @@
 
       if (state.blitz) {
         state.blitzTimeRemaining = Math.max(0, state.blitzTimeRemaining - 5);
-        const bs = getCatStats("blitz");
-        setCatStats("blitz", { wordsAttempted: bs.wordsAttempted + 1 });
+        const bk = blitzStatKey();
+        const bs = getCatStats(bk);
+        setCatStats(bk, { wordsAttempted: bs.wordsAttempted + 1 });
         state.feedback = { type: "wrong", msg: revealMsg };
         render();
         setTimeout(() => {
@@ -1858,8 +1862,8 @@
         state.selectedCategory = "surprise";
         startGame();
       } else if (mode === "math") {
-        state.selectedCategory = "math";
-        startGame();
+        state.screen = "math-select";
+        render();
       } else {
         state.screen = mode;
         render();
@@ -1943,8 +1947,9 @@
       state.blitz = false;
       const survived = Math.min(60, Math.round(((state.blitzExpiredTime || Date.now()) - state.blitzStartTime) / 1000));
       state.blitzTimeSurvived = survived;
-      const bs = getCatStats("blitz");
-      setCatStats("blitz", {
+      const bk = blitzStatKey();
+      const bs = getCatStats(bk);
+      setCatStats(bk, {
         hasPlayed: true,
         totalRuns: (bs.totalRuns || 0) + 1,
         bestWordsCorrect: Math.max(bs.bestWordsCorrect || 0, state.blitzWordsCorrect),
@@ -1954,6 +1959,69 @@
       clearSession();
       state.screen = "gameover";
       render();
+    }
+
+    function blitzStatKey() {
+      return state.gameMode === "math-blitz" ? "math-blitz" : "blitz";
+    }
+
+    function startMathGame() {
+      state.gameMode = "math";
+      state.selectedCategory = "math";
+      startGame();
+    }
+
+    function startMathBlitzCountdown() {
+      state.gameMode = "math-blitz";
+      state.screen = "blitz-countdown";
+      state.blitzCountdown = 3;
+      render();
+      const tick = setInterval(() => {
+        state.blitzCountdown--;
+        if (state.blitzCountdown <= 0) {
+          clearInterval(tick);
+          state.blitzCountdown = "GO";
+          render();
+          setTimeout(startMathBlitzGame, 650);
+        } else {
+          render();
+        }
+      }, 1000);
+    }
+
+    function startMathBlitzGame() {
+      if (state.blitzTimerInterval) clearInterval(state.blitzTimerInterval);
+      clearSession();
+      state.blitz = true;
+      state.blitzTimeRemaining = 60;
+      state.blitzWordsCorrect = 0;
+      state.blitzExpired = false;
+      state.blitzExpiredTime = 0;
+      state.blitzStartTime = Date.now();
+      state.blitzTimeSurvived = 0;
+      state.difficulty = 1;
+      state.selectedCategory = "math";
+      state.screen = "game"; state.lives = 3; state.score = 0;
+      state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
+      const bs = getCatStats("math-blitz");
+      if (!bs.hasPlayed) setCatStats("math-blitz", { hasPlayed: true, totalRuns: 0, bestWordsCorrect: 0, bestTimeSurvived: 0, wordsAttempted: 0, wordsCorrectFirstTry: 0 });
+      state.blitzTimerInterval = setInterval(() => {
+        if (!state.blitz || state.screen !== "game") { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; return; }
+        const elapsed = (Date.now() - state.blitzStartTime) / 1000;
+        state.blitzTimeRemaining = Math.max(0, 60 - elapsed);
+        const fill = document.getElementById("blitz-bar-fill");
+        const num = document.getElementById("blitz-time-num");
+        if (fill) {
+          fill.style.width = `${(state.blitzTimeRemaining / 60) * 100}%`;
+          fill.style.background = state.blitzTimeRemaining <= 10 ? "#ef4444" : state.blitzTimeRemaining <= 20 ? "#f97316" : "var(--yellow)";
+        }
+        if (num) num.textContent = Math.ceil(state.blitzTimeRemaining);
+        if (state.blitzTimeRemaining <= 0 && !state.blitzExpired) {
+          state.blitzExpired = true;
+          state.blitzExpiredTime = Date.now();
+        }
+      }, 100);
+      loadNextWord();
     }
 
     function renderMathKeyboard() {
@@ -2130,7 +2198,38 @@
         app.innerHTML = `
         <div class="blitz-countdown-screen">
           <div class="${isGo ? 'countdown-go' : 'countdown-num'}">${state.blitzCountdown}</div>
-          ${!isGo ? `<p style="font-size:13px;color:var(--muted);letter-spacing:1px">BeeBlitz starts now…</p>` : ""}
+          ${!isGo ? `<p style="font-size:13px;color:var(--muted);letter-spacing:1px">${state.gameMode === "math-blitz" ? "Math Blitz starts now…" : "BeeBlitz starts now…"}</p>` : ""}
+        </div>`;
+        return;
+      }
+
+      // MATH MODE SELECT
+      if (state.screen === "math-select") {
+        app.innerHTML = `
+        <div class="home">
+          <div style="display:flex;align-items:center;padding:18px 20px 4px">
+            <button class="back-btn" onclick="state.screen='home';render()">&#8249;</button>
+            <span style="font-size:17px;font-weight:700;margin-left:8px">Mental Math</span>
+          </div>
+          <div style="padding:8px 20px 0;color:var(--muted);font-size:13px">Choose your mode</div>
+          <div class="mode-list" style="padding-top:8px">
+            <button class="mode-btn math" onclick="startMathGame()">
+              <span class="mode-icon">🔢</span>
+              <div class="mode-info">
+                <div class="mode-title">Classic</div>
+                <div class="mode-subtitle">Practice at your own pace</div>
+              </div>
+              <span class="mode-arrow">&#8250;</span>
+            </button>
+            <button class="mode-btn math" onclick="startMathBlitzCountdown()">
+              <span class="mode-icon">⚡🔢</span>
+              <div class="mode-info">
+                <div class="mode-title">Math Blitz</div>
+                <div class="mode-subtitle">60 seconds of rapid-fire math</div>
+              </div>
+              <span class="mode-arrow">&#8250;</span>
+            </button>
+          </div>
         </div>`;
         return;
       }
@@ -2181,6 +2280,35 @@
               <p class="stat-card-unplayed">The swarm awaits 🐝</p>
             </div>`;
 
+          const mbStats = getCatStats("math-blitz");
+          const mathBlitzPlayed = mbStats.hasPlayed;
+          const isMbWords = state.blitzStatView === "words";
+          const mathBlitzCard = mathBlitzPlayed ? `
+            <div class="blitz-hero-card">
+              <div class="blitz-hero-header">
+                <span class="blitz-hero-emoji">⚡🔢</span>
+                <span class="blitz-hero-name">Math Blitz</span>
+                <div class="blitz-toggle">
+                  <button class="blitz-toggle-btn ${isMbWords ? 'active' : ''}" onclick="state.blitzStatView='words';render()">Problems</button>
+                  <button class="blitz-toggle-btn ${!isMbWords ? 'active' : ''}" onclick="state.blitzStatView='time';render()">Time</button>
+                </div>
+              </div>
+              <div class="blitz-hero-stat">
+                <span class="blitz-hero-your-best">YOUR BEST</span>
+                ${isMbWords
+              ? `<span class="blitz-hero-num">${mbStats.bestWordsCorrect || 0}</span><span class="blitz-hero-label">best problems</span>`
+              : `<span class="blitz-hero-num">${mbStats.bestTimeSurvived || 0}s</span><span class="blitz-hero-label">best time</span>`}
+              </div>
+              <div class="blitz-hero-meta">
+                <span>${mbStats.totalRuns || 0} runs</span>
+                ${mbStats.wordsAttempted ? `<span>${Math.round((mbStats.wordsCorrectFirstTry || 0) / mbStats.wordsAttempted * 100)}% first try</span>` : ""}
+              </div>
+            </div>` : `
+            <div class="blitz-hero-card muted">
+              <div class="blitz-hero-header"><span class="blitz-hero-emoji">⚡🔢</span><span class="blitz-hero-name">Math Blitz</span></div>
+              <p class="stat-card-unplayed">Ready to race? 🔢</p>
+            </div>`;
+
           const SPELLING_STAT_CAT = { id: "spelling", name: "Spelling", emoji: "🐝" };
           const statsCats = [SPELLING_STAT_CAT, ...QUIZ_CATEGORIES];
           const cards = statsCats.map(c => {
@@ -2217,7 +2345,7 @@
               <span class="stats-streak-num">${state.dailyStreak}</span>
               <span class="stats-streak-label">day streak 🔥</span>
             </div>
-            <div class="stats-list">${blitzCard}${cards}</div>
+            <div class="stats-list">${blitzCard}${mathBlitzCard}${cards}</div>
           </div>`;
           return;
         }
@@ -2364,23 +2492,24 @@
 
       // GAME OVER
       if (state.screen === "gameover") {
-        const isBlitzOver = state.gameMode === "blitz";
+        const isBlitzOver = state.gameMode === "blitz" || state.gameMode === "math-blitz";
+        const isMathBlitzOver = state.gameMode === "math-blitz";
         if (isBlitzOver) {
-          const blitzBs = getCatStats("blitz");
+          const blitzBs = getCatStats(blitzStatKey());
           const blitzNewBest = state.blitzWordsCorrect > 0 && state.blitzWordsCorrect >= (blitzBs.bestWordsCorrect || 0);
           app.innerHTML = `
           <div class="gameover">
             <div class="share-card">
-              <div class="gameover-bee">⚡</div>
-              <h2 class="gameover-title">BeeBlitz Over</h2>
+              <div class="gameover-bee">${isMathBlitzOver ? "⚡🔢" : "⚡"}</div>
+              <h2 class="gameover-title">${isMathBlitzOver ? "Math Blitz Over" : "BeeBlitz Over"}</h2>
               <div class="gameover-score">${state.blitzWordsCorrect}</div>
-              <p class="gameover-label">words correct</p>
+              <p class="gameover-label">${isMathBlitzOver ? "problems correct" : "words correct"}</p>
               <p class="gameover-cat">⏱ ${state.blitzTimeSurvived}s survived</p>
               ${blitzNewBest ? `<p class="new-best">✨ New best!</p>` : ""}
             </div>
             <button class="share-btn" onclick="showShareToast()">🔗 Share result</button>
             <div style="height:4px"></div>
-            <button class="btn-primary" onclick="startBlitzCountdown()">PLAY AGAIN</button>
+            <button class="btn-primary" onclick="${isMathBlitzOver ? 'startMathBlitzCountdown()' : 'startBlitzCountdown()'}">PLAY AGAIN</button>
             <button class="btn-secondary" onclick="state.screen='home';render()">Home</button>
           </div>`;
         } else {
