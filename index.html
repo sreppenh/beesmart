@@ -1023,8 +1023,7 @@
     function generateMathMCOptions(mathData) {
       const correct = mathData.answer;
       const isDecimal = !Number.isInteger(correct);
-      const isMobile = window.innerWidth < 600;
-      const numDistractors = isMobile ? 2 : 3;
+      const numDistractors = 3;
 
       const fmt = n => isDecimal ? n.toFixed(1) : String(Math.round(n));
       const magnitude = isDecimal ? 0.5 : (correct < 10 ? 1 : correct < 50 ? 5 : correct < 200 ? 10 : 25);
@@ -1418,10 +1417,8 @@
           state.mechanic = "definition";
           state.mathInput = "";
           state.loading = false;
-          if (shouldShowMultipleChoice()) {
-            state.isMultipleChoice = true;
-            state.multipleChoiceOptions = generateMathMCOptions(mathData);
-          }
+          state.isMultipleChoice = true;
+          state.multipleChoiceOptions = generateMathMCOptions(mathData);
           render();
           return;
         }
@@ -2440,7 +2437,7 @@
       }
 
       const footerHTML = `
-        ${showMC ? `<div class="mc-options">${mcButtonsHTML}</div>` : ""}
+        ${showMC ? `<div class="mc-options${state.currentWord?.isMath ? ' mc-options-math' : ''}">${mcButtonsHTML}</div>` : ""}
         ${showStandardInput ? `
           <div class="input-row">
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
