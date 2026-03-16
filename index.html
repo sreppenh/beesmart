@@ -848,8 +848,9 @@
           label = "Fractions";
         } else if (type === 'pct') {
           const pct = pick([10, 25, 50]);
-          const base = rand(2, 20) * 10;
-          answer = Math.round((pct / 100) * base);
+          // base chosen so answer is always a whole number
+          const base = pct === 25 ? rand(2, 10) * 20 : rand(2, 20) * 10;
+          answer = (pct / 100) * base;
           question = `${pct}% of ${base} = ?`;
           label = "Percentages";
         } else {
