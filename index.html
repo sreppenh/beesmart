@@ -1420,8 +1420,10 @@
           state.mechanic = "definition";
           state.mathInput = "";
           state.loading = false;
-          state.isMultipleChoice = true;
-          state.multipleChoiceOptions = generateMathMCOptions(mathData);
+          if (shouldShowMultipleChoice()) {
+            state.isMultipleChoice = true;
+            state.multipleChoiceOptions = generateMathMCOptions(mathData);
+          }
           render();
           return;
         }
