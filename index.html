@@ -1409,7 +1409,7 @@
       render();
       try {
         // Blitz: pick a fresh category for each word (50% spelling, 50% quiz)
-        if (state.blitz) {
+        if (state.blitz && state.gameMode !== "math-blitz") {
           state.selectedCategory = Math.random() < 0.5
             ? "surprise"
             : QUIZ_CATEGORIES[Math.floor(Math.random() * QUIZ_CATEGORIES.length)].id;
