@@ -1401,7 +1401,7 @@
       state.typewriterRevealed = false;
       state.loading = true; state.hintLevel = 0; state.hintRevealed = []; state.hintUsed = false;
       state.attempts = 0; state.feedback = null; state.transitioning = false;
-      state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null;
+      state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null; state.gapValues = []; state.wordInput = "";
       state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
       render();
       try {
@@ -1604,12 +1604,11 @@
     // Standard submit (audio, definition, scramble)
     function handleSubmit() {
       if (!state.currentWord || state.transitioning) return;
-      const inp = document.getElementById("word-input");
-      if (!inp || !inp.value.trim()) return;
-      const typed = inp.value.trim();
+      if (!state.wordInput.trim()) return;
+      const typed = state.wordInput.trim();
       const normalize = s => s.toLowerCase().replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ').trim();
       const correct = normalize(typed) === normalize(state.currentWord.word);
-      inp.value = "";
+      state.wordInput = "";
       if (correct) { handleCorrect(); }
       else { state.lastAttempt = typed; handleMissedAttempt(); }
     }
@@ -2064,7 +2063,7 @@
             if (hinted) {
               return `<input class="gap-input gap-hinted" id="gap-${idx}" maxlength="1" value="${hinted.toUpperCase()}" disabled/>`;
             }
-            return `<input class="gap-input${state.activeGapIndex === idx ? ' gap-active' : ''}" id="gap-${idx}" maxlength="1" readonly onpointerdown="setActiveGap(event,${idx})"/>`;
+            return `<input class="gap-input${state.activeGapIndex === idx ? ' gap-active' : ''}" id="gap-${idx}" maxlength="1" readonly value="${state.gapValues[idx] || ''}" onpointerdown="setActiveGap(event,${idx})"/>`;
           }
           return `<span class="gap-letter shown">${l}</span>`;
         }).join("");
@@ -2452,7 +2451,7 @@
         ${showMC ? `<div class="mc-options${state.currentWord?.isMath ? ' mc-options-math' : ''}">${mcButtonsHTML}</div>` : ""}
         ${showWordInput ? `
           <div class="input-row">
-            <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
+            <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly value="${state.wordInput}" ${state.transitioning ? "disabled" : ""}/>
             <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
@@ -2592,14 +2591,15 @@
     function gapKbLetter(letter) {
       const inp = document.getElementById(`gap-${state.activeGapIndex}`);
       if (!inp || inp.disabled) return;
-      inp.value = letter.toUpperCase();
+      state.gapValues[state.activeGapIndex] = letter.toUpperCase();
       // advance to next non-disabled gap
       const all = [...document.querySelectorAll(".gap-input:not([disabled])")];
       const ids = all.map(el => parseInt(el.id.replace("gap-", "")));
       const pos = ids.indexOf(state.activeGapIndex);
       if (pos !== -1 && pos < ids.length - 1) state.activeGapIndex = ids[pos + 1];
       // auto-submit if all filled
-      if (all.every(g => g.value.trim())) {
+      if (ids.every(id => state.gapValues[id] && state.gapValues[id].trim())) {
+        render();
         setTimeout(() => handleGapSubmit(), 150);
       } else {
         render();
@@ -2607,9 +2607,8 @@
     }
 
     function gapKbBackspace() {
-      const inp = document.getElementById(`gap-${state.activeGapIndex}`);
-      if (inp && inp.value !== "") {
-        inp.value = "";
+      if (state.gapValues[state.activeGapIndex]) {
+        state.gapValues[state.activeGapIndex] = "";
         render();
         return;
       }
@@ -2619,8 +2618,7 @@
       const pos = ids.indexOf(state.activeGapIndex);
       if (pos > 0) {
         state.activeGapIndex = ids[pos - 1];
-        const prev = document.getElementById(`gap-${state.activeGapIndex}`);
-        if (prev) prev.value = "";
+        state.gapValues[state.activeGapIndex] = "";
         render();
       }
     }
@@ -2652,18 +2650,16 @@
       event.preventDefault();
       if (state.transitioning) return;
       if (state.mechanic === "lettergap") { gapKbLetter(letter); return; }
-      const inp = document.getElementById("word-input");
-      if (!inp) return;
-      inp.value += letter;
+      state.wordInput += letter;
+      render();
     }
 
     function kbBackspace(event) {
       event.preventDefault();
       if (state.transitioning) return;
       if (state.mechanic === "lettergap") { gapKbBackspace(); return; }
-      const inp = document.getElementById("word-input");
-      if (!inp) return;
-      inp.value = inp.value.slice(0, -1);
+      state.wordInput = state.wordInput.slice(0, -1);
+      render();
     }
 
     function kbSubmit(event) {
