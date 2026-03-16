@@ -1442,6 +1442,11 @@
             const fallbackPool = ["definition", "scramble", "lettergap", "oneletteroff"];
             next = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
           }
+          // Definition only fires at difficulty 5+
+          if (next === "definition" && state.difficulty < 5) {
+            const fallbackPool = ["scramble", "lettergap", "oneletteroff"];
+            next = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+          }
         }
         const wordData = await fetchWord(!isQuiz && next === "oneletteroff");
         if (wordData.mechanic) next = wordData.mechanic;
