@@ -348,6 +348,8 @@
       mcAnswered: false,
       // Math
       mathInput: "",
+      // Lettergap
+      activeGapIndex: 0,
       // Preferences
       startFromBeginning: false,
     };
@@ -1483,8 +1485,11 @@
         }));
         if (next === "audio") setTimeout(() => speak(wordData.word), 400);
         setTimeout(() => {
-          const g = document.querySelector(".gap-input");
-          if (g && !state.blitz) g.focus();
+          const g = document.querySelector(".gap-input:not([disabled])");
+          if (g) {
+            state.activeGapIndex = parseInt(g.id.replace("gap-", ""));
+            render();
+          }
         }, 150);
       } catch (e) {
         state.loading = false;
@@ -2054,7 +2059,7 @@
             if (hinted) {
               return `<input class="gap-input gap-hinted" id="gap-${idx}" maxlength="1" value="${hinted.toUpperCase()}" disabled/>`;
             }
-            return `<input class="gap-input" id="gap-${idx}" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="gapInputNext(${idx},${hiddenCount})" onkeydown="gapKeyDown(event,${idx},${hiddenCount})"/>`;
+            return `<input class="gap-input${state.activeGapIndex === idx ? ' gap-active' : ''}" id="gap-${idx}" maxlength="1" readonly onpointerdown="setActiveGap(event,${idx})"/>`;
           }
           return `<span class="gap-letter shown">${l}</span>`;
         }).join("");
@@ -2404,8 +2409,10 @@
       const cardHTML = renderMechanicCard();
 
       const showMC = state.isMultipleChoice && state.currentWord && !state.loading;
-      const showStandardInput = !showMC && state.currentWord && !state.loading && (["audio", "definition"].includes(state.mechanic) || (state.mechanic === "typewriter" && state.typewriterRevealed)) && !state.currentWord.isMath;
+      const showWordInput = !showMC && state.currentWord && !state.loading && (["audio", "definition"].includes(state.mechanic) || (state.mechanic === "typewriter" && state.typewriterRevealed)) && !state.currentWord.isMath;
+      const showStandardInput = showWordInput; // alias kept for clarity
       const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
+      const showBuiltinKeyboard = showWordInput || showGapSubmit;
       const showScrambleSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "scramble";
       const hintAllowed = !state.blitz;
       const hintLengthKnown = ["lettergap", "scramble", "oneletteroff"].includes(state.mechanic);
@@ -2438,12 +2445,18 @@
 
       const footerHTML = `
         ${showMC ? `<div class="mc-options${state.currentWord?.isMath ? ' mc-options-math' : ''}">${mcButtonsHTML}</div>` : ""}
-        ${showStandardInput ? `
+        ${showWordInput ? `
           <div class="input-row">
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly ${state.transitioning ? "disabled" : ""}/>
             <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
+        ` : ""}
+        ${showGapSubmit ? `
+          <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
+          ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
+        ` : ""}
+        ${showBuiltinKeyboard ? `
           <div class="builtin-keyboard"${state.transitioning ? ' style="opacity:0.5;pointer-events:none"' : ""}>
             <div class="kb-row">${"QWERTYUIOP".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
             <div class="kb-row">${"ASDFGHJKL".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}</div>
@@ -2452,14 +2465,8 @@
               ${"ZXCVBNM".split("").map(l => `<button class="kb-key" onpointerdown="kbPress(event,'${l}')">${l}</button>`).join("")}
               <button class="kb-key kb-backspace" onpointerdown="kbBackspace(event)">⌫</button>
             </div>
-            <div class="kb-row">
-              <button class="kb-key kb-space" onpointerdown="kbPress(event,' ')">SPACE</button>
-            </div>
+            ${showWordInput ? `<div class="kb-row"><button class="kb-key kb-space" onpointerdown="kbPress(event,' ')">SPACE</button></div>` : ""}
           </div>
-        ` : ""}
-        ${showGapSubmit ? `
-          <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
-          ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${showScrambleSubmit ? `
           <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
@@ -2570,6 +2577,49 @@
       if (e.key === "Enter") handleGapSubmit();
     }
 
+    // Gap keyboard helpers (custom QWERTY → gap inputs)
+    function setActiveGap(event, idx) {
+      event.preventDefault();
+      state.activeGapIndex = idx;
+      render();
+    }
+
+    function gapKbLetter(letter) {
+      const inp = document.getElementById(`gap-${state.activeGapIndex}`);
+      if (!inp || inp.disabled) return;
+      inp.value = letter.toUpperCase();
+      // advance to next non-disabled gap
+      const all = [...document.querySelectorAll(".gap-input:not([disabled])")];
+      const ids = all.map(el => parseInt(el.id.replace("gap-", "")));
+      const pos = ids.indexOf(state.activeGapIndex);
+      if (pos !== -1 && pos < ids.length - 1) state.activeGapIndex = ids[pos + 1];
+      // auto-submit if all filled
+      if (all.every(g => g.value.trim())) {
+        setTimeout(() => handleGapSubmit(), 150);
+      } else {
+        render();
+      }
+    }
+
+    function gapKbBackspace() {
+      const inp = document.getElementById(`gap-${state.activeGapIndex}`);
+      if (inp && inp.value !== "") {
+        inp.value = "";
+        render();
+        return;
+      }
+      // back up to previous non-disabled gap and clear it
+      const all = [...document.querySelectorAll(".gap-input:not([disabled])")];
+      const ids = all.map(el => parseInt(el.id.replace("gap-", "")));
+      const pos = ids.indexOf(state.activeGapIndex);
+      if (pos > 0) {
+        state.activeGapIndex = ids[pos - 1];
+        const prev = document.getElementById(`gap-${state.activeGapIndex}`);
+        if (prev) prev.value = "";
+        render();
+      }
+    }
+
     // OLO: pick a letter from the A-Z grid
     function oloPickLetter(letter) {
       if (!state.currentWord || state.transitioning) return;
@@ -2592,24 +2642,29 @@
       }
     }
 
-    // Built-in keyboard helpers (audio/definition mechanics)
+    // Built-in keyboard helpers
     function kbPress(event, letter) {
       event.preventDefault();
+      if (state.transitioning) return;
+      if (state.mechanic === "lettergap") { gapKbLetter(letter); return; }
       const inp = document.getElementById("word-input");
-      if (!inp || state.transitioning) return;
+      if (!inp) return;
       inp.value += letter;
     }
 
     function kbBackspace(event) {
       event.preventDefault();
+      if (state.transitioning) return;
+      if (state.mechanic === "lettergap") { gapKbBackspace(); return; }
       const inp = document.getElementById("word-input");
-      if (!inp || state.transitioning) return;
+      if (!inp) return;
       inp.value = inp.value.slice(0, -1);
     }
 
     function kbSubmit(event) {
       event.preventDefault();
       if (state.transitioning) return;
+      if (state.mechanic === "lettergap") { handleGapSubmit(); return; }
       handleSubmit();
     }
 
@@ -2622,9 +2677,14 @@
 
     // Physical keyboard support for built-in keyboard mechanics
     document.addEventListener("keydown", function(e) {
-      if (!["audio", "definition", "typewriter"].includes(state.mechanic)) return;
       if (state.screen !== "game" || state.loading || state.transitioning) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (state.mechanic === "lettergap" && state.currentWord) {
+        if (e.key === "Backspace") { e.preventDefault(); gapKbBackspace(); return; }
+        if (e.key === "Enter") { e.preventDefault(); handleGapSubmit(); return; }
+        if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) { e.preventDefault(); gapKbLetter(e.key); return; }
+      }
+      if (!["audio", "definition", "typewriter"].includes(state.mechanic)) return;
       if (e.key === "Enter") { e.preventDefault(); handleSubmit(); }
       else if (e.key === "Backspace") { e.preventDefault(); kbBackspace(e); }
       else if (e.key.length === 1) { e.preventDefault(); kbPress(e, e.key.toUpperCase()); }

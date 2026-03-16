@@ -570,6 +570,11 @@ h1 {
   border-style: solid;
 }
 
+.gap-active {
+  border-color: var(--yellow) !important;
+  background: rgba(251, 191, 36, 0.12);
+}
+
 .gap-input.gap-hinted {
   background: #2a2000;
   border: 2px solid var(--yellow);
