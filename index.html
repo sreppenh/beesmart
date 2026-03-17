@@ -352,6 +352,7 @@
       activeGapIndex: 0,
       // Preferences
       startFromBeginning: false,
+      soundEnabled: true,
     };
 
     function saveToStorage(k, v) { try { localStorage.setItem("beesmart_" + k, JSON.stringify(v)); } catch { } }
@@ -370,6 +371,7 @@
       if (theme) { state.theme = theme; document.body.classList.toggle("day", theme === "day"); }
       const sfb = loadFromStorage("startFromBeginning");
       if (sfb !== null) state.startFromBeginning = sfb;
+      state.soundEnabled = loadFromStorage("sound_enabled") ?? true;
     }
 
     function toggleTheme() {
@@ -382,6 +384,12 @@
     function toggleStartFromBeginning() {
       state.startFromBeginning = !state.startFromBeginning;
       saveToStorage("startFromBeginning", state.startFromBeginning);
+      render();
+    }
+
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      saveToStorage("sound_enabled", state.soundEnabled);
       render();
     }
 
@@ -485,6 +493,59 @@
       return Array.from({ length: len }, (_, i) => hidden.has(i));
     }
 
+    const BeeSounds = (() => {
+      let ctx = null;
+      function getCtx() {
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        return ctx;
+      }
+      function tone(freq, type, startTime, duration, gainPeak, ac) {
+        const osc = ac.createOscillator();
+        const g = ac.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, startTime);
+        g.gain.setValueAtTime(0, startTime);
+        g.gain.linearRampToValueAtTime(gainPeak, startTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(g); g.connect(ac.destination);
+        osc.start(startTime); osc.stop(startTime + duration);
+      }
+      function guard() { return !state.soundEnabled; }
+      return {
+        click() {
+          if (guard()) return;
+          const ac = getCtx();
+          tone(1200, "square", ac.currentTime, 0.06, 0.08, ac);
+        },
+        correct() {
+          if (guard()) return;
+          const ac = getCtx();
+          const t = ac.currentTime;
+          tone(523, "triangle", t,       0.15, 0.18, ac);
+          tone(659, "triangle", t + 0.1, 0.15, 0.18, ac);
+          tone(784, "triangle", t + 0.2, 0.22, 0.18, ac);
+        },
+        wrong() {
+          if (guard()) return;
+          const ac = getCtx();
+          const t = ac.currentTime;
+          tone(300, "sawtooth", t,       0.18, 0.22, ac);
+          tone(220, "sawtooth", t + 0.15, 0.25, 0.20, ac);
+        },
+        streak(tier) {
+          if (guard()) return;
+          const ac = getCtx();
+          const t = ac.currentTime;
+          const notes = tier === 3
+            ? [523, 659, 784, 1047, 1319]
+            : tier === 2
+            ? [523, 659, 784, 1047]
+            : [523, 659, 784];
+          notes.forEach((f, i) => tone(f, "triangle", t + i * 0.1, 0.18, 0.20, ac));
+        },
+      };
+    })();
+
     function speak(text) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
@@ -511,6 +572,8 @@
         emojis = ["🐝", "✨"];
         tier = "tier-1"; duration = 900;
       }
+      const tierNum = tier === "tier-3" ? 3 : tier === "tier-2" ? 2 : 1;
+      BeeSounds.streak(tierNum);
       el.innerHTML = emojis.map((e, i) =>
         `<span class="celeb-emoji" style="font-size:${tier === 'tier-3' ? 52 : tier === 'tier-2' ? 44 : 36}px;animation-delay:${i * 0.05}s">${e}</span>`
       ).join("");
@@ -1510,6 +1573,7 @@
 
     // Handle correct answer scoring and progression
     function handleCorrect() {
+      BeeSounds.correct();
       if (state.currentWord && !state.currentWord.isMath) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, true);
       state.streak += 1;
       const prevDiff = state.difficulty;
@@ -1596,6 +1660,7 @@
     }
 
     function handleMissedAttempt() {
+      BeeSounds.wrong();
       state.attempts += 1;
       // hint no longer auto-revealed on failed attempts
       if (state.attempts >= 2) {
@@ -2245,9 +2310,9 @@
         const themeBtn = `<button class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">${state.theme === 'day' ? '🌙' : '☀️'}</button>`;
         const tabsHTML = `
           <div class="home-tabs">
-            <button class="tab-pill ${state.homeTab === 'play' ? 'active' : ''}" onclick="state.homeTab='play';render()">Play</button>
-            <button class="tab-pill ${state.homeTab === 'stats' ? 'active' : ''}" onclick="state.homeTab='stats';render()">Stats</button>
-            <button class="tab-pill ${state.homeTab === 'settings' ? 'active' : ''}" onclick="state.homeTab='settings';render()">Settings</button>
+            <button class="tab-pill ${state.homeTab === 'play' ? 'active' : ''}" onclick="BeeSounds.click();state.homeTab='play';render()">Play</button>
+            <button class="tab-pill ${state.homeTab === 'stats' ? 'active' : ''}" onclick="BeeSounds.click();state.homeTab='stats';render()">Stats</button>
+            <button class="tab-pill ${state.homeTab === 'settings' ? 'active' : ''}" onclick="BeeSounds.click();state.homeTab='settings';render()">Settings</button>
           </div>`;
 
         if (state.homeTab === 'stats') {
@@ -2378,6 +2443,15 @@
                   <div class="pref-toggle-thumb"></div>
                 </div>
               </div>
+              <div class="pref-row" onclick="toggleSound()">
+                <div class="pref-row-text">
+                  <span class="pref-row-label">Sound effects</span>
+                  <span class="pref-row-sub">Clicks, feedback &amp; celebrations</span>
+                </div>
+                <div class="pref-toggle ${state.soundEnabled ? 'on' : ''}">
+                  <div class="pref-toggle-thumb"></div>
+                </div>
+              </div>
             </div>
             <div class="reset-panel">
               <p class="reset-panel-title">Reset stats</p>
@@ -2396,7 +2470,7 @@
           <h1>BeeSmart</h1>
           <p class="tagline">Sharpen your spelling. One word at a time.</p>
         </div>
-        ${showResume ? `<button class="btn-primary" onclick="resumeGame()" style="margin-bottom:4px">▶ Resume game — ${savedSession.score} pts, ${savedSession.lives} ♥ left</button>` : ""}
+        ${showResume ? `<button class="btn-primary" onclick="BeeSounds.click();resumeGame()" style="margin-bottom:4px">▶ Resume game — ${savedSession.score} pts, ${savedSession.lives} ♥ left</button>` : ""}
         <div class="stats-row">
           <div class="stat-box"><span class="stat-num">${overallBest}</span><span class="stat-label">Best</span></div>
           <div class="stat-divider"></div>
@@ -2405,7 +2479,7 @@
           <div class="stat-box"><span class="stat-num">${totalSpellingWords}</span><span class="stat-label">Words</span></div>
         </div>
         <div class="mode-select">
-          <button class="mode-btn spelling" onclick="goToMode('spelling')">
+          <button class="mode-btn spelling" onclick="BeeSounds.click();goToMode('spelling')">
             <span class="mode-icon">🐝</span>
             <div class="mode-info">
               <div class="mode-title">Spelling</div>
@@ -2413,7 +2487,7 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
-          <button class="mode-btn quiz" onclick="goToMode('quiz')">
+          <button class="mode-btn quiz" onclick="BeeSounds.click();goToMode('quiz')">
             <span class="mode-icon">🧠</span>
             <div class="mode-info">
               <div class="mode-title">Trivia</div>
@@ -2421,7 +2495,7 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
-          <button class="mode-btn audio" onclick="goToMode('audio')">
+          <button class="mode-btn audio" onclick="BeeSounds.click();goToMode('audio')">
             <span class="mode-icon">🔊</span>
             <div class="mode-info">
               <div class="mode-title">Listen &amp; Spell</div>
@@ -2429,7 +2503,7 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
-          <button class="mode-btn math" onclick="goToMode('math')">
+          <button class="mode-btn math" onclick="BeeSounds.click();goToMode('math')">
             <span class="mode-icon">🔢</span>
             <div class="mode-info">
               <div class="mode-title">Mental Math</div>
@@ -2437,7 +2511,7 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
-          <button class="beeblitz-hero" onclick="goToMode('blitz')">
+          <button class="beeblitz-hero" onclick="BeeSounds.click();goToMode('blitz')">
             <div class="beeblitz-hero-inner">
               <div class="beeblitz-icon">⚡🐝</div>
               <div class="beeblitz-text">
@@ -2468,7 +2542,7 @@
           const meta = triviaMeta[c.id] || {};
           const cs = getCatStats(c.id);
           const bestBadge = cs.hasPlayed ? `<span class="trivia-cat-badge">${cs.bestScore}</span>` : "";
-          return `<button class="trivia-cat-btn trivia-${meta.color}" onclick="selectCategory('${c.id}')">
+          return `<button class="trivia-cat-btn trivia-${meta.color}" onclick="BeeSounds.click();selectCategory('${c.id}')">
             <div class="trivia-cat-top">
               <span class="trivia-cat-emoji">${c.emoji}</span>
               ${bestBadge}
@@ -2509,8 +2583,8 @@
             </div>
             <button class="share-btn" onclick="showShareToast()">🔗 Share result</button>
             <div style="height:4px"></div>
-            <button class="btn-primary" onclick="${isMathBlitzOver ? 'startMathBlitzCountdown()' : 'startBlitzCountdown()'}">PLAY AGAIN</button>
-            <button class="btn-secondary" onclick="state.screen='home';render()">Home</button>
+            <button class="btn-primary" onclick="BeeSounds.click();${isMathBlitzOver ? 'startMathBlitzCountdown()' : 'startBlitzCountdown()'}">PLAY AGAIN</button>
+            <button class="btn-secondary" onclick="BeeSounds.click();state.screen='home';render()">Home</button>
           </div>`;
         } else {
           const gameOverKey = getStatsKey();
@@ -2529,8 +2603,8 @@
             </div>
             <button class="share-btn" onclick="showShareToast()">🔗 Share result</button>
             <div style="height:4px"></div>
-            <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
-            <button class="btn-secondary" onclick="state.screen='home';render()">${state.gameMode === "quiz" ? "Change Category" : "Home"}</button>
+            <button class="btn-primary" onclick="BeeSounds.click();startGame()">PLAY AGAIN</button>
+            <button class="btn-secondary" onclick="BeeSounds.click();state.screen='home';render()">${state.gameMode === "quiz" ? "Change Category" : "Home"}</button>
           </div>`;
         }
         return;
@@ -2584,12 +2658,12 @@
         ${showWordInput ? `
           <div class="input-row">
             <input id="word-input" type="text" placeholder="Type your spelling…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" readonly value="${state.wordInput}" ${state.transitioning ? "disabled" : ""}/>
-            <button class="submit-btn" onclick="handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
+            <button class="submit-btn" onclick="BeeSounds.click();handleSubmit()" ${state.transitioning ? "disabled" : ""}>→</button>
           </div>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${showGapSubmit ? `
-          <button class="btn-primary" onclick="handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
+          <button class="btn-primary" onclick="BeeSounds.click();handleGapSubmit()" ${state.transitioning ? "disabled" : ""}>Check Answers</button>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${showBuiltinKeyboard ? `
@@ -2605,7 +2679,7 @@
           </div>
         ` : ""}
         ${showScrambleSubmit ? `
-          <button class="btn-primary" onclick="handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
+          <button class="btn-primary" onclick="BeeSounds.click();handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${state.blitz && state.currentWord && !state.loading && !state.transitioning ? `
@@ -2616,7 +2690,7 @@
     <div class="game-screen">
       <div class="game-header">
         <div style="display:flex;align-items:center;gap:8px">
-          <button class="home-btn" onclick="goHome()" title="Home">⌂</button>
+          <button class="home-btn" onclick="BeeSounds.click();goHome()" title="Home">⌂</button>
           ${state.blitz
           ? `<span class="blitz-badge">⚡ BeeBlitz</span>`
           : `<div class="lives">${hearts}</div>`}
