@@ -631,176 +631,97 @@
       const numDistractors = numOptions - 1;
       const currentTier = getDifficultyTier(state.difficulty);
 
-      function pickRandom(arr, n, exclude) {
-        const pool = arr.filter(x => !exclude.has(x)).sort(() => Math.random() - 0.5);
-        return pool.slice(0, n);
-      }
-
       let distractors = [];
+
+      // Pick up to n answers from pool, skipping any already in used
+      function fillFrom(pool, getAnswer, n, used) {
+        const picks = pool.map(getAnswer).filter(a => a && !used.has(a))
+          .sort(() => Math.random() - 0.5).slice(0, n);
+        picks.forEach(p => { distractors.push(p); used.add(p); });
+      }
 
       if (catId === 'countries' || catId === 'states') {
         const dataset = catId === 'countries' ? COUNTRIES_CAPITALS : STATES_CAPITALS;
         const entry = word.entry;
         const isCapitalAnswer = entry && word.word === entry.capital;
         const region = entry && entry.region;
-        // Countries use .country field, states use .state field
         const idField = catId === 'countries' ? 'country' : 'state';
         const correctId = entry && entry[idField];
-
         const getAnswer = (e) => isCapitalAnswer ? e.capital : e[idField];
         const notCorrect = (e) => e[idField] !== correctId;
-
-        // Prefer same-region distractors
-        const sameRegion = region
-          ? dataset.filter(e => e.region === region && notCorrect(e))
-          : [];
-        const higherTier = currentTier < 3
-          ? dataset.filter(e => e.difficulty > currentTier && notCorrect(e))
-          : [];
-        const anyOther = dataset.filter(notCorrect);
-
         const used = new Set([correctAnswer]);
 
-        // 1 higher-tier distractor
-        if (higherTier.length > 0 && numDistractors > 1) {
-          const picks = pickRandom(higherTier.map(getAnswer), 1, used);
-          picks.forEach(p => { distractors.push(p); used.add(p); });
-        }
-        // Fill from same region
-        const regionAnswers = sameRegion.map(getAnswer).filter(a => a && !used.has(a));
-        const regionPicks = regionAnswers.sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
-        regionPicks.forEach(p => { distractors.push(p); used.add(p); });
-        // Fill remainder from any
-        if (distractors.length < numDistractors) {
-          const anyAnswers = anyOther.map(getAnswer).filter(a => a && !used.has(a));
-          const anyPicks = anyAnswers.sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
-          anyPicks.forEach(p => { distractors.push(p); used.add(p); });
-        }
+        const sameRegion = region ? dataset.filter(e => e.region === region && notCorrect(e)) : [];
+        const higherTier = currentTier < 3 ? dataset.filter(e => e.difficulty > currentTier && notCorrect(e)) : [];
+        const anyOther = dataset.filter(notCorrect);
+
+        if (numDistractors > 1) fillFrom(higherTier, getAnswer, 1, used);
+        fillFrom(sameRegion, getAnswer, numDistractors - distractors.length, used);
+        fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
       } else if (catId === 'elements') {
         const entry = word.entry;
         const isNameAnswer = word.isElementName;
         const group = entry && entry.group;
         const number = entry && entry.number;
-
-        // For symbol answer: pick symbols from nearby atomic numbers or same group
-        // For name answer: pick names from same group or nearby numbers
         const getAnswer = (e) => isNameAnswer ? e.name : e.symbol;
+        const notThisEntry = (e) => e.name !== entry.name;
         const used = new Set([correctAnswer]);
 
-        const sameGroup = group ? ELEMENTS.filter(e => e.group === group && e.name !== entry.name) : [];
-        const nearbyNum = number ? ELEMENTS.filter(e => Math.abs(e.number - number) <= 10 && e.name !== entry.name) : [];
-        const higherTier = currentTier < 3
-          ? ELEMENTS.filter(e => e.difficulty > currentTier && e.name !== entry.name)
-          : [];
+        // For name answers prefer same group; for symbol answers prefer nearby atomic numbers
+        const sameGroup = group ? ELEMENTS.filter(e => e.group === group && notThisEntry(e)) : [];
+        const nearbyNum = number ? ELEMENTS.filter(e => Math.abs(e.number - number) <= 10 && notThisEntry(e)) : [];
+        const higherTier = currentTier < 3 ? ELEMENTS.filter(e => e.difficulty > currentTier && notThisEntry(e)) : [];
+        const anyOther = ELEMENTS.filter(notThisEntry);
 
-        // If symbol answer, prefer visually/numerically similar symbols
-        if (!isNameAnswer) {
-          // Nearby elements (similar atomic numbers) = similar symbols often
-          const nearby = nearbyNum.map(getAnswer).filter(a => !used.has(a));
-          const nearbyPicks = nearby.sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
-          nearbyPicks.forEach(p => { distractors.push(p); used.add(p); });
-        } else {
-          const groupAnswers = sameGroup.map(getAnswer).filter(a => !used.has(a));
-          const groupPicks = groupAnswers.sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
-          groupPicks.forEach(p => { distractors.push(p); used.add(p); });
-        }
-
-        // 1 higher-tier distractor
-        if (higherTier.length > 0 && distractors.length < numDistractors) {
-          const picks = higherTier.map(getAnswer).filter(a => !used.has(a)).sort(() => Math.random() - 0.5).slice(0, 1);
-          picks.forEach(p => { distractors.push(p); used.add(p); });
-        }
-        // Fill remainder from any element
-        if (distractors.length < numDistractors) {
-          const any = ELEMENTS.filter(e => e.name !== entry.name).map(getAnswer).filter(a => !used.has(a));
-          const anyPicks = any.sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
-          anyPicks.forEach(p => { distractors.push(p); used.add(p); });
-        }
+        fillFrom(isNameAnswer ? sameGroup : nearbyNum, getAnswer, numDistractors - 1, used);
+        fillFrom(higherTier, getAnswer, 1, used);
+        fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
       } else if (catId === 'flags') {
         const entry = word.entry;
         const region = entry && entry.region;
+        const getAnswer = (f) => f.country;
+        const notThisEntry = (f) => f.country !== entry.country;
         const used = new Set([correctAnswer]);
 
-        const sameRegion = region ? FLAGS.filter(f => f.region === region && f.country !== entry.country) : [];
-        const higherTier = currentTier < 3
-          ? FLAGS.filter(f => f.difficulty > currentTier && f.country !== entry.country)
-          : [];
-        const anyOther = FLAGS.filter(f => f.country !== entry.country);
+        const sameRegion = region ? FLAGS.filter(f => f.region === region && notThisEntry(f)) : [];
+        const higherTier = currentTier < 3 ? FLAGS.filter(f => f.difficulty > currentTier && notThisEntry(f)) : [];
+        const anyOther = FLAGS.filter(notThisEntry);
 
-        // 1 higher-tier distractor
-        if (higherTier.length > 0 && numDistractors > 1) {
-          const picks = higherTier.filter(f => !used.has(f.country)).sort(() => Math.random() - 0.5).slice(0, 1);
-          picks.forEach(f => { distractors.push(f.country); used.add(f.country); });
-        }
-        // Same region
-        const regionPicks = sameRegion.filter(f => !used.has(f.country)).sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
-        regionPicks.forEach(f => { distractors.push(f.country); used.add(f.country); });
-        // Any remainder
-        if (distractors.length < numDistractors) {
-          const anyPicks = anyOther.filter(f => !used.has(f.country)).sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
-          anyPicks.forEach(f => { distractors.push(f.country); used.add(f.country); });
-        }
+        if (numDistractors > 1) fillFrom(higherTier, getAnswer, 1, used);
+        fillFrom(sameRegion, getAnswer, numDistractors - distractors.length, used);
+        fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
       } else if (catId === 'mythology') {
         const entry = word.entry;
         const pantheon = entry && entry.pantheon;
+        const getAnswer = (m) => word.word === entry.roman ? m.roman : m.name;
+        const notThisEntry = (m) => m.name !== entry.name;
         const used = new Set([correctAnswer]);
 
-        const samePantheon = pantheon
-          ? MYTHOLOGY.filter(m => m.pantheon === pantheon && m.name !== entry.name)
-          : [];
-        const higherTier = currentTier < 3
-          ? MYTHOLOGY.filter(m => m.difficulty > currentTier && m.name !== entry.name)
-          : [];
-        const anyOther = MYTHOLOGY.filter(m => m.name !== entry.name);
+        const samePantheon = pantheon ? MYTHOLOGY.filter(m => m.pantheon === pantheon && notThisEntry(m)) : [];
+        const higherTier = currentTier < 3 ? MYTHOLOGY.filter(m => m.difficulty > currentTier && notThisEntry(m)) : [];
+        const anyOther = MYTHOLOGY.filter(notThisEntry);
 
-        // Pick the answer field that matches what was asked
-        const getAns = (m) => word.word === entry.roman ? m.roman : m.name;
-
-        const samePicks = samePantheon.map(getAns).filter(a => a && !used.has(a))
-          .sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
-        samePicks.forEach(p => { distractors.push(p); used.add(p); });
-
-        if (distractors.length < numDistractors && higherTier.length > 0) {
-          const picks = higherTier.map(getAns).filter(a => !used.has(a))
-            .sort(() => Math.random() - 0.5).slice(0, 1);
-          picks.forEach(p => { distractors.push(p); used.add(p); });
-        }
-        if (distractors.length < numDistractors) {
-          const any = anyOther.map(getAns).filter(a => a && !used.has(a))
-            .sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
-          any.forEach(p => { distractors.push(p); used.add(p); });
-        }
+        fillFrom(samePantheon, getAnswer, numDistractors - 1, used);
+        fillFrom(higherTier, getAnswer, 1, used);
+        fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
       } else if (catId === 'anatomy') {
         const entry = word.entry;
         const system = entry && entry.system;
+        const getAnswer = (a) => a.name;
+        const notThisEntry = (a) => a.name !== entry.name;
         const used = new Set([correctAnswer]);
 
-        const sameSystem = system
-          ? ANATOMY.filter(a => a.system === system && a.name !== entry.name)
-          : [];
-        const higherTier = currentTier < 3
-          ? ANATOMY.filter(a => a.difficulty > currentTier && a.name !== entry.name)
-          : [];
-        const anyOther = ANATOMY.filter(a => a.name !== entry.name);
+        const sameSystem = system ? ANATOMY.filter(a => a.system === system && notThisEntry(a)) : [];
+        const higherTier = currentTier < 3 ? ANATOMY.filter(a => a.difficulty > currentTier && notThisEntry(a)) : [];
+        const anyOther = ANATOMY.filter(notThisEntry);
 
-        const systemPicks = sameSystem.map(a => a.name).filter(a => !used.has(a))
-          .sort(() => Math.random() - 0.5).slice(0, numDistractors - 1);
-        systemPicks.forEach(p => { distractors.push(p); used.add(p); });
-
-        if (distractors.length < numDistractors && higherTier.length > 0) {
-          const picks = higherTier.map(a => a.name).filter(a => !used.has(a))
-            .sort(() => Math.random() - 0.5).slice(0, 1);
-          picks.forEach(p => { distractors.push(p); used.add(p); });
-        }
-        if (distractors.length < numDistractors) {
-          const any = anyOther.map(a => a.name).filter(a => !used.has(a))
-            .sort(() => Math.random() - 0.5).slice(0, numDistractors - distractors.length);
-          any.forEach(p => { distractors.push(p); used.add(p); });
-        }
+        fillFrom(sameSystem, getAnswer, numDistractors - 1, used);
+        fillFrom(higherTier, getAnswer, 1, used);
+        fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
       }
 
       // Assemble and shuffle
