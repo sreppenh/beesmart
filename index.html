@@ -1126,14 +1126,21 @@
       }
     }
 
-    function getElementChallenge() {
+    // Shared helper: picks a random entry from a dataset, respecting difficulty tier and usedWords.
+    // minTier: clamp the effective tier to at least this value (use 1 for datasets with no tier-0 entries)
+    function pickChallengeEntry(dataset, nameKey, minTier = 1) {
       const rawTier = getEffectiveTier();
-      const tier = rawTier === 0 ? 1 : rawTier; // elements have no tier 0; fall back to tier 1
+      const tier = rawTier < minTier ? minTier : rawTier;
       const usedSet = new Set(state.usedWords);
-      const candidates = ELEMENTS.filter(e => e.difficulty === tier && !usedSet.has(e.name));
-      const pool = candidates.length > 0 ? candidates : ELEMENTS.filter(e => !usedSet.has(e.name));
+      const candidates = dataset.filter(e => e.difficulty === tier && !usedSet.has(e[nameKey]));
+      const pool = candidates.length > 0 ? candidates : dataset.filter(e => !usedSet.has(e[nameKey]));
       if (pool.length === 0) return null;
-      const entry = pool[Math.floor(Math.random() * pool.length)];
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function getElementChallenge() {
+      const entry = pickChallengeEntry(ELEMENTS, 'name');
+      if (!entry) return null;
       const useScramble = state.difficulty >= 6 && Math.random() < 0.4;
       const showSymbolTypeName = Math.random() < 0.5;
       if (useScramble) {
@@ -1158,13 +1165,8 @@
     }
 
     function getFlagChallenge() {
-      const rawTier = getEffectiveTier();
-      const tier = rawTier === 0 ? 1 : rawTier; // flags have no tier 0; fall back to tier 1
-      const usedSet = new Set(state.usedWords);
-      const candidates = FLAGS.filter(f => f.difficulty === tier && !usedSet.has(f.country));
-      const pool = candidates.length > 0 ? candidates : FLAGS.filter(f => !usedSet.has(f.country));
-      if (pool.length === 0) return null;
-      const entry = pool[Math.floor(Math.random() * pool.length)];
+      const entry = pickChallengeEntry(FLAGS, 'country');
+      if (!entry) return null;
       return {
         word: entry.country, definition: entry.flag,
         sentence: "The country with this flag " + entry.flag + " is ______.",
@@ -1173,12 +1175,8 @@
     }
 
     function getMythologyChallenge() {
-      const tier = getEffectiveTier() === 0 ? 1 : getEffectiveTier();
-      const usedSet = new Set(state.usedWords);
-      const candidates = MYTHOLOGY.filter(m => m.difficulty === tier && !usedSet.has(m.name));
-      const pool = candidates.length > 0 ? candidates : MYTHOLOGY.filter(m => !usedSet.has(m.name));
-      if (pool.length === 0) return null;
-      const entry = pool[Math.floor(Math.random() * pool.length)];
+      const entry = pickChallengeEntry(MYTHOLOGY, 'name');
+      if (!entry) return null;
 
       const questionType = Math.random();
       let definition, word;
@@ -1210,15 +1208,9 @@
     }
 
     function getAnatomyChallenge() {
-      const tier = getEffectiveTier() === 0 ? 1 : getEffectiveTier();
-      const usedSet = new Set(state.usedWords);
-      const candidates = ANATOMY.filter(a => a.difficulty === tier && !usedSet.has(a.name));
-      const pool = candidates.length > 0 ? candidates : ANATOMY.filter(a => !usedSet.has(a.name));
-      if (pool.length === 0) return null;
-      const entry = pool[Math.floor(Math.random() * pool.length)];
-
+      const entry = pickChallengeEntry(ANATOMY, 'name');
+      if (!entry) return null;
       const useScramble = state.difficulty >= 7 && Math.random() < 0.35;
-
       return {
         word: entry.name,
         definition: entry.clue,
