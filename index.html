@@ -2246,23 +2246,17 @@
       return `<div class="word-card">${inner}</div>`;
     }
 
-    function render() {
-      const app = document.getElementById("app");
-
-      // BLITZ COUNTDOWN
-      if (state.screen === "blitz-countdown") {
-        const isGo = state.blitzCountdown === "GO";
-        app.innerHTML = `
+    function renderBlitzCountdown(app) {
+      const isGo = state.blitzCountdown === "GO";
+      app.innerHTML = `
         <div class="blitz-countdown-screen">
           <div class="${isGo ? 'countdown-go' : 'countdown-num'}">${state.blitzCountdown}</div>
           ${!isGo ? `<p style="font-size:13px;color:var(--muted);letter-spacing:1px">${state.gameMode === "math-blitz" ? "Math Blitz starts now…" : "BeeBlitz starts now…"}</p>` : ""}
         </div>`;
-        return;
-      }
+    }
 
-      // MATH MODE SELECT
-      if (state.screen === "math-select") {
-        app.innerHTML = `
+    function renderMathSelect(app) {
+      app.innerHTML = `
         <div class="home">
           <div style="display:flex;align-items:center;padding:18px 20px 4px">
             <button class="back-btn" onclick="state.screen='home';render()">&#8249;</button>
@@ -2288,30 +2282,28 @@
             </button>
           </div>
         </div>`;
-        return;
-      }
+    }
 
-      // HOME
-      if (state.screen === "home") {
-        const savedSession = loadFromStorage("session");
-        const showResume = savedSession && savedSession.lives > 0 && savedSession.score > 0;
-        const allCatStats = Object.values(state.categoryStats);
-        const overallBest = allCatStats.length ? Math.max(0, ...allCatStats.map(s => s.bestScore || 0)) : 0;
-        const spellingStats = state.categoryStats["spelling"];
-        const totalSpellingWords = spellingStats ? (spellingStats.wordsAttempted || 0) : 0;
-        const themeBtn = `<button class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">${state.theme === 'day' ? '🌙' : '☀️'}</button>`;
-        const tabsHTML = `
+    function renderHome(app) {
+      const savedSession = loadFromStorage("session");
+      const showResume = savedSession && savedSession.lives > 0 && savedSession.score > 0;
+      const allCatStats = Object.values(state.categoryStats);
+      const overallBest = allCatStats.length ? Math.max(0, ...allCatStats.map(s => s.bestScore || 0)) : 0;
+      const spellingStats = state.categoryStats["spelling"];
+      const totalSpellingWords = spellingStats ? (spellingStats.wordsAttempted || 0) : 0;
+      const themeBtn = `<button class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">${state.theme === 'day' ? '🌙' : '☀️'}</button>`;
+      const tabsHTML = `
           <div class="home-tabs">
             <button class="tab-pill ${state.homeTab === 'play' ? 'active' : ''}" onclick="BeeSounds.click();state.homeTab='play';render()">Play</button>
             <button class="tab-pill ${state.homeTab === 'stats' ? 'active' : ''}" onclick="BeeSounds.click();state.homeTab='stats';render()">Stats</button>
             <button class="tab-pill ${state.homeTab === 'settings' ? 'active' : ''}" onclick="BeeSounds.click();state.homeTab='settings';render()">Settings</button>
           </div>`;
 
-        if (state.homeTab === 'stats') {
-          const bsStats = getCatStats("blitz");
-          const blitzPlayed = bsStats.hasPlayed;
-          const isWords = state.blitzStatView === "words";
-          const blitzCard = blitzPlayed ? `
+      if (state.homeTab === 'stats') {
+        const bsStats = getCatStats("blitz");
+        const blitzPlayed = bsStats.hasPlayed;
+        const isWords = state.blitzStatView === "words";
+        const blitzCard = blitzPlayed ? `
             <div class="blitz-hero-card">
               <div class="blitz-hero-header">
                 <span class="blitz-hero-emoji">⚡🐝</span>
@@ -2337,10 +2329,10 @@
               <p class="stat-card-unplayed">The swarm awaits 🐝</p>
             </div>`;
 
-          const mbStats = getCatStats("math-blitz");
-          const mathBlitzPlayed = mbStats.hasPlayed;
-          const isMbWords = state.blitzStatView === "words";
-          const mathBlitzCard = mathBlitzPlayed ? `
+        const mbStats = getCatStats("math-blitz");
+        const mathBlitzPlayed = mbStats.hasPlayed;
+        const isMbWords = state.blitzStatView === "words";
+        const mathBlitzCard = mathBlitzPlayed ? `
             <div class="blitz-hero-card">
               <div class="blitz-hero-header">
                 <span class="blitz-hero-emoji">⚡🔢</span>
@@ -2366,21 +2358,21 @@
               <p class="stat-card-unplayed">Ready to race? 🔢</p>
             </div>`;
 
-          const SPELLING_STAT_CAT = { id: "spelling", name: "Spelling", emoji: "🐝" };
-          const statsCats = [SPELLING_STAT_CAT, ...QUIZ_CATEGORIES];
-          const cards = statsCats.map(c => {
-            const s = getCatStats(c.id);
-            if (!s.hasPlayed) {
-              return `<div class="stat-card muted">
+        const SPELLING_STAT_CAT = { id: "spelling", name: "Spelling", emoji: "🐝" };
+        const statsCats = [SPELLING_STAT_CAT, ...QUIZ_CATEGORIES];
+        const cards = statsCats.map(c => {
+          const s = getCatStats(c.id);
+          if (!s.hasPlayed) {
+            return `<div class="stat-card muted">
                 <div class="stat-card-header"><span class="stat-card-emoji">${c.emoji}</span><span class="stat-card-name">${c.name}</span></div>
                 <p class="stat-card-unplayed">Not yet played</p>
               </div>`;
-            }
-            const winRate = s.wordsAttempted > 0 ? Math.round((s.wordsCorrectFirstTry / s.wordsAttempted) * 100) : 0;
-            const mcWinRate = s.mcAttempted > 0 ? Math.round((s.mcCorrect / s.mcAttempted) * 100) : null;
-            const diffPct = ((s.difficulty - 1) / 9) * 100;
-            const isQuizCat = ["countries", "states", "elements", "flags", "math", "mythology", "anatomy"].includes(c.id);
-            return `<div class="stat-card">
+          }
+          const winRate = s.wordsAttempted > 0 ? Math.round((s.wordsCorrectFirstTry / s.wordsAttempted) * 100) : 0;
+          const mcWinRate = s.mcAttempted > 0 ? Math.round((s.mcCorrect / s.mcAttempted) * 100) : null;
+          const diffPct = ((s.difficulty - 1) / 9) * 100;
+          const isQuizCat = ["countries", "states", "elements", "flags", "math", "mythology", "anatomy"].includes(c.id);
+          return `<div class="stat-card">
               <div class="stat-card-header"><span class="stat-card-emoji">${c.emoji}</span><span class="stat-card-name">${c.name}</span></div>
               <div class="stat-card-best">${s.bestScore}</div>
               <div class="stat-card-diff">
@@ -2393,8 +2385,8 @@
               </div>
               ${isQuizCat && mcWinRate !== null ? `<div class="stat-card-meta" style="margin-top:4px"><span>👆 MC: ${mcWinRate}% (${s.mcAttempted} q's)</span></div>` : ""}
             </div>`;
-          }).join("");
-          app.innerHTML = `
+        }).join("");
+        app.innerHTML = `
           <div class="home">
             ${themeBtn}
             ${tabsHTML}
@@ -2404,23 +2396,23 @@
             </div>
             <div class="stats-list">${blitzCard}${mathBlitzCard}${cards}</div>
           </div>`;
-          return;
-        }
+        return;
+      }
 
-        if (state.homeTab === 'settings') {
-          const resetOptions = ["blitz", "quiz", "all"].map(type => {
-            const labels = { blitz: "BeeBlitz", quiz: "All Trivia", all: "Everything" };
-            const icons  = { blitz: "⚡", quiz: "🧠", all: "🗑️" };
-            const isPending = state.resetConfirm === type;
-            return isPending
-              ? `<div class="reset-confirm-row">
+      if (state.homeTab === 'settings') {
+        const resetOptions = ["blitz", "quiz", "all"].map(type => {
+          const labels = { blitz: "BeeBlitz", quiz: "All Trivia", all: "Everything" };
+          const icons  = { blitz: "⚡", quiz: "🧠", all: "🗑️" };
+          const isPending = state.resetConfirm === type;
+          return isPending
+            ? `<div class="reset-confirm-row">
                   <span class="reset-confirm-label">Reset ${labels[type]}?</span>
                   <button class="reset-confirm-yes" onclick="resetStats('${type}')">Yes, reset</button>
                   <button class="reset-confirm-no" onclick="state.resetConfirm=null;render()">Cancel</button>
                  </div>`
-              : `<button class="reset-option-btn" onclick="state.resetConfirm='${type}';render()">${icons[type]} ${labels[type]}</button>`;
-          }).join("");
-          app.innerHTML = `
+            : `<button class="reset-option-btn" onclick="state.resetConfirm='${type}';render()">${icons[type]} ${labels[type]}</button>`;
+        }).join("");
+        app.innerHTML = `
           <div class="home">
             ${themeBtn}
             ${tabsHTML}
@@ -2450,10 +2442,11 @@
               <div class="reset-options">${resetOptions}</div>
             </div>
           </div>`;
-          return;
-        }
+        return;
+      }
 
-        app.innerHTML = `
+      // play tab (default)
+      app.innerHTML = `
       <div class="home">
         ${themeBtn}
         ${tabsHTML}
@@ -2516,25 +2509,23 @@
           </button>
         </div>
       </div>`;
-        updateBeeBlitzHero();
-        return;
-      }
+      updateBeeBlitzHero();
+    }
 
-      // QUIZ CATEGORY SELECT
-      if (state.screen === "quiz") {
-        const triviaMeta = {
-          countries: { hook: "Name the capital of every nation",  color: "teal"   },
-          states:    { hook: "All 50 states & their capitals",    color: "blue"   },
-          elements:  { hook: "What does Sn stand for?",           color: "purple" },
-          flags:     { hook: "Can you name that nation?",         color: "orange" },
-          mythology: { hook: "Gods, heroes & ancient legends",    color: "amber"  },
-          anatomy:   { hook: "Know your body inside out",         color: "rose"   },
-        };
-        const quizBtns = QUIZ_CATEGORIES.filter(c => c.id !== "math").map(c => {
-          const meta = triviaMeta[c.id] || {};
-          const cs = getCatStats(c.id);
-          const bestBadge = cs.hasPlayed ? `<span class="trivia-cat-badge">${cs.bestScore}</span>` : "";
-          return `<button class="trivia-cat-btn trivia-${meta.color}" onclick="BeeSounds.click();selectCategory('${c.id}')">
+    function renderQuizSelect(app) {
+      const triviaMeta = {
+        countries: { hook: "Name the capital of every nation",  color: "teal"   },
+        states:    { hook: "All 50 states & their capitals",    color: "blue"   },
+        elements:  { hook: "What does Sn stand for?",           color: "purple" },
+        flags:     { hook: "Can you name that nation?",         color: "orange" },
+        mythology: { hook: "Gods, heroes & ancient legends",    color: "amber"  },
+        anatomy:   { hook: "Know your body inside out",         color: "rose"   },
+      };
+      const quizBtns = QUIZ_CATEGORIES.filter(c => c.id !== "math").map(c => {
+        const meta = triviaMeta[c.id] || {};
+        const cs = getCatStats(c.id);
+        const bestBadge = cs.hasPlayed ? `<span class="trivia-cat-badge">${cs.bestScore}</span>` : "";
+        return `<button class="trivia-cat-btn trivia-${meta.color}" onclick="BeeSounds.click();selectCategory('${c.id}')">
             <div class="trivia-cat-top">
               <span class="trivia-cat-emoji">${c.emoji}</span>
               ${bestBadge}
@@ -2542,8 +2533,8 @@
             <div class="trivia-cat-name">${c.name}</div>
             <div class="trivia-cat-hook">${meta.hook || ""}</div>
           </button>`;
-        }).join("");
-        app.innerHTML = `
+      }).join("");
+      app.innerHTML = `
       <div class="home">
         <button class="back-btn" onclick="state.screen='home';render()">&#8592; Back</button>
         <div class="trivia-header">
@@ -2553,17 +2544,15 @@
         </div>
         <div class="trivia-grid">${quizBtns}</div>
       </div>`;
-        return;
-      }
+    }
 
-      // GAME OVER
-      if (state.screen === "gameover") {
-        const isBlitzOver = state.gameMode === "blitz" || state.gameMode === "math-blitz";
-        const isMathBlitzOver = state.gameMode === "math-blitz";
-        if (isBlitzOver) {
-          const blitzBs = getCatStats(blitzStatKey());
-          const blitzNewBest = state.blitzWordsCorrect > 0 && state.blitzWordsCorrect >= (blitzBs.bestWordsCorrect || 0);
-          app.innerHTML = `
+    function renderGameOver(app) {
+      const isBlitzOver = state.gameMode === "blitz" || state.gameMode === "math-blitz";
+      const isMathBlitzOver = state.gameMode === "math-blitz";
+      if (isBlitzOver) {
+        const blitzBs = getCatStats(blitzStatKey());
+        const blitzNewBest = state.blitzWordsCorrect > 0 && state.blitzWordsCorrect >= (blitzBs.bestWordsCorrect || 0);
+        app.innerHTML = `
           <div class="gameover">
             <div class="share-card">
               <div class="gameover-bee">${isMathBlitzOver ? "⚡🔢" : "⚡"}</div>
@@ -2578,12 +2567,12 @@
             <button class="btn-primary" onclick="BeeSounds.click();${isMathBlitzOver ? 'startMathBlitzCountdown()' : 'startBlitzCountdown()'}">PLAY AGAIN</button>
             <button class="btn-secondary" onclick="BeeSounds.click();state.screen='home';render()">Home</button>
           </div>`;
-        } else {
-          const gameOverKey = getStatsKey();
-          const gameOverCatStats = getCatStats(gameOverKey);
-          const newBest = state.score > 0 && state.score >= gameOverCatStats.bestScore;
-          const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
-          app.innerHTML = `
+      } else {
+        const gameOverKey = getStatsKey();
+        const gameOverCatStats = getCatStats(gameOverKey);
+        const newBest = state.score > 0 && state.score >= gameOverCatStats.bestScore;
+        const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
+        app.innerHTML = `
           <div class="gameover">
             <div class="share-card">
               <div class="gameover-bee">🐝</div>
@@ -2598,11 +2587,10 @@
             <button class="btn-primary" onclick="BeeSounds.click();startGame()">PLAY AGAIN</button>
             <button class="btn-secondary" onclick="BeeSounds.click();state.screen='home';render()">${state.gameMode === "quiz" ? "Change Category" : "Home"}</button>
           </div>`;
-        }
-        return;
       }
+    }
 
-      // GAME
+    function renderGame(app) {
       const hearts = [0, 1, 2].map(i => `<span class="heart ${i < state.lives ? "" : "lost"}">♥</span>`).join("");
       const diffPct = ((state.difficulty - 1) / 9) * 100;
       const blitzTimePct = Math.max(0, (state.blitzTimeRemaining / 60) * 100);
@@ -2736,6 +2724,16 @@
       if (showStandardInput && !state.transitioning) {
         setTimeout(() => { const kb = document.querySelector(".builtin-keyboard"); if (kb) kb.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 150);
       }
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      if (state.screen === "blitz-countdown") return renderBlitzCountdown(app);
+      if (state.screen === "math-select")     return renderMathSelect(app);
+      if (state.screen === "home")            return renderHome(app);
+      if (state.screen === "quiz")            return renderQuizSelect(app);
+      if (state.screen === "gameover")        return renderGameOver(app);
+      renderGame(app);
     }
 
     // Auto-advance between gap inputs
