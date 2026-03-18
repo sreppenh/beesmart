@@ -29,8 +29,8 @@
   <script src="words.js"></script>
   <script>
     const API = "/api/word";
-    const MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff", "typewriter"];
-    const BLITZ_MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff", "typewriter"];
+    const MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff", "typewriter", "wordsearch"];
+    const BLITZ_MECHANICS = ["definition", "scramble", "lettergap", "oneletteroff", "typewriter", "wordsearch"];
 
 
     const ELEMENTS = [
@@ -353,6 +353,11 @@
       mathInput: "",
       // Lettergap
       activeGapIndex: 0,
+      // Wordsearch
+      wordsearchGrid: [],
+      wordsearchPath: [],
+      wordsearchSelected: [],
+      wordsearchDragging: false,
       // Preferences
       startFromBeginning: false,
       soundEnabled: true,
@@ -1451,6 +1456,7 @@
       state.attempts = 0; state.feedback = null; state.transitioning = false;
       state.selectedOloIndex = -1; state.oloPhase = "select"; state.lastAttempt = null; state.gapValues = []; state.wordInput = "";
       state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
+      state.wordsearchSelected = []; state.wordsearchDragging = false;
       render();
       try {
         // Blitz: pick a fresh category for each word (50% spelling, 50% quiz)
@@ -1497,6 +1503,11 @@
             const fallbackPool = ["scramble", "lettergap", "oneletteroff"];
             next = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
           }
+          // Wordsearch only fires at difficulty 2+
+          if (next === "wordsearch" && state.difficulty < 2) {
+            const fallbackPool = ["scramble", "lettergap", "oneletteroff"];
+            next = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+          }
           // Anti-repeat: prevent same mechanic 3x in a row
           const mhist = state.mechanicHistory;
           if (mhist.length >= 2 && mhist[mhist.length - 1] === next && mhist[mhist.length - 2] === next) {
@@ -1505,6 +1516,7 @@
               let alt = altPool[Math.floor(Math.random() * altPool.length)];
               if (alt === "typewriter" && state.difficulty < 6) { const fp = ["scramble", "lettergap", "oneletteroff"]; alt = fp[Math.floor(Math.random() * fp.length)]; }
               if (alt === "definition" && state.difficulty < 5) { const fp = ["scramble", "lettergap", "oneletteroff"]; alt = fp[Math.floor(Math.random() * fp.length)]; }
+              if (alt === "wordsearch" && state.difficulty < 2) { const fp = ["scramble", "lettergap", "oneletteroff"]; alt = fp[Math.floor(Math.random() * fp.length)]; }
               next = alt;
             }
           }
@@ -1554,6 +1566,9 @@
           state.typewriterRevealed = false;
           if (state.typewriterInterval) clearInterval(state.typewriterInterval);
           state.typewriterInterval = null;
+        }
+        if (next === "wordsearch") {
+          buildWordsearchGrid(wordData.word);
         }
 
         state.loading = false; render();
@@ -1667,6 +1682,164 @@
           state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
           render(); setTimeout(() => loadNextWord(), 1800);
         }
+      }
+    }
+
+    // ─── WORD SEARCH MECHANIC ────────────────────────────────────────────────────
+
+    function buildWordsearchGrid(word) {
+      const upper = word.toUpperCase().replace(/[^A-Z]/g, '');
+      const len = upper.length;
+      const size = len <= 4 ? 4 : len <= 6 ? 5 : len <= 9 ? 6 : 7;
+      const grid = Array.from({length: size}, (_, r) =>
+        Array.from({length: size}, (_, c) => ({letter: '', row: r, col: c}))
+      );
+      const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+
+      function backtrack(path, used) {
+        if (path.length === len) return path;
+        const {row, col} = path[path.length - 1];
+        const neighbors = dirs
+          .map(([dr, dc]) => ({row: row + dr, col: col + dc}))
+          .filter(({row: nr, col: nc}) => nr >= 0 && nr < size && nc >= 0 && nc < size && !used.has(nr * size + nc))
+          .sort(() => Math.random() - 0.5);
+        for (const next of neighbors) {
+          used.add(next.row * size + next.col);
+          path.push(next);
+          if (backtrack(path, used)) return path;
+          path.pop();
+          used.delete(next.row * size + next.col);
+        }
+        return null;
+      }
+
+      const starts = [];
+      for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) starts.push({row: r, col: c});
+      starts.sort(() => Math.random() - 0.5);
+
+      let wordPath = null;
+      for (const start of starts) {
+        const used = new Set([start.row * size + start.col]);
+        wordPath = backtrack([start], used);
+        if (wordPath) break;
+      }
+      if (!wordPath) {
+        wordPath = Array.from({length: len}, (_, i) => ({row: Math.floor(i / size), col: i % size}));
+      }
+
+      wordPath.forEach(({row, col}, i) => { grid[row][col].letter = upper[i]; });
+
+      const wordLetters = [...new Set(upper)];
+      const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const noiseBias = state.difficulty >= 7 ? 0.40 : 0.30;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (!grid[r][c].letter) {
+            grid[r][c].letter = Math.random() < noiseBias
+              ? wordLetters[Math.floor(Math.random() * wordLetters.length)]
+              : alpha[Math.floor(Math.random() * alpha.length)];
+          }
+        }
+      }
+      state.wordsearchGrid = grid;
+      state.wordsearchPath = wordPath;
+    }
+
+    function wsComputeCellSize() {
+      const size = state.wordsearchGrid.length || 5;
+      const gap = 2;
+      const maxPx = Math.min(window.innerWidth - 48, 340);
+      return Math.min(60, Math.max(44, Math.floor((maxPx - gap * (size - 1)) / size)));
+    }
+
+    function wsRenderSelection() {
+      const grid = state.wordsearchGrid;
+      const size = grid.length;
+      if (!size) return;
+      const cs = parseInt(document.getElementById('ws-grid')?.dataset.cellSize || '50');
+      const stride = cs + 2;
+      const sel = state.wordsearchSelected;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const el = document.getElementById(`wsc-${r}-${c}`);
+          if (el) el.classList.toggle('ws-selected', sel.some(s => s.row === r && s.col === c));
+        }
+      }
+      const line = document.getElementById('ws-line');
+      if (line) {
+        line.setAttribute('points', sel.length > 0
+          ? sel.map(s => `${s.col * stride + cs / 2},${s.row * stride + cs / 2}`).join(' ')
+          : '');
+      }
+    }
+
+    function wsPointerDown(e) {
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!el || !el.id.startsWith('wsc-')) return;
+      const [, r, c] = el.id.split('-').map(Number);
+      if (isNaN(r) || isNaN(c)) return;
+      state.wordsearchDragging = true;
+      state.wordsearchSelected = [{row: r, col: c}];
+      const grid = document.getElementById('ws-grid');
+      if (grid) try { grid.setPointerCapture(e.pointerId); } catch (_) {}
+      wsRenderSelection();
+    }
+
+    function wsPointerMove(e) {
+      if (!state.wordsearchDragging) return;
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!el || !el.id.startsWith('wsc-')) return;
+      const parts = el.id.split('-');
+      if (parts.length !== 3) return;
+      const r = parseInt(parts[1]), c = parseInt(parts[2]);
+      if (isNaN(r) || isNaN(c)) return;
+      const sel = state.wordsearchSelected;
+      if (sel.some(s => s.row === r && s.col === c)) return;
+      const last = sel[sel.length - 1];
+      if (!last || Math.abs(r - last.row) > 1 || Math.abs(c - last.col) > 1) return;
+      sel.push({row: r, col: c});
+      wsRenderSelection();
+    }
+
+    function wsPointerUp(e) {
+      state.wordsearchDragging = false;
+    }
+
+    function wsUndo() {
+      if (state.wordsearchSelected.length > 0) {
+        state.wordsearchSelected.pop();
+        wsRenderSelection();
+      }
+    }
+
+    function handleWordsearchSubmit() {
+      if (!state.currentWord || state.transitioning || state.wordsearchSelected.length === 0) return;
+      const target = state.currentWord.word.toUpperCase().replace(/[^A-Z]/g, '');
+      const spelled = state.wordsearchSelected
+        .map(({row, col}) => state.wordsearchGrid[row]?.[col]?.letter || '')
+        .join('');
+      if (spelled === target) {
+        handleCorrect();
+      } else {
+        BeeSounds.wrong();
+        state.transitioning = true;
+        const wrongEls = state.wordsearchSelected.map(({row, col}) => document.getElementById(`wsc-${row}-${col}`));
+        wrongEls.forEach(el => { if (el) el.classList.add('ws-wrong'); });
+        setTimeout(() => {
+          state.transitioning = false;
+          wrongEls.forEach(el => { if (el) el.classList.remove('ws-wrong'); });
+          state.wordsearchSelected = [];
+          wsRenderSelection();
+          state.attempts++;
+          if (state.attempts >= 3) {
+            handleWrong(`It was "${state.currentWord.word}"`);
+          } else {
+            state.feedback = { type: "try", msg: "Not quite — try again!" };
+            render();
+          }
+        }, 600);
       }
     }
 
@@ -1880,6 +2053,18 @@
 
     function revealNextHint() {
       if (!state.currentWord) return;
+
+      // Wordsearch hint: reveal next cell in hidden path
+      if (state.mechanic === "wordsearch") {
+        if (state.hintLevel < state.wordsearchPath.length - 1) {
+          state.hintUsed = true;
+          state.hintLevel++;
+          state.score = Math.max(0, state.score - state.hintLevel);
+          render();
+        }
+        return;
+      }
+
       const word = state.currentWord.word.toLowerCase();
       const lengthAlreadyKnown = ["lettergap", "scramble", "oneletteroff"].includes(state.mechanic);
       const isLettergap = state.mechanic === "lettergap";
@@ -2264,6 +2449,42 @@
         ${catTag}
         ${hint}`;
         }
+
+      } else if (state.mechanic === "wordsearch") {
+        const grid = state.wordsearchGrid;
+        const size = grid.length;
+        const gap = 2;
+        const cs = wsComputeCellSize();
+        const stride = cs + gap;
+        const gridPx = size * stride - gap;
+        const sw = Math.round(cs * 0.72);
+        const hintSet = new Set(
+          state.wordsearchPath.slice(0, state.hintLevel).map(({row, col}) => `${row},${col}`)
+        );
+        const selSet = new Set(state.wordsearchSelected.map(({row, col}) => `${row},${col}`));
+        const cells = grid.flatMap((row, r) =>
+          row.map((cell, c) => {
+            const isHint = hintSet.has(`${r},${c}`);
+            const isSelected = selSet.has(`${r},${c}`);
+            return `<div class="ws-cell${isHint ? ' ws-hint-cell' : ''}${isSelected ? ' ws-selected' : ''}" id="wsc-${r}-${c}" data-row="${r}" data-col="${c}" style="width:${cs}px;height:${cs}px;line-height:${cs}px;font-size:${Math.round(cs * 0.42)}px">${cell.letter}</div>`;
+          })
+        ).join('');
+        const initPoints = state.wordsearchSelected.length > 0
+          ? state.wordsearchSelected.map(s => `${s.col * stride + cs / 2},${s.row * stride + cs / 2}`).join(' ')
+          : '';
+        inner = `
+        <p class="def-text" style="margin-bottom:10px">"${state.currentWord.definition}"</p>
+        <p class="cat-tag" style="margin-bottom:10px">${state.currentWord.category}</p>
+        <div class="ws-wrap" style="width:${gridPx}px;height:${gridPx}px;margin:0 auto">
+          <div class="ws-grid" id="ws-grid" data-cell-size="${cs}"
+            style="grid-template-columns:repeat(${size},${cs}px);gap:${gap}px;width:${gridPx}px;height:${gridPx}px"
+            onpointerdown="wsPointerDown(event)" onpointermove="wsPointerMove(event)" onpointerup="wsPointerUp(event)">
+            ${cells}
+          </div>
+          <svg class="ws-svg" width="${gridPx}" height="${gridPx}" viewBox="0 0 ${gridPx} ${gridPx}">
+            <polyline id="ws-line" fill="none" stroke="var(--yellow)" stroke-opacity="0.45" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" points="${initPoints}"/>
+          </svg>
+        </div>`;
       }
 
       return `<div class="word-card">${inner}</div>`;
@@ -2627,16 +2848,19 @@
       const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
       const showBuiltinKeyboard = showWordInput || showGapSubmit;
       const showScrambleSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "scramble";
+      const showWordsearchSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "wordsearch";
       const hintAllowed = !state.blitz;
-      const hintLengthKnown = ["lettergap", "scramble", "oneletteroff"].includes(state.mechanic);
+      const hintLengthKnown = ["lettergap", "scramble", "oneletteroff", "wordsearch"].includes(state.mechanic);
       const hintFirstLabel = hintLengthKnown ? 'Reveal a letter (−1 pt)' : 'Show word length (−1 pt)';
       const hintLabel = state.hintLevel === 0 ? hintFirstLabel : `Reveal a letter (−${state.hintLevel + 1} pts)`;
-      // For lettergap, only count unhinted gap positions; elsewhere count all nulls
-      const hintableCount = (state.hintLevel >= 1 && state.hintRevealed.length)
-        ? (state.mechanic === "lettergap" && state.gapIndices
-            ? state.gapIndices.filter((isGap, i) => isGap && state.hintRevealed[i] === null).length
-            : state.hintRevealed.filter(v => v === null).length)
-        : Infinity;
+      // For lettergap, only count unhinted gap positions; for wordsearch count unrevealed path cells; elsewhere count all nulls
+      const hintableCount = state.mechanic === "wordsearch"
+        ? state.wordsearchPath.length - state.hintLevel
+        : (state.hintLevel >= 1 && state.hintRevealed.length)
+          ? (state.mechanic === "lettergap" && state.gapIndices
+              ? state.gapIndices.filter((isGap, i) => isGap && state.hintRevealed[i] === null).length
+              : state.hintRevealed.filter(v => v === null).length)
+          : Infinity;
       const hintStillAvailable = hintableCount > 1;
 
       let mcButtonsHTML = "";
@@ -2683,6 +2907,13 @@
         ` : ""}
         ${showScrambleSubmit ? `
           <button class="btn-primary" onclick="BeeSounds.click();handleScrambleSubmit()" ${state.transitioning || state.scrambleSelected.length !== state.currentWord.word.length ? "disabled" : ""}>Check</button>
+          ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
+        ` : ""}
+        ${showWordsearchSubmit ? `
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="btn-primary" onclick="BeeSounds.click();handleWordsearchSubmit()" ${state.transitioning || state.wordsearchSelected.length === 0 ? "disabled" : ""}>Check</button>
+            <button class="hint-btn" onclick="wsUndo()" ${state.wordsearchSelected.length === 0 ? "disabled" : ""}>⌫ Undo</button>
+          </div>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
         ${state.blitz && state.currentWord && !state.loading && !state.transitioning ? `
