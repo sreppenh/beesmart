@@ -2628,3 +2628,63 @@ body.day .beeblitz-best-row {
   background: rgba(180, 83, 9, 0.06);
   border-top-color: rgba(180, 83, 9, 0.2);
 }
+
+/* ─── WORD SEARCH MECHANIC ──────────────────────────────────────────────────── */
+
+.ws-wrap {
+  position: relative;
+  margin: 0 auto;
+  touch-action: none;
+}
+
+.ws-grid {
+  display: grid;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  position: relative;
+}
+
+.ws-cell {
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-family: inherit;
+  color: var(--text);
+  border-radius: 5px;
+  border: 1.5px solid var(--border);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.ws-cell.ws-selected {
+  color: var(--yellow);
+}
+
+.ws-cell.ws-hint-cell {
+  background: var(--border);
+  color: var(--yellow);
+  border-color: var(--yellow);
+  opacity: 0.75;
+}
+
+.ws-cell.ws-wrong {
+  color: #ef4444 !important;
+  border-color: #ef4444 !important;
+  animation: ws-wrong-flash 0.6s ease-out;
+}
+
+@keyframes ws-wrong-flash {
+  0%   { background: rgba(239,68,68,0.22); }
+  100% { background: var(--card); }
+}
+
+.ws-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}

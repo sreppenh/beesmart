@@ -281,20 +281,6 @@
       { name: "nephron", clue: "The functional filtering unit of the kidney", system: "Urinary", difficulty: 3 },
     ];
 
-    const SPELLING_CATEGORIES = [
-      { id: "geography", name: "Geography", emoji: "🌍", prompt: "cities, countries, capitals, rivers, mountains, landmarks, regions" },
-      { id: "history", name: "People & History", emoji: "👑", prompt: "historical figures, events, dynasties, explorers, leaders, eras" },
-      { id: "science", name: "Science & Nature", emoji: "🔬", prompt: "scientific terms, animals, plants, elements, phenomena, anatomy" },
-      { id: "arts", name: "Arts & Culture", emoji: "🎭", prompt: "art movements, musicians, authors, films, cultural terms, architecture" },
-      { id: "food", name: "Food & Cooking", emoji: "🍽️", prompt: "ingredients, dishes, cooking techniques, cuisines, chefs, food terms" },
-      { id: "sports", name: "Sports & Games", emoji: "🏅", prompt: "sports terms, athletic events, game rules, board games, chess, classic video game terms" },
-      { id: "general", name: "General", emoji: "📚", prompt: "mixed nouns, concepts, commonly misspelled words, vocabulary, idioms" },
-      { id: "tricky", name: "Tricky Words", emoji: "🧩", prompt: "commonly misspelled English words, silent letters, irregular spellings, confusing homophones" },
-      { id: "animals", name: "Animals & Nature", emoji: "🐾", prompt: "animals, birds, insects, marine life, plants, nature terms" },
-      { id: "dinosaurs", name: "Dinosaurs", emoji: "🦕", prompt: "dinosaur species, prehistoric creatures, paleontology terms" },
-      { id: "surprise", name: "Surprise Me", emoji: "🎲", prompt: "anything goes — a wild unpredictable mix of all categories" },
-    ];
-
     const QUIZ_CATEGORIES = [
       { id: "countries", name: "Countries & Capitals", emoji: "🌐" },
       { id: "states", name: "States & Capitals", emoji: "🇺🇸" },
@@ -305,7 +291,7 @@
       { id: "anatomy", name: "Human Anatomy", emoji: "🫀" },
     ];
 
-    const CATEGORIES = [...SPELLING_CATEGORIES, ...QUIZ_CATEGORIES];
+    const CATEGORIES = QUIZ_CATEGORIES;
 
 
     let state = {
@@ -316,7 +302,7 @@
       lives: 3, score: 0, streak: 0,
       dailyStreak: 0,
       difficulty: 1, currentWord: null,
-      mechanic: "audio", hintLevel: 0, hintRevealed: [],
+      mechanic: "definition", hintLevel: 0, hintRevealed: [],
       hintUsed: false, attempts: 0,
       usedWords: [], mechanicHistory: [], transitioning: false,
       scrambled: "", scrambleSelected: [], scrambleRemaining: [], loading: false, feedback: null,
@@ -615,7 +601,7 @@
         const cs = getCatStats(key);
         const isNewBest = state.score > 0 && state.score >= cs.bestScore;
         const cat = CATEGORIES.find(c => c.id === state.selectedCategory);
-        const modeLabel = state.gameMode === "audio" ? "Listen & Spell" : state.gameMode === "quiz" ? `Trivia – ${cat ? cat.name : ""}` : state.gameMode === "math" ? "Mental Math" : `Spelling${cat && cat.id !== "surprise" ? ` – ${cat.name}` : ""}`;
+        const modeLabel = state.gameMode === "quiz" ? `Trivia – ${cat ? cat.name : ""}` : state.gameMode === "math" ? "Mental Math" : "Spelling";
         text = `🐝 BeeSmart – ${modeLabel}\n${state.score} pts · ${diffLabel(cs.difficulty)} level${isNewBest ? "\n✨ New personal best!" : ""}\n#BeeSmart`;
       }
       if (navigator.share) {
@@ -1341,7 +1327,6 @@
 
       // Check for spaced repetition words due
       const srDue = srQueue.find(item =>
-        (catId === "surprise" || item.catId === catId) &&
         item.dueAfter <= state.usedWords.length &&
         !usedSet.has(item.word)
       );
@@ -1352,15 +1337,12 @@
 
       // Pick fresh word from library
       const candidates = ALL_WORDS.filter(w =>
-        (catId === "surprise" || w.catId === catId) &&
         w.difficulty === tier &&
         !usedSet.has(w.word)
       );
 
       if (candidates.length === 0) {
-        const fallback = ALL_WORDS.filter(w =>
-          (catId === "surprise" || w.catId === catId) && !usedSet.has(w.word)
-        );
+        const fallback = ALL_WORDS.filter(w => !usedSet.has(w.word));
         if (fallback.length === 0) return null;
         // During ramp, prefer lower-difficulty words in fallback
         const sorted = fallback.slice().sort((a, b) => a.difficulty - b.difficulty);
@@ -1394,7 +1376,6 @@
     }
 
     async function fetchWordFromAI(catId, needsMisspelling) {
-      const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[5];
       const dl = state.difficulty < 3 ? "easy" : state.difficulty < 6 ? "medium" : "hard";
       const defInstruction = state.difficulty < 4
         ? 'Write a definition so clear and specific that the word is obvious — the player should recognise the word immediately and only need to think about spelling it. Write an example sentence where the word is very obvious in context.'
@@ -1409,7 +1390,7 @@
           max_tokens: 1200,
           messages: [{
             role: "user", content:
-              `Generate a spelling challenge word for an adult spelling bee game.\n\nCategory: ${cat.name} — focus on: ${cat.prompt}\nDifficulty: ${dl} (${state.difficulty.toFixed(1)}/10)\nDo NOT use: ${state.usedWords.slice(-20).join(", ") || "none"}\n\n${defInstruction}\n\nIMPORTANT: In the sentence field replace the word with "______".\n${needsMisspelling ? 'Provide a misspelled version with EXACTLY ONE letter substituted (same word length, no additions or deletions). Include misspelled and wrongIndex (0-based).' : ''}\n\nRespond ONLY raw JSON:\n{"word":"the word","definition":"max 15 words","sentence":"with ______","category":"subcategory","misspelled":"","wrongIndex":-1}`
+              `Generate a general spelling challenge word for an adult spelling bee game.\n\nDifficulty: ${dl} (${state.difficulty.toFixed(1)}/10)\nDo NOT use: ${state.usedWords.slice(-20).join(", ") || "none"}\n\n${defInstruction}\n\nIMPORTANT: In the sentence field replace the word with "______".\n${needsMisspelling ? 'Provide a misspelled version with EXACTLY ONE letter substituted (same word length, no additions or deletions). Include misspelled and wrongIndex (0-based).' : ''}\n\nRespond ONLY raw JSON:\n{"word":"the word","definition":"max 15 words","sentence":"with ______","category":"subcategory","misspelled":"","wrongIndex":-1}`
           }]
         })
       });
@@ -1462,7 +1443,7 @@
         // Blitz: pick a fresh category for each word (50% spelling, 50% quiz)
         if (state.blitz && state.gameMode !== "math-blitz") {
           state.selectedCategory = Math.random() < 0.5
-            ? "surprise"
+            ? null
             : QUIZ_CATEGORIES[Math.floor(Math.random() * QUIZ_CATEGORIES.length)].id;
         }
 
@@ -1484,9 +1465,7 @@
         const isCapitals = isCapitalsMode();
         const isQuiz = isQuizMode();
         let next;
-        if (state.gameMode === "audio") {
-          next = "audio";
-        } else if (isCapitals || state.selectedCategory === "flags") {
+        if (isCapitals || state.selectedCategory === "flags") {
           next = "definition";
         } else if (state.selectedCategory === "elements" || state.selectedCategory === "mythology" || state.selectedCategory === "anatomy") {
           next = "definition";
@@ -1526,7 +1505,7 @@
         state.mechanic = next;
         state.currentWord = wordData;
         // Track mechanic history for anti-repeat (spelling modes only)
-        if (!isQuiz && !isCapitals && state.gameMode !== "audio" && state.selectedCategory !== "math") {
+        if (!isQuiz && !isCapitals && state.selectedCategory !== "math") {
           state.mechanicHistory.push(next);
           if (state.mechanicHistory.length > 10) state.mechanicHistory.shift();
         }
@@ -1577,7 +1556,6 @@
           if (card) { card.classList.add("word-card-enter"); }
           if (state.mechanic === "typewriter" && !state.typewriterRevealed) startTypewriter();
         }));
-        if (next === "audio") setTimeout(() => speak(wordData.word), 400);
         setTimeout(() => {
           const g = document.querySelector(".gap-input:not([disabled])");
           if (g) {
@@ -1913,7 +1891,7 @@
       }
     }
 
-    // Standard submit (audio, definition, scramble)
+    // Standard submit (definition, scramble)
     function handleSubmit() {
       if (!state.currentWord || state.transitioning) return;
       if (!state.wordInput.trim()) return;
@@ -2173,10 +2151,7 @@
       if (mode === "blitz") {
         startBlitzCountdown();
       } else if (mode === "spelling") {
-        state.selectedCategory = "surprise";
-        startGame();
-      } else if (mode === "audio") {
-        state.selectedCategory = "surprise";
+        state.selectedCategory = null;
         startGame();
       } else if (mode === "math") {
         state.screen = "math-select";
@@ -2414,10 +2389,7 @@
       const sw = state.currentWord.word.replace(/'/g, "\\'");
       let inner = "";
 
-      if (state.mechanic === "audio") {
-        inner = `<button class="speak-btn" onclick="speak('${sw}')">🔊 Hear word again</button><p class="cat-tag">${state.currentWord.category}</p>`;
-
-      } else if (state.mechanic === "definition") {
+      if (state.mechanic === "definition") {
         const isFlag = state.currentWord.isFlag;
         const defDisplay = isFlag
           ? `<div style="font-size:80px;line-height:1.3;margin-bottom:8px">${state.currentWord.definition}</div>`
@@ -2784,14 +2756,6 @@
             </div>
             <span class="mode-arrow">&#8250;</span>
           </button>
-          <button class="mode-btn audio" onclick="BeeSounds.click();goToMode('audio')">
-            <span class="mode-icon">🔊</span>
-            <div class="mode-info">
-              <div class="mode-title">Listen &amp; Spell</div>
-              <div class="mode-subtitle">Hear the word, then spell it</div>
-            </div>
-            <span class="mode-arrow">&#8250;</span>
-          </button>
           <button class="mode-btn math" onclick="BeeSounds.click();goToMode('math')">
             <span class="mode-icon">🔢</span>
             <div class="mode-info">
@@ -2903,7 +2867,7 @@
       const cardHTML = renderMechanicCard();
 
       const showMC = state.isMultipleChoice && state.currentWord && !state.loading;
-      const showWordInput = !showMC && state.currentWord && !state.loading && (["audio", "definition"].includes(state.mechanic) || (state.mechanic === "typewriter" && state.typewriterRevealed)) && !state.currentWord.isMath;
+      const showWordInput = !showMC && state.currentWord && !state.loading && (state.mechanic === "definition" || (state.mechanic === "typewriter" && state.typewriterRevealed)) && !state.currentWord.isMath;
       const showStandardInput = showWordInput; // alias kept for clarity
       const showGapSubmit = !showMC && state.currentWord && !state.loading && state.mechanic === "lettergap";
       const showBuiltinKeyboard = showWordInput || showGapSubmit;
@@ -3195,7 +3159,7 @@
         if (e.key === "Enter") { e.preventDefault(); handleGapSubmit(); return; }
         if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) { e.preventDefault(); gapKbLetter(e.key); return; }
       }
-      if (!["audio", "definition", "typewriter"].includes(state.mechanic)) return;
+      if (!["definition", "typewriter"].includes(state.mechanic)) return;
       if (e.key === "Enter") { e.preventDefault(); handleSubmit(); }
       else if (e.key === "Backspace") { e.preventDefault(); kbBackspace(e); }
       else if (e.key.length === 1) { e.preventDefault(); kbPress(e, e.key.toUpperCase()); }
