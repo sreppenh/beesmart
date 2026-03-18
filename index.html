@@ -1914,9 +1914,9 @@
       const [item] = state.scrambleRemaining.splice(idx, 1);
       state.scrambleSelected.push(item);
       render();
-      if (state.scrambleSelected.length === state.currentWord.word.length) {
+      if (state.scrambleRemaining.length === 0) {
         setTimeout(() => {
-          if (state.scrambleSelected.length === state.currentWord.word.length && !state.transitioning)
+          if (state.scrambleRemaining.length === 0 && !state.transitioning)
             handleScrambleSubmit();
         }, 450);
       }
@@ -1978,14 +1978,26 @@
 
     function handleScrambleSubmit() {
       if (!state.currentWord || state.transitioning) return;
-      if (state.scrambleSelected.length !== state.currentWord.word.length) return;
-      const typed = state.scrambleSelected.map(x => x.l).join("");
-      const correct = typed === state.currentWord.word.toUpperCase();
+      const word = state.currentWord.word;
+      const wordLen = word.length;
+      const hintCount = (state.hintRevealed || []).filter(x => x !== null).length;
+      if (state.scrambleSelected.length !== wordLen - hintCount) return;
+      // Build answer by merging hint-locked positions and player-placed letters
+      const result = Array(wordLen).fill('');
+      if (state.hintRevealed) {
+        state.hintRevealed.forEach((ch, i) => { if (ch !== null) result[i] = ch.toUpperCase(); });
+      }
+      let sIdx = 0;
+      for (let i = 0; i < wordLen; i++) {
+        if (result[i] === '') result[i] = state.scrambleSelected[sIdx++].l;
+      }
+      const typed = result.join('');
+      const correct = typed === word.toUpperCase();
       if (correct) {
         handleCorrect();
       } else {
         state.lastAttempt = typed;
-        // Reset tiles back to the pool so player can rearrange
+        // Reset tiles back to the pool so player can rearrange (hint tiles stay removed)
         state.scrambleRemaining = [...state.scrambleSelected, ...state.scrambleRemaining];
         state.scrambleSelected = [];
         handleMissedAttempt();
@@ -2111,6 +2123,11 @@
           const pick = pickHintPosition();
           if (pick === -1) { render(); return; }
           state.hintRevealed[pick] = word[pick];
+          if (state.mechanic === "scramble") {
+            const hintedLetter = word[pick].toUpperCase();
+            const idx = state.scrambleRemaining.findIndex(t => t.l === hintedLetter);
+            if (idx !== -1) state.scrambleRemaining.splice(idx, 1);
+          }
           state.hintLevel = 1;
           state.score = Math.max(0, state.score - 1);
         } else {
@@ -2123,6 +2140,11 @@
         const pick = pickHintPosition();
         if (pick === -1) return;
         state.hintRevealed[pick] = word[pick];
+        if (state.mechanic === "scramble") {
+          const hintedLetter = word[pick].toUpperCase();
+          const idx = state.scrambleRemaining.findIndex(t => t.l === hintedLetter);
+          if (idx !== -1) state.scrambleRemaining.splice(idx, 1);
+        }
         state.hintLevel++;
         state.score = Math.max(0, state.score - state.hintLevel);
       }
@@ -2384,14 +2406,33 @@
         }
 
       } else if (state.mechanic === "scramble") {
-        const placed = state.scrambleSelected.map(x => x.l).join("");
-        const remaining = "_".repeat(state.currentWord.word.length - placed.length);
-        const displaySize = state.currentWord.word.length > 12 ? '18px' : '24px';
+        const word = state.currentWord.word;
+        const wordLen = word.length;
+        const displaySize = wordLen > 12 ? '18px' : '24px';
+        // Build unified slot array merging hint-locked and player-placed positions
+        const slots = Array(wordLen).fill(null).map((_, i) => {
+          if (state.hintRevealed && state.hintRevealed[i] !== null && state.hintRevealed[i] !== undefined) {
+            return { letter: state.hintRevealed[i].toUpperCase(), type: 'hint' };
+          }
+          return { letter: '_', type: 'empty' };
+        });
+        let placedIdx = 0;
+        for (let i = 0; i < wordLen && placedIdx < state.scrambleSelected.length; i++) {
+          if (slots[i].type === 'empty') {
+            slots[i] = { letter: state.scrambleSelected[placedIdx].l, type: 'placed' };
+            placedIdx++;
+          }
+        }
+        const answerBar = slots.map(s => {
+          if (s.type === 'hint') return `<span class="scramble-hint-slot">${s.letter}</span>`;
+          if (s.type === 'placed') return `<span class="scramble-placed">${s.letter}</span>`;
+          return `<span class="scramble-empty">_</span>`;
+        }).join('');
         const poolTiles = state.scrambleRemaining.map(x =>
           `<span class="s-letter" onclick="scrambleSelect(${x.id})">${x.l}</span>`
         ).join("");
         inner = `
-<div class="scramble-text-display" style="font-size:${displaySize}"><span class="scramble-placed">${placed}</span><span class="scramble-empty">${remaining}</span></div>
+<div class="scramble-text-display" style="font-size:${displaySize}">${answerBar}</div>
 <div style="display:flex;justify-content:flex-end;margin-top:6px">
   <button class="scramble-undo-btn" onclick="scrambleUndo()" ${state.scrambleSelected.length === 0 ? 'disabled' : ''}>⌫ Undo</button>
 </div>
@@ -2961,7 +3002,7 @@
       <div class="game-body">
         ${cardHTML}
         ${state.feedback ? `<div class="feedback ${state.feedback.type}">${state.feedback.msg}${state.lastAttempt && state.feedback.type !== 'correct' && state.mechanic !== 'oneletteroff' ? `<div style="margin-top:6px;font-size:0.88em;opacity:0.9">You typed: <span style="color:#ff8a80">"${state.lastAttempt}"</span></div>` : ''}</div>` : ""}
-        ${state.hintLevel >= 1 && state.mechanic !== "lettergap" ? `
+        ${state.hintLevel >= 1 && state.mechanic !== "lettergap" && state.mechanic !== "scramble" ? `
   <div class="hint-tiles">
     ${state.hintRevealed.map(ch =>
       ch ? `<span class="hint-tile revealed">${ch.toUpperCase()}</span>`

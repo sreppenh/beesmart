@@ -492,6 +492,7 @@ h1 {
 }
 .scramble-placed { color: var(--yellow); }
 .scramble-empty  { color: var(--muted);  }
+.scramble-hint-slot { color: var(--text); opacity: 0.55; }
 
 .scramble-undo-btn {
   background: none;
