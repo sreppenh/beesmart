@@ -1537,6 +1537,7 @@
         state.feedback = { type: "correct", msg: `✓ +${timeBonus}s${streakBonus ? " 🔥" : ""}` };
         state.transitioning = true;
         saveProgress();
+        state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
         render();
         setTimeout(() => { if (state.blitzExpired) { endBlitzGame(); return; } loadNextWord(); }, 1000);
       } else {
@@ -1559,6 +1560,7 @@
         state.transitioning = true;
         saveProgress();
         saveSession();
+        state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
         render();
         setTimeout(() => loadNextWord(), 1400);
       }
@@ -1576,6 +1578,7 @@
         const bs = getCatStats(bk);
         setCatStats(bk, { wordsAttempted: bs.wordsAttempted + 1 });
         state.feedback = { type: "wrong", msg: revealMsg };
+        state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
         render();
         setTimeout(() => {
           if (state.blitzExpired || state.blitzTimeRemaining <= 0) { endBlitzGame(); return; }
@@ -1592,10 +1595,12 @@
           const finalCs = getCatStats(key);
           if (state.score > finalCs.bestScore) setCatStats(key, { bestScore: state.score });
           state.feedback = { type: "wrong", msg: revealMsg };
+          state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
           render(); setTimeout(() => { state.screen = "gameover"; render(); }, 2000);
         } else {
           saveSession();
           state.feedback = { type: "wrong", msg: revealMsg };
+          state.isMultipleChoice = false; state.multipleChoiceOptions = []; state.mcAnswered = false;
           render(); setTimeout(() => loadNextWord(), 1800);
         }
       }
