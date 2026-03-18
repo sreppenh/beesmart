@@ -517,6 +517,10 @@
       }
       function guard() { return !state.soundEnabled; }
       return {
+        unlock() {
+          try { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+          try { if (ctx && ctx.state === 'suspended') ctx.resume(); } catch (e) {}
+        },
         click() {
           if (guard()) return;
           const ac = getCtx();
@@ -557,6 +561,13 @@
       u.rate = 0.85; u.pitch = 1;
       window.speechSynthesis.speak(u);
     }
+
+    // Unlock Web Audio + speechSynthesis on first user gesture (iOS/Safari requirement)
+    document.addEventListener('click', function unlockOnFirstGesture() {
+      try { BeeSounds.unlock(); } catch (e) {}
+      try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; window.speechSynthesis.speak(u); } catch (e) {}
+      document.removeEventListener('click', unlockOnFirstGesture);
+    }, { once: true });
 
     function showToast(msg) {
       const t = document.getElementById("toast");
