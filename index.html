@@ -1885,8 +1885,12 @@
     function goHome() {
       window.speechSynthesis.cancel();
       if (state.blitzTimerInterval) { clearInterval(state.blitzTimerInterval); state.blitzTimerInterval = null; }
+      if (state.gameMode === "blitz" || state.gameMode === "math-blitz") {
+        clearSession();
+      } else {
+        saveSession();
+      }
       state.blitz = false;
-      clearSession();
       state.screen = "home"; state.currentWord = null; state.feedback = null;
       render();
     }
