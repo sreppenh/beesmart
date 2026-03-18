@@ -1645,7 +1645,7 @@
       }
     }
 
-    function handleWrong(revealMsg) {
+    function handleWrong(revealMsg, skipLivesDeduction = false) {
       if (state.currentWord && !state.currentWord.isMath) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, false);
       state.streak = 0;
       state.difficulty = Math.max(1, state.difficulty - 0.3);
@@ -1664,7 +1664,7 @@
           loadNextWord();
         }, 1400);
       } else {
-        state.lives -= 1;
+        if (!skipLivesDeduction) state.lives -= 1;
         const key = getStatsKey();
         const cs = getCatStats(key);
         setCatStats(key, { difficulty: state.difficulty, wordsAttempted: cs.wordsAttempted + 1 });
@@ -1833,9 +1833,15 @@
           state.wordsearchSelected = [];
           wsRenderSelection();
           state.attempts++;
-          if (state.attempts >= 3) {
+          if (state.blitz) {
             handleWrong(`It was "${state.currentWord.word}"`);
+          } else if (state.attempts >= 3) {
+            handleWrong(`It was "${state.currentWord.word}"`, true);
           } else {
+            if (state.attempts === 1) {
+              state.lives -= 1;
+              if (state.lives <= 0) { handleWrong(`It was "${state.currentWord.word}"`, true); return; }
+            }
             state.feedback = { type: "try", msg: "Not quite — try again!" };
             render();
           }
@@ -1846,14 +1852,24 @@
     function handleMissedAttempt() {
       BeeSounds.wrong();
       state.attempts += 1;
-      // hint no longer auto-revealed on failed attempts
-      if (state.attempts >= 2) {
+      if (state.blitz) {
         handleWrong(`It was "${state.currentWord.word}"`);
-      } else {
+        return;
+      }
+      if (state.attempts === 1) {
+        // First miss: deduct a heart now, let them retry
+        state.lives -= 1;
+        if (state.lives <= 0) {
+          handleWrong(`It was "${state.currentWord.word}"`, true);
+          return;
+        }
         state.feedback = { type: "try", msg: "Not quite — try again!" };
         const row = document.querySelector(".input-row, .gap-input-row");
         if (row) { row.classList.add("shake"); setTimeout(() => row.classList.remove("shake"), 300); }
         render();
+      } else {
+        // Second miss: reveal answer, heart already lost
+        handleWrong(`It was "${state.currentWord.word}"`, true);
       }
     }
 
