@@ -1519,7 +1519,7 @@
       if (state.currentWord && !state.currentWord.isMath) updateSpacedRepetition(state.currentWord.word, state.currentWord.catId || state.selectedCategory, true);
       state.streak += 1;
       const prevDiff = state.difficulty;
-      const diffIncrease = state.isMultipleChoice ? 0.1 : (state.hintUsed ? 0.2 : 0.4);
+      const diffIncrease = state.isMultipleChoice ? 0.1 : (state.hintUsed ? 0.2 : 0.5);
       state.difficulty = Math.min(10, state.difficulty + diffIncrease);
       if ([3, 5, 8].includes(state.streak)) showCelebration(state.streak);
 
