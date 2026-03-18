@@ -331,6 +331,7 @@
       sessionWordCount: 0,
       warmupRamp: false,
       resetConfirm: null, // 'blitz' | 'quiz' | 'all' | null
+      continueModal: null, // { key, savedSession } | null
       // Multiple choice
       isMultipleChoice: false,
       multipleChoiceOptions: [],
@@ -353,6 +354,8 @@
     function loadFromStorage(k) { try { const v = localStorage.getItem("beesmart_" + k); return v ? JSON.parse(v) : null; } catch { return null; } }
 
     function initStorage() {
+      // Migration: discard old single-key session if present
+      try { localStorage.removeItem("beesmart_session"); } catch { }
       const cs = loadFromStorage("category_stats");
       if (cs) state.categoryStats = cs;
       const ds = loadFromStorage("dailystreak");
@@ -433,8 +436,21 @@
       render();
     }
 
+    function getSessionKey() {
+      if (state.gameMode === "blitz" || state.gameMode === "math-blitz") return null;
+      const cat = state.selectedCategory;
+      if (!cat) return null;
+      if (cat === "general") return "spelling";
+      if (cat === "math") return "math";
+      const quizCats = ["countries", "states", "elements", "flags", "mythology", "anatomy"];
+      if (quizCats.includes(cat)) return cat;
+      return null;
+    }
+
     function saveSession() {
-      saveToStorage("session", {
+      const key = getSessionKey();
+      if (!key) return;
+      saveToStorage("session_" + key, {
         score: state.score, lives: state.lives, streak: state.streak,
         difficulty: state.difficulty, usedWords: state.usedWords,
         mechanicHistory: state.mechanicHistory,
@@ -442,21 +458,58 @@
       });
     }
 
-    function clearSession() {
-      try { localStorage.removeItem("beesmart_session"); } catch { }
+    function clearSession(key) {
+      if (!key) key = getSessionKey();
+      if (!key) return;
+      try { localStorage.removeItem("beesmart_session_" + key); } catch { }
     }
 
-    function resumeGame() {
-      const saved = loadFromStorage("session");
-      if (!saved) return;
-      state.selectedCategory = saved.selectedCategory;
-      state.gameMode = saved.gameMode || null;
-      state.score = saved.score; state.lives = saved.lives;
-      state.streak = saved.streak; state.difficulty = saved.difficulty;
-      state.usedWords = saved.usedWords || [];
-      state.mechanicHistory = saved.mechanicHistory || [];
+    function continueModalResume() {
+      const { savedSession } = state.continueModal;
+      state.continueModal = null;
+      state.selectedCategory = savedSession.selectedCategory;
+      state.gameMode = savedSession.gameMode || null;
+      state.score = savedSession.score; state.lives = savedSession.lives;
+      state.streak = savedSession.streak; state.difficulty = savedSession.difficulty;
+      state.usedWords = savedSession.usedWords || [];
+      state.mechanicHistory = savedSession.mechanicHistory || [];
       state.screen = "game"; state.currentWord = null; state.feedback = null;
       loadNextWord();
+    }
+
+    function continueModalNewGame() {
+      const { key } = state.continueModal;
+      state.continueModal = null;
+      clearSession(key);
+      startGame();
+    }
+
+    function renderContinueModal(app) {
+      const existing = document.getElementById("continue-modal");
+      if (existing) existing.remove();
+      const m = state.continueModal;
+      const modeLabels = {
+        spelling: "Spelling", math: "Mental Math Classic",
+        countries: "Countries & Capitals", states: "States & Capitals",
+        elements: "Periodic Elements", flags: "World Flags",
+        mythology: "Mythology", anatomy: "Human Anatomy"
+      };
+      const label = modeLabels[m.key] || m.key;
+      const el = document.createElement("div");
+      el.id = "continue-modal";
+      el.className = "continue-modal-overlay";
+      el.onclick = (e) => { if (e.target === el) { BeeSounds.click(); continueModalNewGame(); } };
+      el.innerHTML = `
+        <div class="continue-modal-card share-card">
+          <div class="gameover-bee">🐝</div>
+          <h2 class="gameover-title">Continue your game?</h2>
+          <p class="gameover-cat">${label} &middot; ${m.savedSession.score} pts &middot; ${m.savedSession.lives} &#9829; left</p>
+          <div class="continue-modal-btns">
+            <button class="btn-primary" style="padding:14px" onclick="BeeSounds.click();continueModalResume()">Continue</button>
+            <button class="btn-secondary" onclick="BeeSounds.click();continueModalNewGame()">New Game</button>
+          </div>
+        </div>`;
+      app.appendChild(el);
     }
 
     function diffLabel(d) {
@@ -2056,7 +2109,19 @@
       }
     }
 
-    function selectCategory(id) { state.selectedCategory = id; startGame(); }
+    function selectCategory(id) {
+      state.selectedCategory = id;
+      const quizCats = ["countries", "states", "elements", "flags", "mythology", "anatomy"];
+      if (quizCats.includes(id)) {
+        const saved = loadFromStorage("session_" + id);
+        if (saved && saved.lives > 0) {
+          state.continueModal = { key: id, savedSession: saved };
+          render();
+          return;
+        }
+      }
+      startGame();
+    }
 
     function startGame() {
       if (!state.selectedCategory) return;
@@ -2157,7 +2222,13 @@
         startBlitzCountdown();
       } else if (mode === "spelling") {
         state.selectedCategory = "general";
-        startGame();
+        const spellingSession = loadFromStorage("session_spelling");
+        if (spellingSession && spellingSession.lives > 0) {
+          state.continueModal = { key: "spelling", savedSession: spellingSession };
+          render();
+        } else {
+          startGame();
+        }
       } else if (mode === "math") {
         state.screen = "math-select";
         render();
@@ -2269,7 +2340,13 @@
     function startMathGame() {
       state.gameMode = "math";
       state.selectedCategory = "math";
-      startGame();
+      const mathSession = loadFromStorage("session_math");
+      if (mathSession && mathSession.lives > 0) {
+        state.continueModal = { key: "math", savedSession: mathSession };
+        render();
+      } else {
+        startGame();
+      }
     }
 
     function startMathBlitzCountdown() {
@@ -2584,8 +2661,6 @@
     }
 
     function renderHome(app) {
-      const savedSession = loadFromStorage("session");
-      const showResume = savedSession && savedSession.lives > 0 && savedSession.score > 0;
       const allCatStats = Object.values(state.categoryStats);
       const overallBest = allCatStats.length ? Math.max(0, ...allCatStats.map(s => s.bestScore || 0)) : 0;
       const spellingStats = state.categoryStats["spelling"];
@@ -2754,7 +2829,6 @@
           <h1>BeeSmart</h1>
           <p class="tagline">Sharpen your spelling. One word at a time.</p>
         </div>
-        ${showResume ? `<button class="btn-primary" onclick="BeeSounds.click();resumeGame()" style="margin-bottom:4px">▶ Resume game — ${savedSession.score} pts, ${savedSession.lives} ♥ left</button>` : ""}
         <div class="stats-row">
           <div class="stat-box"><span class="stat-num">${overallBest}</span><span class="stat-label">Best</span></div>
           <div class="stat-divider"></div>
@@ -3029,12 +3103,13 @@
 
     function render() {
       const app = document.getElementById("app");
-      if (state.screen === "blitz-countdown") return renderBlitzCountdown(app);
-      if (state.screen === "math-select")     return renderMathSelect(app);
-      if (state.screen === "home")            return renderHome(app);
-      if (state.screen === "quiz")            return renderQuizSelect(app);
-      if (state.screen === "gameover")        return renderGameOver(app);
-      renderGame(app);
+      if (state.screen === "blitz-countdown") renderBlitzCountdown(app);
+      else if (state.screen === "math-select") renderMathSelect(app);
+      else if (state.screen === "home")        renderHome(app);
+      else if (state.screen === "quiz")        renderQuizSelect(app);
+      else if (state.screen === "gameover")    renderGameOver(app);
+      else renderGame(app);
+      if (state.continueModal) renderContinueModal(app);
     }
 
     // Auto-advance between gap inputs

@@ -2689,3 +2689,34 @@ body.day .beeblitz-best-row {
   left: 0;
   pointer-events: none;
 }
+
+/* ─── CONTINUE MODAL ─────────────────────────────────────────────────────────── */
+
+.continue-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+}
+
+.continue-modal-card {
+  max-width: 340px;
+  width: 100%;
+}
+
+.continue-modal-btns {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.continue-modal-btns .btn-primary,
+.continue-modal-btns .btn-secondary {
+  flex: 1;
+  width: auto;
+}
