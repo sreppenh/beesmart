@@ -2067,18 +2067,18 @@
         // Clicking the selected letter again deselects it
         state.selectedOloIndex = -1;
         state.oloPhase = "select";
-        render();
+        setTimeout(() => render(), 0);
         return;
       }
       if (state.oloPhase === "fix") {
         // Clicking a different letter switches the selection
         state.selectedOloIndex = idx;
-        render();
+        setTimeout(() => render(), 0);
         return;
       }
       state.selectedOloIndex = idx;
       state.oloPhase = "fix";
-      render();
+      setTimeout(() => render(), 0);
     }
 
     // One letter off: submit the fix
@@ -2546,19 +2546,16 @@
           if (state.selectedOloIndex === i) cls += " selected-wrong";
           return `<span class="${cls}" onpointerdown="event.preventDefault();oloClickLetter(${i})">${l}</span>`;
         }).join("");
-        let fixHTML = "";
-        if (state.oloPhase === "fix") {
-          const oloKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
-            .map(l => `<button class="olo-key" onpointerdown="event.preventDefault();oloPickLetter('${l}')">${l}</button>`)
-            .join("");
-          fixHTML = `<div class="olo-fix-section">
+        const oloKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+          .map(l => `<button class="olo-key" onpointerdown="event.preventDefault();oloPickLetter('${l}')">${l}</button>`)
+          .join("");
+        const fixHTML = `<div class="olo-fix-section" style="${state.oloPhase !== 'fix' ? 'visibility:hidden' : ''}">
           <p class="olo-fix-label">Replace with:</p>
           <div class="olo-key-grid">${oloKeys}</div>
         </div>`;
-        }
         inner = `
-        <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the letter that is spelled incorrectly" : "Tap the correct letter"}</p>
-        <div class="olo-row" style="margin-top:12px">${tiles}</div>
+        <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the incorrect letter" : "Tap the correct letter"}</p>
+        <div class="olo-row" style="margin-top:12px${state.transitioning ? ';pointer-events:none' : ''}">${tiles}</div>
         ${fixHTML}
         <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
         <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
