@@ -1851,8 +1851,6 @@
 
     function wsPointerDown(e) {
       wsStartAt(e.clientX, e.clientY);
-      const grid = document.getElementById('ws-grid');
-      if (grid) try { grid.setPointerCapture(e.pointerId); } catch (_) {}
     }
 
     function wsPointerMove(e) {
