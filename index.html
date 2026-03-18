@@ -626,6 +626,36 @@
       return false;
     }
 
+    // Lookup maps for famous non-capital trap cities
+    const CAPITAL_TRAPS = {
+      "Australia": "Sydney", "Brazil": "Rio de Janeiro", "Canada": "Toronto",
+      "United States": "New York", "India": "Mumbai", "China": "Shanghai",
+      "Japan": "Osaka", "Germany": "Munich", "Turkey": "Istanbul",
+      "Nigeria": "Lagos", "Pakistan": "Karachi", "Egypt": "Alexandria",
+      "Vietnam": "Ho Chi Minh City", "Switzerland": "Geneva", "Morocco": "Casablanca",
+      "Myanmar": "Yangon", "Colombia": "Medellín", "South Africa": "Cape Town",
+      "New Zealand": "Auckland", "Argentina": "Córdoba",
+    };
+    const STATE_TRAPS = {
+      "New York": "New York City", "California": "Los Angeles", "Texas": "Houston",
+      "Florida": "Miami", "Illinois": "Chicago", "Pennsylvania": "Philadelphia",
+      "Michigan": "Detroit", "Missouri": "St. Louis", "Louisiana": "New Orleans",
+      "Nevada": "Las Vegas", "Alaska": "Anchorage", "Tennessee": "Memphis",
+      "Wisconsin": "Milwaukee", "New Jersey": "Newark", "Ohio": "Cleveland",
+    };
+
+    // Generate fake-but-plausible element symbols from an element's name
+    function genFakeSymbols(name) {
+      const realSymbols = new Set(ELEMENTS.map(e => e.symbol));
+      const candidates = [
+        name[0].toUpperCase() + name[1].toLowerCase(),
+        name[0].toUpperCase() + (name[2] || '').toLowerCase(),
+        name[0].toUpperCase() + name[name.length - 1].toLowerCase(),
+        name[0].toUpperCase() + (name[Math.floor(name.length / 2)] || '').toLowerCase(),
+      ];
+      return [...new Set(candidates)].filter(s => s.length === 2 && /^[A-Z][a-z]$/.test(s) && !realSymbols.has(s));
+    }
+
     function generateMCOptions() {
       const word = state.currentWord;
       if (!word) return [];
@@ -656,12 +686,18 @@
         const notCorrect = (e) => e[idField] !== correctId;
         const used = new Set([correctAnswer]);
 
+        // Trap city: famous non-capital that players commonly confuse for the real one
+        if (isCapitalAnswer) {
+          const trapCity = (catId === 'countries' ? CAPITAL_TRAPS : STATE_TRAPS)[correctId];
+          if (trapCity && !used.has(trapCity)) { distractors.push(trapCity); used.add(trapCity); }
+        }
+
         const sameRegion = region ? dataset.filter(e => e.region === region && notCorrect(e)) : [];
         const higherTier = currentTier < 3 ? dataset.filter(e => e.difficulty > currentTier && notCorrect(e)) : [];
         const anyOther = dataset.filter(notCorrect);
 
-        if (numDistractors > 1) fillFrom(higherTier, getAnswer, 1, used);
         fillFrom(sameRegion, getAnswer, numDistractors - distractors.length, used);
+        fillFrom(higherTier, getAnswer, 1, used);
         fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
       } else if (catId === 'elements') {
@@ -673,13 +709,22 @@
         const notThisEntry = (e) => e.name !== entry.name;
         const used = new Set([correctAnswer]);
 
-        // For name answers prefer same group; for symbol answers prefer nearby atomic numbers
         const sameGroup = group ? ELEMENTS.filter(e => e.group === group && notThisEntry(e)) : [];
         const nearbyNum = number ? ELEMENTS.filter(e => Math.abs(e.number - number) <= 10 && notThisEntry(e)) : [];
         const higherTier = currentTier < 3 ? ELEMENTS.filter(e => e.difficulty > currentTier && notThisEntry(e)) : [];
         const anyOther = ELEMENTS.filter(notThisEntry);
 
-        fillFrom(isNameAnswer ? sameGroup : nearbyNum, getAnswer, numDistractors - 1, used);
+        if (isNameAnswer) {
+          // Combine same-group and nearby-number for trickier name distractors
+          const namePool = [...sameGroup, ...nearbyNum].filter((e, i, arr) => arr.indexOf(e) === i);
+          fillFrom(namePool, getAnswer, numDistractors - 1, used);
+        } else {
+          // Symbol answer: inject fake-but-plausible symbols (e.g. "So" for Sodium) before real ones
+          for (const fs of genFakeSymbols(entry.name).sort(() => Math.random() - 0.5)) {
+            if (distractors.length < numDistractors - 1 && !used.has(fs)) { distractors.push(fs); used.add(fs); }
+          }
+          fillFrom(nearbyNum, getAnswer, numDistractors - 1 - distractors.length, used);
+        }
         fillFrom(higherTier, getAnswer, 1, used);
         fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
@@ -691,17 +736,17 @@
         const used = new Set([correctAnswer]);
 
         const sameRegion = region ? FLAGS.filter(f => f.region === region && notThisEntry(f)) : [];
-        const higherTier = currentTier < 3 ? FLAGS.filter(f => f.difficulty > currentTier && notThisEntry(f)) : [];
         const anyOther = FLAGS.filter(notThisEntry);
 
-        if (numDistractors > 1) fillFrom(higherTier, getAnswer, 1, used);
-        fillFrom(sameRegion, getAnswer, numDistractors - distractors.length, used);
+        // Always include at least 1 same-region distractor (visually similar flags are trickier)
+        fillFrom(sameRegion, getAnswer, Math.max(1, numDistractors - 1), used);
         fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
       } else if (catId === 'mythology') {
         const entry = word.entry;
         const pantheon = entry && entry.pantheon;
-        const getAnswer = (m) => word.word === entry.roman ? m.roman : m.name;
+        const isAskingForRoman = word.word === entry.roman && entry.roman !== entry.name;
+        const getAnswer = (m) => isAskingForRoman ? m.roman : m.name;
         const notThisEntry = (m) => m.name !== entry.name;
         const used = new Set([correctAnswer]);
 
@@ -709,7 +754,15 @@
         const higherTier = currentTier < 3 ? MYTHOLOGY.filter(m => m.difficulty > currentTier && notThisEntry(m)) : [];
         const anyOther = MYTHOLOGY.filter(notThisEntry);
 
+        // Cross-pantheon trap: slip in the opposite name type (Greek↔Roman) to catch guessers
+        const crossPantheonPool = MYTHOLOGY
+          .filter(m => notThisEntry(m) && m.roman !== m.name)
+          .map(m => isAskingForRoman ? m.name : m.roman)
+          .sort(() => Math.random() - 0.5);
+        const crossPick = crossPantheonPool.find(n => !used.has(n));
+
         fillFrom(samePantheon, getAnswer, numDistractors - 1, used);
+        if (crossPick && distractors.length < numDistractors) { distractors.push(crossPick); used.add(crossPick); }
         fillFrom(higherTier, getAnswer, 1, used);
         fillFrom(anyOther, getAnswer, numDistractors - distractors.length, used);
 
