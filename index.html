@@ -315,7 +315,7 @@
       difficulty: 1, currentWord: null,
       mechanic: "audio", hintLevel: 0, hintRevealed: [],
       hintUsed: false, attempts: 0,
-      usedWords: [], transitioning: false,
+      usedWords: [], mechanicHistory: [], transitioning: false,
       scrambled: "", scrambleSelected: [], scrambleRemaining: [], loading: false, feedback: null,
       // letter gap
       gapIndices: [], gapAnswers: [],
@@ -443,6 +443,7 @@
       saveToStorage("session", {
         score: state.score, lives: state.lives, streak: state.streak,
         difficulty: state.difficulty, usedWords: state.usedWords,
+        mechanicHistory: state.mechanicHistory,
         selectedCategory: state.selectedCategory, gameMode: state.gameMode
       });
     }
@@ -459,6 +460,7 @@
       state.score = saved.score; state.lives = saved.lives;
       state.streak = saved.streak; state.difficulty = saved.difficulty;
       state.usedWords = saved.usedWords || [];
+      state.mechanicHistory = saved.mechanicHistory || [];
       state.screen = "game"; state.currentWord = null; state.feedback = null;
       loadNextWord();
     }
@@ -1428,12 +1430,36 @@
             const fallbackPool = ["scramble", "lettergap", "oneletteroff"];
             next = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
           }
+          // Anti-repeat: prevent same mechanic 3x in a row
+          const mhist = state.mechanicHistory;
+          if (mhist.length >= 2 && mhist[mhist.length - 1] === next && mhist[mhist.length - 2] === next) {
+            const altPool = (state.blitz ? BLITZ_MECHANICS : MECHANICS).filter(m => m !== next);
+            if (altPool.length > 0) {
+              let alt = altPool[Math.floor(Math.random() * altPool.length)];
+              if (alt === "typewriter" && state.difficulty < 6) { const fp = ["scramble", "lettergap", "oneletteroff"]; alt = fp[Math.floor(Math.random() * fp.length)]; }
+              if (alt === "definition" && state.difficulty < 5) { const fp = ["scramble", "lettergap", "oneletteroff"]; alt = fp[Math.floor(Math.random() * fp.length)]; }
+              next = alt;
+            }
+          }
         }
         const wordData = await fetchWord(!isQuiz && next === "oneletteroff");
         if (wordData.mechanic) next = wordData.mechanic;
         state.mechanic = next;
         state.currentWord = wordData;
-        state.usedWords.push(wordData.word);
+        // Track mechanic history for anti-repeat (spelling modes only)
+        if (!isQuiz && !isCapitals && state.gameMode !== "audio" && state.selectedCategory !== "math") {
+          state.mechanicHistory.push(next);
+          if (state.mechanicHistory.length > 10) state.mechanicHistory.shift();
+        }
+        // Track used entry by unique ID to prevent re-asking same entry with different framing
+        let usedId = wordData.word;
+        if (wordData.entry) {
+          const cat = wordData.catId || state.selectedCategory;
+          if (cat === 'countries') usedId = wordData.entry.country;
+          else if (cat === 'states') usedId = wordData.entry.state;
+          else if (cat === 'elements' || cat === 'mythology' || cat === 'anatomy') usedId = wordData.entry.name;
+        }
+        state.usedWords.push(usedId);
         state.sessionWordCount += 1;
 
         // Determine multiple choice (quiz mode only, not scramble mechanic)
@@ -1776,7 +1802,7 @@
       }
       state.sessionWordCount = 0;
       state.screen = "game"; state.lives = 3; state.score = 0;
-      state.streak = 0; state.usedWords = []; state.currentWord = null; state.feedback = null;
+      state.streak = 0; state.usedWords = []; state.mechanicHistory = []; state.currentWord = null; state.feedback = null;
       loadNextWord();
     }
 
