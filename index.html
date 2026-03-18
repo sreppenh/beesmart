@@ -1762,7 +1762,13 @@
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
           const el = document.getElementById(`wsc-${r}-${c}`);
-          if (el) el.classList.toggle('ws-selected', sel.some(s => s.row === r && s.col === c));
+          if (el) {
+            const isSel = sel.some(s => s.row === r && s.col === c);
+            el.classList.toggle('ws-selected', isSel);
+            if (!el.classList.contains('ws-hint-cell')) {
+              el.style.color = isSel ? 'var(--yellow)' : '';
+            }
+          }
         }
       }
       const line = document.getElementById('ws-line');
@@ -1773,29 +1779,40 @@
       }
     }
 
+    function wsCellAt(clientX, clientY) {
+      const gridEl = document.getElementById('ws-grid');
+      if (!gridEl) return null;
+      const rect = gridEl.getBoundingClientRect();
+      const cs = parseInt(gridEl.dataset.cellSize || '50');
+      const stride = cs + 2;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x < 0 || y < 0 || x >= rect.width || y >= rect.height) return null;
+      const c = Math.floor(x / stride);
+      const r = Math.floor(y / stride);
+      const size = state.wordsearchGrid.length;
+      if (r < 0 || r >= size || c < 0 || c >= size) return null;
+      return {row: r, col: c};
+    }
+
     function wsStartAt(clientX, clientY) {
-      const el = document.elementFromPoint(clientX, clientY);
-      if (!el || !el.id.startsWith('wsc-')) return;
-      const [, r, c] = el.id.split('-').map(Number);
-      if (isNaN(r) || isNaN(c)) return;
+      const cell = wsCellAt(clientX, clientY);
+      if (!cell) return;
       state.wordsearchDragging = true;
-      state.wordsearchSelected = [{row: r, col: c}];
+      state.wordsearchSelected = [cell];
       wsRenderSelection();
     }
 
     function wsMoveAt(clientX, clientY) {
       if (!state.wordsearchDragging) return;
-      const el = document.elementFromPoint(clientX, clientY);
-      if (!el || !el.id.startsWith('wsc-')) return;
-      const parts = el.id.split('-');
-      if (parts.length !== 3) return;
-      const r = parseInt(parts[1]), c = parseInt(parts[2]);
-      if (isNaN(r) || isNaN(c)) return;
+      const cell = wsCellAt(clientX, clientY);
+      if (!cell) return;
+      const {row: r, col: c} = cell;
       const sel = state.wordsearchSelected;
       if (sel.some(s => s.row === r && s.col === c)) return;
       const last = sel[sel.length - 1];
       if (!last || Math.abs(r - last.row) > 1 || Math.abs(c - last.col) > 1) return;
-      sel.push({row: r, col: c});
+      sel.push(cell);
       wsRenderSelection();
     }
 
@@ -2505,7 +2522,10 @@
           row.map((cell, c) => {
             const isHint = hintSet.has(`${r},${c}`);
             const isSelected = selSet.has(`${r},${c}`);
-            return `<div class="ws-cell${isHint ? ' ws-hint-cell' : ''}${isSelected ? ' ws-selected' : ''}" id="wsc-${r}-${c}" data-row="${r}" data-col="${c}" style="width:${cs}px;height:${cs}px;line-height:${cs}px;font-size:${Math.round(cs * 0.42)}px">${cell.letter}</div>`;
+            const extraStyle = isHint
+              ? ';background:var(--border);color:var(--yellow);border-color:var(--yellow);opacity:0.85'
+              : isSelected ? ';color:var(--yellow)' : '';
+            return `<div class="ws-cell${isHint ? ' ws-hint-cell' : ''}${isSelected ? ' ws-selected' : ''}" id="wsc-${r}-${c}" data-row="${r}" data-col="${c}" style="width:${cs}px;height:${cs}px;line-height:${cs}px;font-size:${Math.round(cs * 0.42)}px${extraStyle}">${cell.letter}</div>`;
           })
         ).join('');
         const initPoints = state.wordsearchSelected.length > 0
