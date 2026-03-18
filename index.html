@@ -1672,7 +1672,7 @@
       const grid = Array.from({length: size}, (_, r) =>
         Array.from({length: size}, (_, c) => ({letter: '', row: r, col: c}))
       );
-      const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+      const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
 
       function backtrack(path, used) {
         if (path.length === len) return path;
@@ -1789,7 +1789,9 @@
       const sel = state.wordsearchSelected;
       if (sel.some(s => s.row === r && s.col === c)) return;
       const last = sel[sel.length - 1];
-      if (!last || Math.abs(r - last.row) > 1 || Math.abs(c - last.col) > 1) return;
+      const isOrthogonal = (r === last.row && Math.abs(c - last.col) === 1) ||
+                           (c === last.col && Math.abs(r - last.row) === 1);
+      if (!last || !isOrthogonal) return;
       sel.push(cell);
       wsRenderSelection();
     }
