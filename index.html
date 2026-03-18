@@ -1809,10 +1809,8 @@
     }
 
     function wsUndo() {
-      if (state.wordsearchSelected.length > 0) {
-        state.wordsearchSelected.pop();
-        wsRenderSelection();
-      }
+      state.wordsearchSelected = [];
+      wsRenderSelection();
     }
 
     function handleWordsearchSubmit() {
@@ -2918,7 +2916,7 @@
         ${showWordsearchSubmit ? `
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
             <button class="btn-primary" onclick="BeeSounds.click();handleWordsearchSubmit()" ${state.transitioning || state.wordsearchSelected.length === 0 ? "disabled" : ""}>Check</button>
-            <button class="hint-btn" onclick="wsUndo()" ${state.wordsearchSelected.length === 0 ? "disabled" : ""}>⌫ Undo</button>
+            <button class="hint-btn" onclick="wsUndo()" ${state.wordsearchSelected.length === 0 ? "disabled" : ""}>✕ Clear</button>
           </div>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
