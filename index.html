@@ -2468,12 +2468,12 @@
         const tiles = display.toUpperCase().split("").map((l, i) => {
           let cls = "olo-letter";
           if (state.selectedOloIndex === i) cls += " selected-wrong";
-          return `<span class="${cls}" onclick="oloClickLetter(${i})">${l}</span>`;
+          return `<span class="${cls}" onpointerdown="event.preventDefault();oloClickLetter(${i})">${l}</span>`;
         }).join("");
         let fixHTML = "";
         if (state.oloPhase === "fix") {
           const oloKeys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
-            .map(l => `<button class="olo-key" onclick="oloPickLetter('${l}')">${l}</button>`)
+            .map(l => `<button class="olo-key" onpointerdown="event.preventDefault();oloPickLetter('${l}')">${l}</button>`)
             .join("");
           fixHTML = `<div class="olo-fix-section">
           <p class="olo-fix-label">Replace with:</p>
