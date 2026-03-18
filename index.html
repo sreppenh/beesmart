@@ -1773,23 +1773,19 @@
       }
     }
 
-    function wsPointerDown(e) {
-      e.preventDefault();
-      const el = document.elementFromPoint(e.clientX, e.clientY);
+    function wsStartAt(clientX, clientY) {
+      const el = document.elementFromPoint(clientX, clientY);
       if (!el || !el.id.startsWith('wsc-')) return;
       const [, r, c] = el.id.split('-').map(Number);
       if (isNaN(r) || isNaN(c)) return;
       state.wordsearchDragging = true;
       state.wordsearchSelected = [{row: r, col: c}];
-      const grid = document.getElementById('ws-grid');
-      if (grid) try { grid.setPointerCapture(e.pointerId); } catch (_) {}
       wsRenderSelection();
     }
 
-    function wsPointerMove(e) {
+    function wsMoveAt(clientX, clientY) {
       if (!state.wordsearchDragging) return;
-      e.preventDefault();
-      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const el = document.elementFromPoint(clientX, clientY);
       if (!el || !el.id.startsWith('wsc-')) return;
       const parts = el.id.split('-');
       if (parts.length !== 3) return;
@@ -1803,7 +1799,34 @@
       wsRenderSelection();
     }
 
+    function wsPointerDown(e) {
+      if (e.pointerType === 'touch') return; // handled by touch events
+      wsStartAt(e.clientX, e.clientY);
+      const grid = document.getElementById('ws-grid');
+      if (grid) try { grid.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+
+    function wsPointerMove(e) {
+      if (e.pointerType === 'touch') return;
+      wsMoveAt(e.clientX, e.clientY);
+    }
+
     function wsPointerUp(e) {
+      if (e.pointerType === 'touch') return;
+      state.wordsearchDragging = false;
+    }
+
+    function wsTouchStart(e) {
+      e.preventDefault();
+      if (e.touches.length > 0) wsStartAt(e.touches[0].clientX, e.touches[0].clientY);
+    }
+
+    function wsTouchMove(e) {
+      e.preventDefault();
+      if (e.touches.length > 0) wsMoveAt(e.touches[0].clientX, e.touches[0].clientY);
+    }
+
+    function wsTouchEnd(e) {
       state.wordsearchDragging = false;
     }
 
@@ -2493,11 +2516,12 @@
         <p class="cat-tag" style="margin-bottom:10px">${state.currentWord.category}</p>
         <div class="ws-wrap" style="width:${gridPx}px;height:${gridPx}px;margin:0 auto">
           <div class="ws-grid" id="ws-grid" data-cell-size="${cs}"
-            style="grid-template-columns:repeat(${size},${cs}px);gap:${gap}px;width:${gridPx}px;height:${gridPx}px"
-            onpointerdown="wsPointerDown(event)" onpointermove="wsPointerMove(event)" onpointerup="wsPointerUp(event)">
+            style="display:grid;touch-action:none;grid-template-columns:repeat(${size},${cs}px);gap:${gap}px;width:${gridPx}px;height:${gridPx}px"
+            onpointerdown="wsPointerDown(event)" onpointermove="wsPointerMove(event)" onpointerup="wsPointerUp(event)"
+            ontouchstart="wsTouchStart(event)" ontouchmove="wsTouchMove(event)" ontouchend="wsTouchEnd(event)">
             ${cells}
           </div>
-          <svg class="ws-svg" width="${gridPx}" height="${gridPx}" viewBox="0 0 ${gridPx} ${gridPx}">
+          <svg class="ws-svg" style="pointer-events:none" width="${gridPx}" height="${gridPx}" viewBox="0 0 ${gridPx} ${gridPx}">
             <polyline id="ws-line" fill="none" stroke="var(--yellow)" stroke-opacity="0.45" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" points="${initPoints}"/>
           </svg>
         </div>`;
