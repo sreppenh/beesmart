@@ -1808,6 +1808,11 @@
           ? sel.map(s => `${s.col * stride + cs / 2},${s.row * stride + cs / 2}`).join(' ')
           : '');
       }
+      const hasSelection = sel.length > 0;
+      const checkBtn = document.getElementById('ws-check-btn');
+      if (checkBtn) checkBtn.disabled = state.transitioning || !hasSelection;
+      const clearBtn = document.getElementById('ws-clear-btn');
+      if (clearBtn) clearBtn.disabled = !hasSelection;
     }
 
     function wsCellAt(clientX, clientY) {
@@ -3030,8 +3035,8 @@
         ` : ""}
         ${showWordsearchSubmit ? `
           <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-            <button class="btn-primary" onclick="BeeSounds.click();handleWordsearchSubmit()" ${state.transitioning || state.wordsearchSelected.length === 0 ? "disabled" : ""}>Check</button>
-            <button class="hint-btn" onclick="wsUndo()" ${state.wordsearchSelected.length === 0 ? "disabled" : ""}>✕ Clear</button>
+            <button id="ws-check-btn" class="btn-primary" onclick="BeeSounds.click();handleWordsearchSubmit()" ${state.transitioning || state.wordsearchSelected.length === 0 ? "disabled" : ""}>Check</button>
+            <button id="ws-clear-btn" class="hint-btn" onclick="wsUndo()" ${state.wordsearchSelected.length === 0 ? "disabled" : ""}>✕ Clear</button>
           </div>
           ${hintAllowed && !state.transitioning && hintStillAvailable ? `<button class="hint-btn" onclick="revealNextHint()">💡 ${hintLabel}</button>` : ""}
         ` : ""}
