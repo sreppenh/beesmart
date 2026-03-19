@@ -488,7 +488,7 @@ h1 {
   font-weight: 800;
   font-family: 'Plus Jakarta Sans', sans-serif;
   letter-spacing: 0.18em;
-  white-space: nowrap;
+  flex-wrap: wrap;
 }
 .scramble-placed { color: var(--yellow); }
 .scramble-empty  { color: var(--muted);  }
@@ -517,6 +517,9 @@ h1 {
   flex-wrap: wrap;
   margin-bottom: 4px;
 }
+
+.gap-tile-sm .gap-input, .gap-tile-sm .gap-letter { width: 26px; height: 32px; font-size: 14px; }
+.gap-tile-md .gap-input, .gap-tile-md .gap-letter { width: 30px; height: 36px; font-size: 16px; }
 
 .gap-letter {
   width: 34px;
@@ -598,6 +601,9 @@ body.day .gap-input.gap-hinted {
   justify-content: center;
   flex-wrap: wrap;
 }
+
+.olo-tile-sm .olo-letter { width: 28px; height: 36px; font-size: 14px; padding: 0; }
+.olo-tile-md .olo-letter { width: 32px; height: 40px; font-size: 16px; padding: 0; }
 
 .olo-letter {
   width: 36px;

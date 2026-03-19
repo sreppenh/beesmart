@@ -1555,6 +1555,11 @@
         }
         const wordData = await fetchWord(!isQuiz && next === "oneletteroff");
         if (wordData.mechanic) next = wordData.mechanic;
+        // Guard: if lettergap word is too long, fall back to a different mechanic
+        if (next === "lettergap" && wordData.word.replace(/\s/g, '').length > 18) {
+          const fallback = ["scramble", "definition", "oneletteroff"];
+          next = fallback[Math.floor(Math.random() * fallback.length)];
+        }
         state.mechanic = next;
         state.currentWord = wordData;
         // Track mechanic history for anti-repeat (spelling modes only)
@@ -2488,7 +2493,7 @@
       } else if (state.mechanic === "scramble") {
         const word = state.currentWord.word;
         const wordLen = word.length;
-        const displaySize = wordLen > 12 ? '18px' : '24px';
+        const displaySize = wordLen > 14 ? '14px' : wordLen > 10 ? '18px' : '24px';
         // Build unified slot array merging hint-locked and player-placed positions
         const slots = Array(wordLen).fill(null).map((_, i) => {
           if (state.hintRevealed && state.hintRevealed[i] !== null && state.hintRevealed[i] !== undefined) {
@@ -2522,6 +2527,8 @@
 
       } else if (state.mechanic === "lettergap") {
         const gapWord = state.currentWord.word.toUpperCase();
+        const wordLen = gapWord.length;
+        const tileSizeClass = wordLen > 14 ? 'gap-tile-sm' : wordLen > 10 ? 'gap-tile-md' : '';
         const hiddenCount = state.gapIndices.filter(Boolean).length;
         let hiddenIdx = 0;
         const letterTiles = gapWord.split("").map((l, i) => {
@@ -2536,11 +2543,13 @@
           return `<span class="gap-letter shown">${l}</span>`;
         }).join("");
         inner = `
-        <div class="gap-row">${letterTiles}</div>
+        <div class="gap-row ${tileSizeClass}">${letterTiles}</div>
         <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
 
       } else if (state.mechanic === "oneletteroff") {
         const display = state.misspelled || state.currentWord.word;
+        const oloLen = display.length;
+        const oloSizeClass = oloLen > 14 ? 'olo-tile-sm' : oloLen > 10 ? 'olo-tile-md' : '';
         const tiles = display.toUpperCase().split("").map((l, i) => {
           let cls = "olo-letter";
           if (state.selectedOloIndex === i) cls += " selected-wrong";
@@ -2555,7 +2564,7 @@
         </div>`;
         inner = `
         <p class="olo-instruction">${state.oloPhase === "select" ? "Tap the incorrect letter" : "Tap the correct letter"}</p>
-        <div class="olo-row" style="margin-top:12px${state.transitioning ? ';pointer-events:none' : ''}">${tiles}</div>
+        <div class="olo-row ${oloSizeClass}" style="margin-top:12px${state.transitioning ? ';pointer-events:none' : ''}">${tiles}</div>
         ${fixHTML}
         <p class="cat-tag" style="margin-top:12px">${state.currentWord.category}</p>
         <p class="def-text" style="margin-top:8px">"${state.currentWord.definition}"</p>`;
